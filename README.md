@@ -1,4 +1,4 @@
-**English** | [한국어](docs/README.ko.md)
+**English** | [한국어](docs/ko/README.md)
 
 <p align="center">
   <br/>
