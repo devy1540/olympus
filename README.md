@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <strong>Stop building. Start questioning.</strong>
+  <em>"The gods merely pose questions. Fate lies in what I ask — the answers are yours to find."</em>
   <br/>
   <sub>14 gods argue, challenge, and verify — so your software doesn't ship on assumptions.</sub>
 </p>
