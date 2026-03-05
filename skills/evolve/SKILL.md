@@ -8,11 +8,13 @@ description: "자기 진화 — 실전 테스트와 행동 평가를 통해 Olym
 Olympus를 실제 태스크에 실행하고, 결과를 평가하고, 에이전트 프롬프트를 개선하는 셀프 개선 루프.
 `/olympus:audit`가 뼈대(구조)를 지킨다면, `/olympus:evolve`는 근육(행동 품질)을 키운다.
 
-## 사용 에이전트
-- **Athena**: 산출물 품질 평가 (Semantic Evaluator)
-- **Eris**: 평가 결과 챌린지 + 원인 진단 (Devil's Advocate)
-- **Metis**: 기대-실제 갭 분석 (Analyst)
-- **Prometheus**: 프롬프트 개선 구현 (Executor)
+## 사용 에이전트 (subagent_type 바인딩)
+- **Athena**: 산출물 품질 평가 (Semantic Evaluator) → `subagent_type: "olympus:athena"`
+- **Eris**: 평가 결과 챌린지 + 원인 진단 (Devil's Advocate) → `subagent_type: "olympus:eris"`
+- **Metis**: 기대-실제 갭 분석 (Analyst) → `subagent_type: "olympus:metis"`
+- **Prometheus**: 프롬프트 개선 구현 (Executor) → `subagent_type: "olympus:prometheus"`
+
+> ⚠ **필수**: Task 생성 시 반드시 위의 `subagent_type`을 사용한다. `oh-my-claudecode:*` 에이전트를 절대 사용하지 않는다.
 
 ## 게이트
 - 품질 점수 ≥ 0.8 (개선 목표 달성)

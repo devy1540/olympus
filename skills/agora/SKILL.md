@@ -7,11 +7,13 @@ description: "토론의 광장 — 위원회 토론을 통한 의사결정"
 
 구조화된 위원회 토론을 통해 기술적 의사결정을 내리는 스킬.
 
-## 사용 에이전트
-- **Zeus**: Planner 역할 (tie-breaker)
-- **Ares**: Engineering 비평가
-- **Eris**: Devil's Advocate (모든 포지션에 대해)
-- **general-purpose**: UX 비평가 (UX 프롬프트 주입)
+## 사용 에이전트 (subagent_type 바인딩)
+- **Zeus**: Planner 역할 (tie-breaker) → `subagent_type: "olympus:zeus"`
+- **Ares**: Engineering 비평가 → `subagent_type: "olympus:ares"`
+- **Eris**: Devil's Advocate (모든 포지션에 대해) → `subagent_type: "olympus:eris"`
+- **UX Critic**: UX 비평가 → `subagent_type: "general-purpose"` (UX 프롬프트 주입)
+
+> ⚠ **필수**: Task 생성 시 반드시 위의 `subagent_type`을 사용한다. `oh-my-claudecode:*` 에이전트를 절대 사용하지 않는다.
 
 ## 게이트
 - Normal: Working consensus (≥67%)

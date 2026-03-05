@@ -7,10 +7,14 @@ description: "신들의 재판 — 3단계 평가 파이프라인"
 
 기계적 검증 → 의미론적 평가 → 합의 평가의 3단계로 구현을 평가하는 파이프라인.
 
-## 사용 에이전트
-- **Hephaestus**: 기계적 검증 (Stage 1)
-- **Athena**: 의미론적 평가 (Stage 2)
-- **Ares + Eris + Hera**: 합의 평가 (Stage 3, 조건부)
+## 사용 에이전트 (subagent_type 바인딩)
+- **Hephaestus**: 기계적 검증 (Stage 1) → `subagent_type: "olympus:hephaestus"`
+- **Athena**: 의미론적 평가 (Stage 2) → `subagent_type: "olympus:athena"`
+- **Ares**: 합의 평가 Proposer (Stage 3) → `subagent_type: "olympus:ares"`
+- **Eris**: 합의 평가 DA (Stage 3) → `subagent_type: "olympus:eris"`
+- **Hera**: 합의 평가 Synthesizer (Stage 3) → `subagent_type: "olympus:hera"`
+
+> ⚠ **필수**: Task 생성 시 반드시 위의 `subagent_type`을 사용한다. `oh-my-claudecode:*` 에이전트를 절대 사용하지 않는다.
 
 ## 최종 판정
 APPROVED / BLOCKED / INCOMPLETE / REJECTED
