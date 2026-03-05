@@ -166,3 +166,25 @@ The short UUID is generated via `uuidgen` and truncated to 8 characters.
 - **audit-mechanical.json** -- Mechanical validation results including YAML frontmatter validity, cross-reference integrity, file existence checks, and contract agent verification.
 - **audit-semantic.json** -- Semantic validation results including permission-role consistency, contract completeness, gate threshold consistency, clarity enforcement scan, and delegation pattern compliance.
 - **audit-report.md** -- Human-readable audit report summarizing all violations, warnings, and coverage statistics.
+
+---
+
+## Evolve Contracts
+
+| File                    | Phase | Writer        | Reader            |
+|-------------------------|-------|---------------|-------------------|
+| benchmark.md            | 1     | Orchestrator  | All phases        |
+| dogfood-result.md       | 2     | Orchestrator  | Athena, Metis     |
+| eval-matrix.md          | 3     | Orchestrator  | Eris, Metis       |
+| diagnosis.md            | 4     | Orchestrator  | Prometheus        |
+| refinement-log.md       | 5     | Orchestrator  | Tracking          |
+| evolve-state.json       | all   | Orchestrator  | State recovery    |
+
+### File Descriptions
+
+- **benchmark.md** -- Benchmark task definition including target skill, test scenario, expected quality thresholds, and test input data.
+- **dogfood-result.md** -- Complete output from running the target skill on the benchmark, including all agent outputs, round counts, gate results, and handoff records.
+- **eval-matrix.md** -- Athena's quality evaluation across 5 dimensions (Specificity, Evidence Density, Role Adherence, Efficiency, Actionability) with scores and evidence.
+- **diagnosis.md** -- Root cause analysis tracing quality issues back to specific agent prompt sections, with concrete improvement proposals.
+- **refinement-log.md** -- Record of all prompt changes applied and rejected per iteration, with rationale.
+- **evolve-state.json** -- Persistent state tracking iteration count, score history, convergence status, and benchmark reference.

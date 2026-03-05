@@ -205,5 +205,41 @@
       "writer": "orchestrator",
       "readers": ["user"]
     }
+  },
+  "evolve": {
+    "benchmark.md": {
+      "phase": 1,
+      "writer": "orchestrator",
+      "readers": ["all-phases"]
+    },
+    "dogfood-result.md": {
+      "phase": 2,
+      "writer": "orchestrator",
+      "readers": ["athena", "metis"]
+    },
+    "eval-matrix.md": {
+      "phase": 3,
+      "writer": "orchestrator",
+      "source": "athena",
+      "readers": ["eris", "metis"],
+      "note": "Athena는 SendMessage로 평가 결과 전달, 오케스트레이터가 저장"
+    },
+    "diagnosis.md": {
+      "phase": 4,
+      "writer": "orchestrator",
+      "source": ["metis", "eris"],
+      "readers": ["prometheus"],
+      "note": "Metis와 Eris는 SendMessage로 진단 결과 전달, 오케스트레이터가 종합 저장"
+    },
+    "refinement-log.md": {
+      "phase": 5,
+      "writer": "orchestrator",
+      "readers": ["tracking"]
+    },
+    "evolve-state.json": {
+      "phase": "all",
+      "writer": "orchestrator",
+      "readers": ["state-recovery"]
+    }
   }
 }
