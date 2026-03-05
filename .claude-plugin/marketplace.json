@@ -1,0 +1,20 @@
+{
+  "name": "olympus-marketplace",
+  "owner": {
+    "name": "hjyoon"
+  },
+  "description": "Olympus — 하네스 엔지니어링 플러그인 마켓플레이스",
+  "version": "1.0.0",
+  "homepage": "https://github.com/hjyoon/olympus",
+  "plugins": [
+    {
+      "name": "olympus",
+      "description": "14명의 에이전트가 요구사항 정제, 다관점 분석, 진화 루프, 평가를 수행하는 하네스 엔지니어링 플러그인",
+      "version": "2.1.0",
+      "source": "./",
+      "category": "engineering",
+      "tags": ["harness", "requirements", "analysis", "evolution", "evaluation", "multi-agent"],
+      "author": "hjyoon"
+    }
+  ]
+}

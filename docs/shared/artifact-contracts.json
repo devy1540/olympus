@@ -1,0 +1,209 @@
+{
+  "oracle": {
+    "codebase-context.md": {
+      "phase": 1,
+      "writer": "hermes",
+      "readers": ["apollo", "metis"],
+      "writerRequires": ["Write"]
+    },
+    "interview-log.md": {
+      "phase": 2,
+      "writer": "orchestrator",
+      "source": "apollo",
+      "readers": ["metis"],
+      "note": "Apollo는 SendMessage로 결과 전달, 오케스트레이터가 저장"
+    },
+    "ambiguity-scores.json": {
+      "phase": 2,
+      "writer": "orchestrator",
+      "source": "apollo",
+      "readers": ["gate-check"],
+      "note": "Apollo는 SendMessage로 점수 전달, 오케스트레이터가 저장"
+    },
+    "gap-analysis.md": {
+      "phase": 4,
+      "writer": "orchestrator",
+      "source": "metis",
+      "readers": ["zeus", "helios"],
+      "note": "Metis는 SendMessage로 결과 전달, 오케스트레이터가 저장"
+    },
+    "spec.md": {
+      "phase": 5,
+      "writer": "orchestrator",
+      "readers": ["all-downstream"]
+    }
+  },
+  "pantheon": {
+    "ontology-catalog.md": {
+      "phase": 0,
+      "writer": "orchestrator",
+      "readers": ["all-agents"]
+    },
+    "ontology-scope-analyst.md": {
+      "phase": 0,
+      "writer": "orchestrator",
+      "readers": ["analyst-agents"]
+    },
+    "ontology-scope-da.md": {
+      "phase": 0,
+      "writer": "orchestrator",
+      "readers": ["eris"]
+    },
+    "perspectives.md": {
+      "phase": 2,
+      "writer": "orchestrator",
+      "source": "helios",
+      "readers": ["all-agents"],
+      "note": "Helios는 SendMessage로 결과 전달, 오케스트레이터가 저장"
+    },
+    "context.md": {
+      "phase": 2,
+      "writer": "orchestrator",
+      "readers": ["all-agents"]
+    },
+    "analyst-findings.md": {
+      "phase": 3,
+      "writer": "orchestrator",
+      "source": ["ares", "poseidon", "zeus"],
+      "readers": ["eris"],
+      "note": "분석 에이전트들은 SendMessage로 결과 전달, 오케스트레이터가 합산 저장"
+    },
+    "da-evaluation.md": {
+      "phase": 4,
+      "writer": "orchestrator",
+      "source": "eris",
+      "readers": ["consensus-stage"],
+      "note": "Eris는 SendMessage로 결과 전달, 오케스트레이터가 저장"
+    },
+    "prior-iterations.md": {
+      "phase": 5,
+      "writer": "orchestrator",
+      "readers": ["re-entry"]
+    },
+    "analysis.md": {
+      "phase": 5,
+      "writer": "orchestrator",
+      "readers": ["downstream"]
+    }
+  },
+  "tribunal": {
+    "mechanical-result.json": {
+      "phase": 1,
+      "writer": "hephaestus",
+      "readers": ["athena"],
+      "writerRequires": ["Write", "Bash"]
+    },
+    "semantic-matrix.md": {
+      "phase": 2,
+      "writer": "orchestrator",
+      "source": "athena",
+      "readers": ["stage-3"],
+      "note": "Athena는 SendMessage로 결과 전달, 오케스트레이터가 저장"
+    },
+    "consensus-record.json": {
+      "phase": 3,
+      "writer": "orchestrator",
+      "readers": ["final-verdict"]
+    },
+    "verdict.md": {
+      "phase": 3,
+      "writer": "orchestrator",
+      "readers": ["user"]
+    }
+  },
+  "genesis": {
+    "gen-{n}/ontology.json": {
+      "phase": 3,
+      "writer": "orchestrator",
+      "readers": ["convergence-check"]
+    },
+    "gen-{n}/spec.md": {
+      "phase": 3,
+      "writer": "orchestrator",
+      "readers": ["next-generation"]
+    },
+    "gen-{n}/wonder.md": {
+      "phase": 1,
+      "writer": "orchestrator",
+      "source": "metis",
+      "readers": ["reflect"],
+      "note": "Metis는 SendMessage로 결과 전달, 오케스트레이터가 저장"
+    },
+    "gen-{n}/reflect.md": {
+      "phase": 2,
+      "writer": "orchestrator",
+      "source": "eris",
+      "readers": ["seed"],
+      "note": "Eris는 SendMessage로 결과 전달, 오케스트레이터가 저장"
+    },
+    "lineage.json": {
+      "phase": 5,
+      "writer": "orchestrator",
+      "readers": ["rewind"]
+    },
+    "convergence.json": {
+      "phase": 4,
+      "writer": "orchestrator",
+      "readers": ["evolution-halt"]
+    }
+  },
+  "agora": {
+    "debate-frame.json": {
+      "phase": 1,
+      "writer": "orchestrator",
+      "readers": ["all-committee"]
+    },
+    "committee-positions.md": {
+      "phase": 3,
+      "writer": "orchestrator",
+      "source": ["committee"],
+      "readers": ["eris", "orchestrator"],
+      "note": "위원들은 SendMessage로 입장 전달, 오케스트레이터가 저장"
+    },
+    "da-challenges.md": {
+      "phase": 4,
+      "writer": "orchestrator",
+      "source": "eris",
+      "readers": ["committee"],
+      "note": "Eris는 SendMessage로 챌린지 전달, 오케스트레이터가 저장"
+    },
+    "decision.md": {
+      "phase": 5,
+      "writer": "orchestrator",
+      "readers": ["user"]
+    }
+  },
+  "odyssey": {
+    "odyssey-state.json": {
+      "phase": "all",
+      "writer": "orchestrator",
+      "readers": ["state-recovery"]
+    },
+    "plan.md": {
+      "phase": 4,
+      "writer": "zeus",
+      "readers": ["themis", "prometheus"],
+      "writerRequires": ["Write"]
+    }
+  },
+  "audit": {
+    "audit-mechanical.json": {
+      "phase": 1,
+      "writer": "hephaestus",
+      "readers": ["athena"],
+      "writerRequires": ["Write", "Bash"]
+    },
+    "audit-semantic.json": {
+      "phase": 2,
+      "writer": "orchestrator",
+      "source": "athena",
+      "readers": ["orchestrator"],
+      "note": "Athena는 SendMessage로 결과 전달, 오케스트레이터가 저장"
+    },
+    "audit-report.md": {
+      "phase": 3,
+      "writer": "orchestrator",
+      "readers": ["user"]
+    }
+  }
+}

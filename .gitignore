@@ -1,0 +1,8 @@
+# oh-my-claudecode local state
+.omc/
+
+# Olympus runtime artifacts
+.olympus/
+
+# OS
+.DS_Store
