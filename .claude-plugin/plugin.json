@@ -1,7 +1,7 @@
 {
   "name": "olympus",
   "version": "2.3.0",
-  "description": "Olympus — 하네스 엔지니어링 플러그인. 14명의 에이전트가 요구사항 정제, 다관점 분석, 진화 루프, 평가를 수행합니다.",
+  "description": "Olympus — Harness engineering plugin. 14 agents perform requirement refinement, multi-perspective analysis, evolution loops, and evaluation.",
   "author": {
     "name": "hjyoon"
   },
