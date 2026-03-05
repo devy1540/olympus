@@ -12,8 +12,6 @@ Ouroboros의 핵심 패턴. 명세/설계를 세대별로 진화시켜 수렴할
 - **Eris**: Reflect (성찰) — 논리 감사 → `subagent_type: "olympus:eris"`
 - **Orchestrator**: Seed (결정화) + 수렴 검사
 
-> ⚠ **필수**: Task 생성 시 반드시 위의 `subagent_type`을 사용한다. `oh-my-claudecode:*` 에이전트를 절대 사용하지 않는다.
-
 ## 게이트
 - 온톨로지 수렴 ≥ 0.95
 

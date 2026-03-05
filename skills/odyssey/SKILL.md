@@ -37,7 +37,6 @@ Phase 7: 팀 정리
 | Artemis | `olympus:artemis` |
 | Hera | `olympus:hera` |
 
-> ⚠ **필수**: Task 생성 시 반드시 위의 `subagent_type`을 사용한다. `oh-my-claudecode:*` 에이전트를 절대 사용하지 않는다.
 > 하위 스킬(Oracle, Genesis, Pantheon, Tribunal) 호출 시에는 해당 스킬의 바인딩을 따른다.
 
 ## 상태 관리

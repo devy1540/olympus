@@ -15,8 +15,6 @@ description: "만신전의 회의 — 다관점 분석 파이프라인"
 - **Zeus**: 아키텍처 관점 분석 → `subagent_type: "olympus:zeus"`
 - **Eris**: Devil's Advocate 챌린지 → `subagent_type: "olympus:eris"`
 
-> ⚠ **필수**: Task 생성 시 반드시 위의 `subagent_type`을 사용한다. `oh-my-claudecode:*` 에이전트를 절대 사용하지 않는다.
-
 ## 게이트
 - Normal: 합의 ≥ Working (67%)
 - Hell mode (--hell): 만장일치
@@ -95,12 +93,11 @@ Step 5: 스코프 블록 생성
    - Evidence-based
    - Domain-specific
    - Actionable
-5. 각 관점에 분석 에이전트 매핑 (반드시 olympus: 접두사 사용):
+5. 각 관점에 분석 에이전트 매핑:
    - 코드 품질 → olympus:ares
    - 보안 → olympus:poseidon
    - 아키텍처 → olympus:zeus (Analysis_Mode 적용)
    - 기타 → general-purpose에 관점 프롬프트 주입
-   ⚠ oh-my-claudecode:* 에이전트를 절대 사용하지 않는다
 ```
 
 ### Phase 2: 관점 승인
@@ -130,7 +127,7 @@ context.md 생성: spec + perspectives + ontology 종합
   - context.md
   - 할당된 관점의 key questions
 
-에이전트 매핑 (반드시 olympus: 접두사 사용, oh-my-claudecode:* 절대 사용 금지):
+에이전트 매핑:
   - 코드 품질 관점 → olympus:ares (subagent_type: "olympus:ares")
   - 보안 관점 → olympus:poseidon (subagent_type: "olympus:poseidon")
   - 아키텍처 관점 → olympus:zeus (subagent_type: "olympus:zeus", Analysis_Mode 적용)

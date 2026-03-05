@@ -12,8 +12,6 @@ description: "델포이의 신탁 — 요구사항 정제 파이프라인"
 - **Apollo**: 인터뷰 루프 (Phase 2) → `subagent_type: "olympus:apollo"`
 - **Metis**: 갭 분석 (Phase 4) → `subagent_type: "olympus:metis"`
 
-> ⚠ **필수**: Task 생성 시 반드시 위의 `subagent_type`을 사용한다. `oh-my-claudecode:*` 에이전트를 절대 사용하지 않는다.
-
 ## 게이트
 - 모호성 점수 ≤ 0.2
 
