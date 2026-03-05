@@ -64,11 +64,15 @@ Four numbers. Four moments where the system refuses to proceed until the math sa
 ## Quick Start
 
 ```bash
-# Add the marketplace
+# In your terminal
 claude plugin marketplace add devy1540/olympus
-
-# Install the plugin
 claude plugin install olympus@olympus-marketplace
+```
+
+```
+# Inside Claude Code
+/plugin marketplace add devy1540/olympus
+/plugin install olympus@olympus-marketplace
 
 # Refine your requirements
 /olympus:oracle
