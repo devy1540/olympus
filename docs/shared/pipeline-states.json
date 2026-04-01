@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Derived from Claude Code production source: src/query.ts State/Terminal/Continue types",
+  "title": "Olympus Pipeline State Schema",
+  "description": "Formal state machine for olympus pipelines, ported from Claude Code's query loop (State type line 204, Terminal/Continue return types)",
+
+  "definitions": {
+    "Terminal": {
+      "description": "Ported from query.ts Terminal return type — reasons the pipeline stops. Claude Code has: completed, aborted_streaming, aborted_tools, max_turns, model_error, prompt_too_long, hook_stopped, etc.",
+      "type": "object",
+      "properties": {
+        "status": { "const": "terminal" },
+        "reason": {
+          "enum": [
+            "completed",
+            "approved",
+            "rejected",
+            "blocked",
+            "incomplete",
+            "aborted",
+            "max_retries",
+            "stagnation",
+            "user_override",
+            "error"
+          ]
+        },
+        "verdict": {
+          "enum": [
+            "APPROVED",
+            "BLOCKED",
+            "INCOMPLETE",
+            "REJECTED_IMPLEMENTATION",
+            "REJECTED_SPEC",
+            "REJECTED_ARCHITECTURE",
+            null
+          ],
+          "description": "Tribunal-specific verdict subtype"
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable termination reason"
+        },
+        "returnToPhase": {
+          "type": "string",
+          "description": "Target phase for rewind (null if truly terminal)"
+        }
+      },
+      "required": ["status", "reason"]
+    },
+
+    "Continue": {
+      "description": "Ported from query.ts Continue type — reasons the loop continues. Claude Code has: next_turn, reactive_compact_retry, max_output_tokens_recovery, etc.",
+      "type": "object",
+      "properties": {
+        "status": { "const": "continue" },
+        "reason": {
+          "enum": [
+            "next_phase",
+            "gate_retry",
+            "feedback_loop",
+            "implementation_retry",
+            "debug_retry",
+            "generation_next",
+            "persona_switch",
+            "user_directed"
+          ]
+        },
+        "targetPhase": {
+          "type": "string",
+          "description": "Phase to continue from"
+        },
+        "retryCount": {
+          "type": "integer",
+          "description": "Current retry count (mirrors Claude Code's maxOutputTokensRecoveryCount)"
+        },
+        "maxRetries": {
+          "type": "integer",
+          "description": "Max allowed retries before Terminal"
+        },
+        "context": {
+          "type": "string",
+          "description": "Additional context for the continuation (e.g., persona name, feedback)"
+        }
+      },
+      "required": ["status", "reason"]
+    },
+
+    "PipelineState": {
+      "description": "Ported from query.ts State type (line 204-217). The full state snapshot at any point in the pipeline.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z]+-[0-9]{8}-[a-f0-9]{8}$",
+          "description": "Pipeline run ID: {skill}-{YYYYMMDD}-{short-uuid}"
+        },
+        "phase": {
+          "type": "string",
+          "description": "Current phase (mirrors query.ts State.turnCount as phase position)"
+        },
+        "transition": {
+          "oneOf": [
+            { "$ref": "#/definitions/Terminal" },
+            { "$ref": "#/definitions/Continue" },
+            { "type": "null" }
+          ],
+          "description": "Ported from State.transition: Continue | undefined. Last transition decision."
+        },
+        "gates": {
+          "type": "object",
+          "description": "Ported concept: gate values tracked across iterations (like autoCompactTracking)",
+          "properties": {
+            "ambiguityScore": { "type": ["number", "null"] },
+            "convergenceScore": { "type": ["number", "null"] },
+            "consensusLevel": { "type": ["string", "null"] },
+            "semanticScore": { "type": ["number", "null"] },
+            "mechanicalPass": { "type": ["boolean", "null"] },
+            "themisVerdict": { "type": ["string", "null"] }
+          }
+        },
+        "retryTracking": {
+          "type": "object",
+          "description": "Ported from query.ts maxOutputTokensRecoveryCount + hasAttemptedReactiveCompact pattern",
+          "properties": {
+            "evaluationPass": { "type": "integer", "default": 0 },
+            "maxPasses": { "type": "integer", "default": 3 },
+            "feedbackLoopCount": { "type": "integer", "default": 0 },
+            "consecutiveFailures": { "type": "integer", "default": 0 }
+          }
+        },
+        "artifacts": {
+          "type": "object",
+          "description": "References to sub-skill artifact directories",
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "required": ["id", "phase"]
+    }
+  },
+
+  "OdysseyPhases": {
+    "description": "Valid phase values for odyssey-state.json, with allowed transitions (validated by validate-state.sh)",
+    "enum": ["oracle", "genesis", "pantheon", "planning", "execution", "tribunal", "completed"],
+    "transitions": {
+      "oracle":    ["genesis", "pantheon"],
+      "genesis":   ["pantheon"],
+      "pantheon":  ["planning"],
+      "planning":  ["execution"],
+      "execution": ["tribunal"],
+      "tribunal":  ["completed", "execution"]
+    }
+  }
+}

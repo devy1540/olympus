@@ -1,0 +1,22 @@
+{
+  "ambiguity": {
+    "threshold": 0.2,
+    "operator": "<=",
+    "description": "Ambiguity score must be ≤ 0.2 to pass Oracle gate"
+  },
+  "convergence": {
+    "threshold": 0.95,
+    "operator": ">=",
+    "description": "Ontology convergence similarity must be ≥ 0.95 to pass Genesis gate"
+  },
+  "consensus": {
+    "threshold": 0.67,
+    "operator": ">=",
+    "description": "Consensus percentage must be ≥ 67% to pass Pantheon/Tribunal gate"
+  },
+  "semantic": {
+    "threshold": 0.8,
+    "operator": ">=",
+    "description": "Semantic/quality score must be ≥ 0.8 to pass Tribunal/Evolve gate"
+  }
+}

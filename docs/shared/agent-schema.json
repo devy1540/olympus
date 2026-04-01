@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Derived from Claude Code production source: src/Tool.ts buildTool() factory + TOOL_DEFAULTS object (lines 757-792)",
+  "title": "Olympus Agent Definition Schema",
+  "description": "Formal schema for agent .md frontmatter. Mirrors Claude Code's buildTool() pattern where TOOL_DEFAULTS provides safe defaults and buildTool() spreads user definition over them.",
+
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z]+$",
+      "description": "Agent identifier (lowercase, no hyphens). Maps to subagent_type: 'olympus:{name}'"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "One-line role description"
+    },
+    "model": {
+      "enum": ["opus", "sonnet", "haiku"],
+      "description": "LLM model assignment"
+    },
+    "disallowedTools": {
+      "type": "array",
+      "items": {
+        "enum": ["Write", "Edit", "Bash", "NotebookEdit"]
+      },
+      "description": "Tools this agent cannot use. Ported from Claude Code's getDenyRuleForTool() pattern (src/utils/permissions/permissions.ts:287-292)"
+    },
+
+    "defaults": {
+      "$comment": "Ported from TOOL_DEFAULTS (src/Tool.ts:757-769). These fields have safe defaults and need not be specified in agent .md files.",
+      "type": "object",
+      "properties": {
+        "isEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "TOOL_DEFAULTS.isEnabled: () => true"
+        },
+        "isReadOnly": {
+          "type": "boolean",
+          "default": false,
+          "description": "TOOL_DEFAULTS.isReadOnly: () => false. Auto-derived: true if disallowedTools includes Write AND Edit"
+        },
+        "isConcurrencySafe": {
+          "type": "boolean",
+          "default": false,
+          "description": "TOOL_DEFAULTS.isConcurrencySafe: () => false. Whether this agent can run in parallel safely."
+        },
+        "maxResultSizeChars": {
+          "type": "integer",
+          "default": 50000,
+          "description": "Maximum output size from this agent's SendMessage"
+        }
+      }
+    }
+  },
+  "required": ["name", "description", "model", "disallowedTools"],
+
+  "derivedProperties": {
+    "$comment": "Properties computed at runtime, not specified in frontmatter. Mirrors buildTool() spread pattern.",
+    "subagentType": {
+      "description": "Computed: 'olympus:{name}'. Used in skill SKILL.md for subagent_type binding.",
+      "pattern": "^olympus:[a-z]+$"
+    },
+    "permissionLevel": {
+      "description": "Computed from disallowedTools: 'read-only' if [Write,Edit] included, 'write' if [Edit] only, 'full' if []",
+      "enum": ["read-only", "write", "full"]
+    },
+    "checkPermissions": {
+      "description": "Ported from TOOL_DEFAULTS.checkPermissions (line 763-766): default is allow. Override in agent .md Investigation Protocol section with explicit tool usage constraints."
+    }
+  },
+
+  "validationRules": {
+    "$comment": "Rules enforced by /olympus:audit skill. Ported from Claude Code's validateInput() pattern.",
+    "rules": [
+      {
+        "id": "permission-role-consistency",
+        "description": "If disallowedTools includes Write/Edit, agent prompt must NOT contain file-writing instructions",
+        "severity": "VIOLATION"
+      },
+      {
+        "id": "delegation-pattern",
+        "description": "If isReadOnly=true, agent Tool_Usage must include SendMessage and Final_Checklist must mention orchestrator handoff",
+        "severity": "WARNING"
+      },
+      {
+        "id": "model-capability-match",
+        "description": "Complex reasoning tasks (evaluation, analysis, planning) should use opus. Execution tasks can use sonnet. Simple discovery can use haiku.",
+        "severity": "INFO"
+      },
+      {
+        "id": "disallowed-tool-coverage",
+        "description": "Every tool in disallowedTools must be absent from the agent's Tool_Usage section",
+        "severity": "VIOLATION"
+      }
+    ]
+  },
+
+  "agentRegistry": {
+    "$comment": "Ported from Claude Code's getAllBaseTools() pattern (src/tools.ts). Known agents with their configurations.",
+    "agents": {
+      "zeus":       { "model": "opus",   "permissionLevel": "full",      "role": "Planner",            "maxTurns": 25 },
+      "athena":     { "model": "opus",   "permissionLevel": "read-only", "role": "Semantic Evaluator",  "maxTurns": 20 },
+      "apollo":     { "model": "opus",   "permissionLevel": "read-only", "role": "Interviewer",         "maxTurns": 25 },
+      "hermes":     { "model": "haiku",  "permissionLevel": "read-only", "role": "Explorer",            "maxTurns": 15 },
+      "ares":       { "model": "opus",   "permissionLevel": "read-only", "role": "Code Reviewer",       "maxTurns": 20 },
+      "hera":       { "model": "sonnet", "permissionLevel": "write",     "role": "Verifier",            "maxTurns": 15 },
+      "poseidon":   { "model": "opus",   "permissionLevel": "read-only", "role": "Security Reviewer",   "maxTurns": 20 },
+      "prometheus":  { "model": "sonnet", "permissionLevel": "full",      "role": "Executor",              "maxTurns": 30 },
+      "artemis":    { "model": "sonnet", "permissionLevel": "full",      "role": "Debugger",              "maxTurns": 25 },
+      "metis":      { "model": "opus",   "permissionLevel": "read-only", "role": "Analyst",               "maxTurns": 20 },
+      "themis":     { "model": "opus",   "permissionLevel": "read-only", "role": "Critic",                "maxTurns": 15 },
+      "hephaestus": { "model": "sonnet", "permissionLevel": "full",      "role": "Mechanical Evaluator",  "maxTurns": 15 },
+      "eris":       { "model": "opus",   "permissionLevel": "read-only", "role": "Devil's Advocate",      "maxTurns": 20 },
+      "helios":     { "model": "opus",   "permissionLevel": "read-only", "role": "Perspective Generator", "maxTurns": 15 }
+    }
+  }
+}

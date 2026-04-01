@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Derived from Claude Code production source: src/types/permissions.ts PermissionDecision type",
+  "title": "Olympus Hook Response Schema",
+  "description": "Structured response format for olympus hooks, ported from Claude Code's PermissionDecision<Input> type (PermissionAllowDecision | PermissionAskDecision | PermissionDenyDecision)",
+
+  "oneOf": [
+    {
+      "type": "object",
+      "title": "AllowDecision",
+      "description": "Ported from: PermissionAllowDecision<Input> (src/types/permissions.ts:174-184)",
+      "properties": {
+        "behavior": { "const": "allow" },
+        "updatedInput": {
+          "type": "object",
+          "description": "Optional modified input to pass to the tool (mirrors PermissionAllowDecision.updatedInput)"
+        },
+        "decisionReason": { "$ref": "#/$defs/decisionReason" },
+        "additionalContext": {
+          "type": "string",
+          "description": "Feedback text injected into the conversation as context"
+        }
+      },
+      "required": ["behavior"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "title": "DenyDecision",
+      "description": "Ported from: PermissionDenyDecision (src/types/permissions.ts:231-236)",
+      "properties": {
+        "behavior": { "const": "deny" },
+        "message": {
+          "type": "string",
+          "description": "Reason for denial, shown to the LLM"
+        },
+        "decisionReason": { "$ref": "#/$defs/decisionReason" },
+        "additionalContext": {
+          "type": "string",
+          "description": "Additional feedback text"
+        }
+      },
+      "required": ["behavior", "message"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "title": "AskDecision",
+      "description": "Ported from: PermissionAskDecision<Input> (src/types/permissions.ts:199-226). Prompts the user for approval.",
+      "properties": {
+        "behavior": { "const": "ask" },
+        "message": {
+          "type": "string",
+          "description": "Question presented to the user"
+        },
+        "suggestions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "enum": ["allow", "deny"] },
+              "tool": { "type": "string" },
+              "pattern": { "type": "string" }
+            }
+          },
+          "description": "Ported from: PermissionUpdate[] — suggested permission rule changes"
+        },
+        "decisionReason": { "$ref": "#/$defs/decisionReason" }
+      },
+      "required": ["behavior", "message"],
+      "additionalProperties": false
+    }
+  ],
+
+  "$defs": {
+    "decisionReason": {
+      "type": "object",
+      "description": "Ported from: PermissionDecisionReason (src/types/permissions.ts:271-324). Tracks WHY a decision was made.",
+      "properties": {
+        "type": {
+          "enum": [
+            "rule",
+            "hook",
+            "gate",
+            "contract",
+            "evidence",
+            "mode",
+            "other"
+          ],
+          "description": "Decision source. 'rule'/'hook'/'mode' from Claude Code. 'gate'/'contract'/'evidence' are olympus extensions."
+        },
+        "rule": {
+          "type": "string",
+          "description": "The specific rule that matched (for type=rule)"
+        },
+        "hookName": {
+          "type": "string",
+          "description": "The hook that made this decision (for type=hook)"
+        },
+        "gate": {
+          "type": "string",
+          "description": "The gate that was evaluated (for type=gate)"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Human-readable explanation"
+        }
+      },
+      "required": ["type"]
+    }
+  }
+}
