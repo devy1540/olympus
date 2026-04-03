@@ -50,8 +50,8 @@ Oracle → Genesis → Pantheon → Plan → Execute → Tribunal
 
 ### 에이전트 권한 모델
 
-- **Read-only (9)**: Hermes, Apollo, Metis, Ares, Poseidon, Athena, Themis, Eris, Helios — `SendMessage`로 결과를 오케스트레이터에 전달, 오케스트레이터가 파일 기록
-- **Write (2)**: Hera (테스트), Hephaestus (빌드)
+- **Write/Edit 금지 (9)**: Hermes, Apollo, Metis, Ares, Poseidon, Athena, Themis, Eris, Helios — `SendMessage`로 결과를 오케스트레이터에 전달, 오케스트레이터가 파일 기록. Hermes·Poseidon은 Bash 허용 (디렉토리 탐색·보안 스캔 목적)
+- **Write (2)**: Hera (테스트, Edit 금지), Hephaestus (빌드/테스트 실행, 코드 수정은 하지 않음)
 - **Full (3)**: Zeus (계획), Prometheus (구현), Artemis (디버깅)
 
 위임 패턴 (`Read-only → SendMessage → Orchestrator → Write`)은 보안 경계. `hooks/enforce-permissions.sh`가 강제.

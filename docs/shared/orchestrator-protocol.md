@@ -22,6 +22,7 @@ Agent → SendMessage(result) → Orchestrator → Write(.olympus/{id}/{artifact
 - Save the content of `SendMessage` **verbatim**. The orchestrator must not summarize or transform it.
 - When aggregating results from multiple agents (e.g., `analyst-findings.md`), separate each agent's output into distinct sections.
 - Artifact filenames must exactly match those defined in `artifact-contracts.json`.
+- **Size tracking**: If a SendMessage result exceeds `maxResultSizeChars` (default: 50,000, per `agent-schema.json`), log a warning in the artifact with the actual size. Oversized results may be truncated by the runtime, causing silent data loss. When this occurs, add a note at the top of the saved artifact: `<!-- WARNING: Agent output was {N} chars, exceeding maxResultSizeChars ({limit}). Content may be truncated. -->`
 
 ### 1.2 Artifact Reference (No Full-Content Injection)
 

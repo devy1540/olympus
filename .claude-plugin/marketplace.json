@@ -10,7 +10,7 @@
     {
       "name": "olympus",
       "description": "Harness engineering plugin — 14 agents perform requirement refinement, multi-perspective analysis, evolution loops, and evaluation",
-      "version": "2.3.0",
+      "version": "1.0.0",
       "source": "./",
       "category": "engineering",
       "tags": ["harness", "requirements", "analysis", "evolution", "evaluation", "multi-agent"],

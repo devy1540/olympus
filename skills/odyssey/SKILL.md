@@ -59,7 +59,17 @@ Conforms to **pipeline-states.json** PipelineState schema (ported from Claude Co
     "evaluationPass": 0,
     "maxPasses": 3,
     "feedbackLoopCount": 0,
-    "consecutiveFailures": 0
+    "consecutiveFailures": 0,
+    "consecutiveDebugFailures": 0,
+    "maxDebugCycles": 3
+  },
+  "phaseTimings": {
+    "oracle":    { "startedAt": null, "completedAt": null, "agentTurns": {} },
+    "genesis":   { "startedAt": null, "completedAt": null, "agentTurns": {} },
+    "pantheon":  { "startedAt": null, "completedAt": null, "agentTurns": {} },
+    "planning":  { "startedAt": null, "completedAt": null, "agentTurns": {} },
+    "execution": { "startedAt": null, "completedAt": null, "agentTurns": {} },
+    "tribunal":  { "startedAt": null, "completedAt": null, "agentTurns": {} }
   },
   "genesisEnabled": false,
   "artifacts": {
@@ -187,10 +197,15 @@ When enabled:
    - Build/test pass → Phase 6
    - Build/test fail → deploy Artemis (debugger) → fix → re-verify
 
-3. Debug cycle (if needed):
+3. Debug cycle (if needed, max 3 cycles):
    - Spawn Artemis: root cause analysis
    - Spawn Prometheus: implement fix
    - Spawn Hephaestus: re-verify
+   - Track: retryTracking.consecutiveDebugFailures++
+   - If consecutiveDebugFailures >= 3:
+     → Circuit breaker: stop debug loop
+     → Proceed to Phase 6 (Tribunal) with current state
+     → Tribunal will classify as BLOCKED or REJECTED_IMPLEMENTATION
 
 4. Update odyssey-state.json:
    - phase: "tribunal"
@@ -212,8 +227,12 @@ When enabled:
      transition: { status: "continue", reason: "implementation_retry", retryCount: N, maxRetries: 3 }
    - REJECTED_SPEC → return to Phase 1 (Oracle)
      transition: { status: "terminal", reason: "rejected", returnToPhase: "oracle" }
+     NOTE: Reverse transitions do NOT modify odyssey-state.json phase directly.
+           Instead, create a new artifact directory and re-execute the target skill.
+           (See orchestrator-protocol.md §5.2)
    - REJECTED_ARCHITECTURE → return to Phase 3 (Pantheon)
      transition: { status: "terminal", reason: "rejected", returnToPhase: "pantheon" }
+     NOTE: Same as above — re-execute /olympus:pantheon with new artifact directory.
 
 3. Retry logic (REJECTED_IMPLEMENTATION):
    if retryTracking.evaluationPass < retryTracking.maxPasses (3):

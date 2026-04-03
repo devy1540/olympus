@@ -91,9 +91,15 @@ case "${PREV_PHASE}→${CURRENT_PHASE}" in
     ;;
 esac
 
+# --- Phase timing reminder ---
+# Append timing instruction to compaction message on every phase transition
+TIMING_MSG="PHASE TIMING: Record completedAt for '${PREV_PHASE}' and startedAt for '${CURRENT_PHASE}' in odyssey-state.json phaseTimings."
+
 if [[ -n "$COMPACT_MSG" ]]; then
-  emit_allow_with_context "$COMPACT_MSG"
+  emit_allow_with_context "${COMPACT_MSG} ${TIMING_MSG}"
   exit 0
 fi
 
+# Phase transition detected but no compaction needed — still emit timing reminder
+emit_allow_with_context "$TIMING_MSG"
 exit 0

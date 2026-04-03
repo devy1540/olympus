@@ -287,6 +287,22 @@ All artifacts are stored under `.olympus/{id}/` with ID format `{skill}-{YYYYMMD
 
 ---
 
+## Contributing
+
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+```bash
+# Run tests before submitting
+bash hooks/test-hooks.sh
+bash hooks/test-integration.sh
+```
+
+## License
+
+[MIT](LICENSE) &copy; hjyoon
+
+---
+
 <p align="center">
   <em>"The unexamined code is not worth shipping."</em>
   <br/><br/>

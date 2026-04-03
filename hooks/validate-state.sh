@@ -193,6 +193,20 @@ if [[ "$FILENAME" == "odyssey-state.json" ]]; then
       exit 0
     fi
   fi
+
+  # Debug cycle circuit breaker (Phase 5 build→debug→build loop limit)
+  DEBUG_FAILURES=$(echo "$CONTENT" | jq -r '.retryTracking.consecutiveDebugFailures // empty' 2>/dev/null || true)
+  MAX_DEBUG=$(echo "$CONTENT" | jq -r '.retryTracking.maxDebugCycles // empty' 2>/dev/null || true)
+
+  if [[ -n "$DEBUG_FAILURES" && -n "$MAX_DEBUG" ]]; then
+    EXCEEDED=$(echo "$DEBUG_FAILURES $MAX_DEBUG" | awk '{ print ($1 > $2) ? "true" : "false" }')
+    if [[ "$EXCEEDED" == "true" ]]; then
+      emit_deny \
+        "STATE VIOLATION: consecutiveDebugFailures (${DEBUG_FAILURES}) > maxDebugCycles (${MAX_DEBUG}). Debug circuit breaker exceeded — proceed to Tribunal." \
+        "rule" "debug cycle limit"
+      exit 0
+    fi
+  fi
 fi
 
 # --- 5. Gate precondition validation (phase requires prior gate to have passed) ---
