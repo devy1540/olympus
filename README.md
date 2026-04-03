@@ -74,6 +74,9 @@ claude plugin install olympus@olympus-marketplace
 /plugin marketplace add devy1540/olympus
 /plugin install olympus@olympus-marketplace
 
+# Verify installation
+/olympus:setup
+
 # Refine your requirements
 /olympus:oracle
 

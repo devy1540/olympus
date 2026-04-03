@@ -24,6 +24,7 @@ claude plugin install olympus@olympus-marketplace
 /olympus:agora       # 구조적 위원회 토론
 /olympus:audit       # 플러그인 자가점검
 /olympus:evolve      # 플러그인 자가개선
+/olympus:setup       # 설치 검증 및 환경 체크
 
 # 검증/테스트 (hooks/ 디렉토리의 셸 스크립트)
 bash hooks/validate-agents.sh    # 에이전트 정의 스키마 검증
