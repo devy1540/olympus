@@ -114,7 +114,8 @@
       "themis":     { "model": "opus",   "permissionLevel": "read-only", "role": "Critic",                "maxTurns": 15 },
       "hephaestus": { "model": "sonnet", "permissionLevel": "full",      "role": "Mechanical Evaluator",  "maxTurns": 15 },
       "eris":       { "model": "opus",   "permissionLevel": "read-only", "role": "Devil's Advocate",      "maxTurns": 20 },
-      "helios":     { "model": "opus",   "permissionLevel": "read-only", "role": "Perspective Generator", "maxTurns": 15 }
+      "helios":     { "model": "opus",   "permissionLevel": "read-only", "role": "Perspective Generator", "maxTurns": 15 },
+      "nemesis":    { "model": "opus",   "permissionLevel": "read-only", "role": "PR Review Synthesizer", "maxTurns": 20 }
     }
   }
 }

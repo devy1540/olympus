@@ -206,6 +206,60 @@
       "readers": ["user"]
     }
   },
+  "review-pr": {
+    "pr-diff.patch": {
+      "phase": 0,
+      "writer": "orchestrator",
+      "readers": ["hermes"]
+    },
+    "spec-context.md": {
+      "phase": 0.5,
+      "writer": "orchestrator",
+      "readers": ["helios", "ares", "poseidon", "eris", "nemesis"],
+      "note": "기존 spec.md/ontology.json에서 도메인 컨텍스트 추출. --spec 또는 자동탐지 시에만 생성"
+    },
+    "pr-context.md": {
+      "phase": 1,
+      "writer": "orchestrator",
+      "source": "hermes",
+      "readers": ["helios", "ares", "poseidon", "eris", "nemesis"],
+      "note": "Hermes는 SendMessage로 결과 전달, 오케스트레이터가 저장"
+    },
+    "review-perspectives.md": {
+      "phase": 2,
+      "writer": "orchestrator",
+      "source": "helios",
+      "readers": ["ares", "poseidon", "dynamic-reviewers"],
+      "note": "Helios는 SendMessage로 결과 전달, 오케스트레이터가 저장"
+    },
+    "review-findings.md": {
+      "phase": 3,
+      "writer": "orchestrator",
+      "source": ["ares", "poseidon", "dynamic-reviewers"],
+      "readers": ["eris", "nemesis"],
+      "note": "리뷰 에이전트들은 SendMessage로 결과 전달, 오케스트레이터가 합산 저장"
+    },
+    "da-evaluation.md": {
+      "phase": 4,
+      "writer": "orchestrator",
+      "source": "eris",
+      "readers": ["nemesis"],
+      "note": "Eris는 SendMessage로 결과 전달, 오케스트레이터가 저장"
+    },
+    "verdict.md": {
+      "phase": 5,
+      "writer": "orchestrator",
+      "source": "nemesis",
+      "readers": ["user", "github"],
+      "note": "Nemesis는 SendMessage로 결과 전달, 오케스트레이터가 저장"
+    },
+    "review-pr-state.json": {
+      "phase": "all",
+      "writer": "orchestrator",
+      "readers": ["state-recovery"],
+      "note": "Auto 모드 상태 추적. 리뷰 완료 PR 번호, 커밋, 판결 기록. 재실행 시 중복 방지"
+    }
+  },
   "evolve": {
     "benchmark.md": {
       "phase": 1,
