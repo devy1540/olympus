@@ -74,6 +74,12 @@ claude plugin install olympus@olympus-marketplace
 /plugin marketplace add devy1540/olympus
 /plugin install olympus@olympus-marketplace
 
+# 설치 검증
+/olympus:setup
+
+# 프로젝트 온보딩 — 프로젝트를 스캔하고 추천 받기
+/olympus:hestia
+
 # 요구사항 정제
 /olympus:oracle
 
@@ -188,6 +194,22 @@ Oracle → Genesis → Pantheon → Zeus + Themis → Prometheus → Tribunal
 - Tribunal 거부 시 최대 3회 재시도, 이후 Genesis로 되감기
 - `odyssey-state.json`을 통한 완전한 상태 영속성
 
+### `/olympus:setup` — 설치 검증
+
+플러그인 설치를 검증하고 환경을 체크한다.
+
+```
+에이전트 파일 검증 → 훅 설정 확인 → 스킬 등록 확인 → 결과 리포트
+```
+
+### `/olympus:hestia` — 프로젝트 온보딩
+
+프로젝트를 스캔하고 적합한 파이프라인을 추천한다.
+
+```
+프로젝트 스캔 → 기술 스택 파악 → 복잡도 분석 → 스킬 추천
+```
+
 ### `/olympus:audit` — 자기 검사
 
 플러그인 자체의 내부 일관성을 검증한다.
@@ -284,6 +306,22 @@ Hephaestus (구조적) → Athena (의미적) → audit-report.md
 ```
 
 </details>
+
+---
+
+## 기여하기
+
+기여를 환영합니다! [CONTRIBUTING.md](../../CONTRIBUTING.md)에서 가이드를 확인하세요.
+
+```bash
+# 제출 전 테스트 실행
+bash hooks/test-hooks.sh
+bash hooks/test-integration.sh
+```
+
+## 라이선스
+
+[MIT](../../LICENSE) &copy; hjyoon
 
 ---
 
