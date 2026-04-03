@@ -12,6 +12,8 @@ A pipeline that systematically refines requirements into a structured spec.md.
 - **Apollo**: Interview loop (Phase 2) → `subagent_type: "olympus:apollo"`
 - **Metis**: Gap analysis (Phase 4) → `subagent_type: "olympus:metis"`
 
+**⚠ MANDATORY**: Each agent listed above MUST be spawned via the Agent tool with the specified subagent_type. The orchestrator MUST NOT perform Hermes's exploration, Apollo's interview, or Metis's gap analysis directly. See orchestrator-protocol.md §0.
+
 ## Gate
 - Ambiguity score ≤ 0.2
 

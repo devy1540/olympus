@@ -14,6 +14,8 @@ While `/olympus:audit` guards structure (skeleton), `/olympus:evolve` builds cap
 - **Metis**: Expected-actual gap analysis (Analyst) → `subagent_type: "olympus:metis"`
 - **Prometheus**: Prompt improvement implementation (Executor) → `subagent_type: "olympus:prometheus"`
 
+**⚠ MANDATORY**: All 4 agents MUST be spawned via Agent tool. Metis and Eris in Phase 4 MUST run in parallel. See orchestrator-protocol.md §0.
+
 ## Gates
 - Quality score ≥ 0.8 (improvement target met)
 - `/olympus:audit` CLEAN (structural consistency maintained)

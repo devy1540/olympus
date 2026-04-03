@@ -39,6 +39,11 @@ Phase 7: Team teardown
 
 > Sub-skills (Oracle, Genesis, Pantheon, Tribunal) use their own agent bindings when invoked.
 
+**⚠ MANDATORY**: See orchestrator-protocol.md §0.
+- Sub-skills (Oracle, Pantheon, Tribunal) MUST spawn their own agents as defined in their SKILL.md. The Odyssey orchestrator MUST NOT bypass sub-skill agent spawns.
+- Zeus and Themis in Phase 4 MUST be spawned as separate Agent calls.
+- Prometheus in Phase 5 MUST be spawned via Agent tool, not executed inline.
+
 ## State Management
 
 Conforms to **pipeline-states.json** PipelineState schema (ported from Claude Code's query.ts State type).

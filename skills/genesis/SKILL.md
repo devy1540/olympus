@@ -12,6 +12,8 @@ Core Ouroboros pattern. Evolves specs/designs generation by generation until con
 - **Eris**: Reflect (audit) — logical validation → `subagent_type: "olympus:eris"`
 - **Orchestrator**: Seed (crystallization) + convergence check
 
+**⚠ MANDATORY**: Metis and Eris MUST be spawned via Agent tool in each generation cycle. The orchestrator handles only Seed (Phase 3) and convergence check (Phase 4). See orchestrator-protocol.md §0.
+
 ## Gate
 - Ontology convergence ≥ 0.95
 

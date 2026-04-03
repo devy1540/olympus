@@ -58,6 +58,10 @@ Oracle → Genesis → Pantheon → Plan → Execute → Tribunal
 
 위임 패턴 (`Read-only → SendMessage → Orchestrator → Write`)은 보안 경계. `hooks/enforce-permissions.sh`가 강제.
 
+### 에이전트 스폰 필수 규칙
+
+SKILL.md에서 "Spawn {Agent} as a Task"로 명시된 에이전트는 **반드시** Agent tool로 스폰해야 한다. 오케스트레이터가 직접 Grep/Read로 대체 수행하거나 단계를 생략하면 안 된다. 역할 분리가 이 플러그인의 핵심 가치 — "내가 직접 하면 더 빠르다"는 이유로 스킵하면 적대적 검증이 무력화된다. 상세: `docs/shared/orchestrator-protocol.md §0`.
+
 ### 핵심 설계 원칙
 
 - 에이전트 정의: `agents/{name}.md` (YAML frontmatter + prompt). 스키마: `docs/shared/agent-schema.json`

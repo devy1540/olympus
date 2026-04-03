@@ -14,6 +14,11 @@ A pipeline that evaluates implementations through three stages: mechanical verif
 - **Eris**: Consensus DA (Stage 3) → `subagent_type: "olympus:eris"`
 - **Hera**: Consensus Synthesizer (Stage 3) → `subagent_type: "olympus:hera"`
 
+**⚠ MANDATORY**: All agents above MUST be spawned via the Agent tool.
+- **Stage 3 is NOT optional** when trigger conditions apply (see Phase 3 below). Do NOT skip to APPROVED after Athena alone.
+- Ares, Eris, and Hera in Stage 3 MUST run as 3 separate parallel Agent calls.
+See orchestrator-protocol.md §0.
+
 ## Final Verdict
 APPROVED / BLOCKED / INCOMPLETE / REJECTED
 

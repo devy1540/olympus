@@ -13,6 +13,8 @@ Structured committee debate for reaching technical decisions through consensus-d
 - **Eris**: Devil's Advocate (challenges all positions) → `subagent_type: "olympus:eris"`
 - **UX Critic**: UX critic → `subagent_type: "general-purpose"` (UX prompt injection)
 
+**⚠ MANDATORY**: All committee members and Eris MUST be spawned via Agent tool. Committee debate rounds require separate agent outputs — do NOT simulate debate internally. See orchestrator-protocol.md §0.
+
 ## Gate
 - Normal: Working consensus (≥67%)
 - Hell mode (--hell): Unanimous

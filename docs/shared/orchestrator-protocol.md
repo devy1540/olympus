@@ -8,6 +8,28 @@ This document specifies the orchestrator's decision logic, artifact management r
 
 ---
 
+## 0. Mandatory Agent Spawn Rule
+
+**CRITICAL — This rule overrides all other considerations.**
+
+When a SKILL.md specifies "Spawn {Agent} as a Task", the orchestrator **MUST** use the Agent tool with the specified `subagent_type`. The orchestrator **MUST NOT**:
+
+1. Perform the agent's work directly (e.g., running Grep/Read instead of spawning Hermes)
+2. Skip an agent because "I can do it faster myself"
+3. Combine multiple agents' roles into a single action
+4. Skip pipeline stages (e.g., Eris DA challenge, Stage 3 consensus) unless the SKILL.md explicitly defines skip conditions
+
+**Why this rule exists:**
+- **Role separation is the product.** An orchestrator that does everything itself is just a monolithic agent with extra steps
+- **Adversarial verification requires independent agents.** Eris cannot challenge findings she produced. Themis cannot critique a plan she wrote
+- **Specialization produces better results.** Hermes (haiku, fast exploration) finds different things than the orchestrator (opus, generalist)
+
+**Enforcement:** If the orchestrator performs work that SKILL.md assigns to an agent, it is equivalent to a read-only agent writing files directly — a protocol violation.
+
+**The only exception:** If the Agent tool is unavailable or agent spawn fails after retry, the orchestrator may fall back to direct execution with a logged warning: `"FALLBACK: {Agent} spawn failed, executing directly. Reason: {reason}"`
+
+---
+
 ## 1. Artifact Management Rules
 
 ### 1.1 Write on Behalf

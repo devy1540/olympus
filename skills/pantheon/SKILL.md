@@ -15,6 +15,12 @@ A pipeline that analyzes problems from multiple perspectives and validates logic
 - **Zeus**: Architecture perspective analysis → `subagent_type: "olympus:zeus"`
 - **Eris**: Devil's Advocate challenge → `subagent_type: "olympus:eris"`
 
+**⚠ MANDATORY**: All agents above MUST be spawned via the Agent tool. In particular:
+- **Helios MUST be spawned** for perspective generation (Phase 1). Do NOT skip to direct analysis.
+- **Eris MUST be spawned** for DA challenge (Phase 4). Do NOT skip Eris even if analysts agree.
+- Analyst agents MUST run in parallel via separate Agent tool calls.
+See orchestrator-protocol.md §0.
+
 ## Gate
 - Normal: Consensus ≥ Working (67%)
 - Hell mode (--hell): Unanimous

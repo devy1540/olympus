@@ -13,6 +13,8 @@ Automatically validates the internal consistency of the Olympus plugin: agent pe
 - **Hephaestus**: Mechanical validation (YAML, file existence, structure) → `subagent_type: "olympus:hephaestus"`
 - **Athena**: Semantic validation (permission-role consistency, contract completeness) → `subagent_type: "olympus:athena"`
 
+**⚠ MANDATORY**: Hephaestus and Athena MUST be spawned via Agent tool. The orchestrator only synthesizes the final report (Phase 3). See orchestrator-protocol.md §0.
+
 ## Verdict
 - CLEAN: all validations pass
 - WARNING: non-critical inconsistencies found (manual review recommended)
