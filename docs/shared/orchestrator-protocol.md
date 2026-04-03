@@ -143,6 +143,28 @@ Situations requiring user intervention:
 | Repeated evaluation failure | evaluationPass >= 3 | Genesis rewind / Override / Abort |
 | Stagnation detected | Spinning/Oscillation/Diminishing | Persona switch / Change benchmark / Abort |
 
+### 4.1 Context-Rich Escalation Rule
+
+When escalating to the user via AskUserQuestion, the orchestrator MUST provide full context. The user is not watching the pipeline internals — they see only the question.
+
+**Required:**
+1. **What happened**: Which phase, which agent, what was attempted
+2. **Why it failed**: The specific gate value, error, or disagreement
+3. **What the options mean**: Concrete consequences of each choice
+4. **Current state**: How far the pipeline has progressed
+
+**Example:**
+```
+Tribunal Stage 2 evaluated your implementation against spec.md and found 2 of 5 ACs unmet:
+  - AC #3 (error handling): No 401 response on expired tokens — src/auth/middleware.ts returns 500 instead
+  - AC #5 (rate limiting): Not implemented
+
+This is the 2nd evaluation failure (max 3). Options:
+  A) Return to implementation — Prometheus will fix the 2 unmet ACs
+  B) Evolve the spec — some ACs may be unrealistic given the codebase
+  C) Abort — stop the pipeline
+```
+
 ---
 
 ## 5. State Management

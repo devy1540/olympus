@@ -92,6 +92,36 @@ When an artifact is large, read only the sections you need:
 
 ## Rules
 
+### User-Facing Questions (AskUserQuestion)
+
+Every question presented to the user must include enough context for the user to answer **without referring to anything else**. The user cannot see your internal state, prior analysis, or the artifacts you've been reading.
+
+**Required format:**
+1. **Why are you asking**: What decision depends on this answer?
+2. **Current state**: What do you already know? What did the codebase or spec reveal?
+3. **The question**: Specific, with concrete options when possible
+4. **Impact**: What changes based on the answer?
+
+**BAD** (no context):
+```
+"How should line 42 be changed?"
+```
+
+**GOOD** (self-contained):
+```
+"src/auth/middleware.ts:42 currently validates JWT tokens with a 1-hour expiry.
+The spec doesn't specify the refresh token strategy.
+
+Should expired tokens:
+  A) Return 401 and require re-login
+  B) Auto-refresh with a refresh token (requires additional storage)
+  C) Extend the session silently (less secure)
+
+This determines whether we need a refresh token endpoint in the API."
+```
+
+This rule applies to all agents using AskUserQuestion and to the orchestrator when escalating to the user.
+
 ### Scope Discipline
 
 - **Never** modify files outside the scope defined by your task.
