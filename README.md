@@ -195,6 +195,40 @@ Oracle → Genesis → Pantheon → Zeus + Themis → Prometheus → Tribunal
 - Up to 3 retries on Tribunal rejection, then rewind to Genesis
 - Full state persistence via `odyssey-state.json`
 
+### `/olympus:review-pr` — Trial of Nemesis
+
+Multi-perspective PR review with adversarial challenge and confidence-calibrated verdict.
+
+```
+Hermes (recon) → Helios (perspectives) → Ares + Poseidon + dynamic (parallel review)
+  → Eris (challenge) → Nemesis (synthesis) → verdict + GitHub review comments
+```
+
+**Interactive mode** — review a specific PR, branch, or commit range:
+
+```
+/olympus:review-pr 123              # PR number
+/olympus:review-pr feature/auth     # Branch name
+/olympus:review-pr                  # Current branch vs main
+```
+
+**Auto mode** — poll for unreviewed PRs and review them automatically:
+
+```
+/olympus:review-pr --auto --repo myorg/myrepo --base main
+```
+
+Combine with `/loop` or `/schedule` for continuous review:
+
+```
+/loop 5m /olympus:review-pr --auto --repo myorg/myrepo --base main
+/schedule create --cron "*/15 * * * *" --prompt "/olympus:review-pr --auto --repo myorg/myrepo"
+```
+
+- Posts a "Review Started" comment on the PR, updates it with the verdict on completion
+- Optional `--spec` flag for domain-aware review (checks against acceptance criteria)
+- Inline GitHub review comments with severity and confidence scores
+
 ### `/olympus:audit` — Self-Inspection
 
 Validate the plugin's own internal consistency.

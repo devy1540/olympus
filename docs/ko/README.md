@@ -211,6 +211,40 @@ Oracle → Genesis → Pantheon → Zeus + Themis → Prometheus → Tribunal
 프로젝트 스캔 → 기술 스택 파악 → 복잡도 분석 → 스킬 추천
 ```
 
+### `/olympus:review-pr` — 네메시스의 재판
+
+다관점 PR 리뷰 + 적대적 검증 + 신뢰도 보정 판결.
+
+```
+Hermes (정찰) → Helios (관점) → Ares + Poseidon + 동적 (병렬 리뷰)
+  → Eris (도전) → Nemesis (합성) → 판결 + GitHub 리뷰 코멘트
+```
+
+**인터랙티브 모드** — 특정 PR, 브랜치, 커밋 범위를 리뷰:
+
+```
+/olympus:review-pr 123              # PR 번호
+/olympus:review-pr feature/auth     # 브랜치명
+/olympus:review-pr                  # 현재 브랜치 vs main
+```
+
+**자동 모드** — 미리뷰 PR을 자동으로 찾아 리뷰:
+
+```
+/olympus:review-pr --auto --repo myorg/myrepo --base main
+```
+
+`/loop` 또는 `/schedule`과 결합하면 지속적 리뷰 가능:
+
+```
+/loop 5m /olympus:review-pr --auto --repo myorg/myrepo --base main
+/schedule create --cron "*/15 * * * *" --prompt "/olympus:review-pr --auto --repo myorg/myrepo"
+```
+
+- PR에 "리뷰 시작" 코멘트를 남기고, 완료 시 판결로 업데이트
+- `--spec` 플래그로 도메인 인식 리뷰 (인수 기준 대비 검증)
+- 심각도·신뢰도 점수가 포함된 GitHub 인라인 리뷰 코멘트
+
 ### `/olympus:audit` — 자기 검사
 
 플러그인 자체의 내부 일관성을 검증한다.
