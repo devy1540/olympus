@@ -117,27 +117,30 @@ bash hooks/test-integration.sh
 
 ## Releasing
 
-Releases are automated via `scripts/release.sh` and GitHub Actions.
+Two ways to release:
+
+### Option A: GitHub UI (recommended)
+
+1. Go to **Actions** → **Release** → **Run workflow**
+2. Select bump type (`patch` / `minor` / `major`)
+3. Optionally check **dry_run** to validate without releasing
+4. Click **Run workflow**
+
+The workflow will: validate → bump version → generate changelog → commit → tag → create GitHub Release.
+
+### Option B: Local script
 
 ```bash
-# Bump version, run tests, create commit + tag
 bash scripts/release.sh patch    # 1.0.0 → 1.0.1
 bash scripts/release.sh minor    # 1.0.0 → 1.1.0
 bash scripts/release.sh major    # 1.0.0 → 2.0.0
-
-# Push to trigger GitHub Release
-git push origin main --tags
+git push origin main --tags      # Triggers GitHub Release
 ```
 
-The release script:
-1. Validates clean working tree and runs all tests
-2. Bumps version in `plugin.json` and `marketplace.json`
-3. Generates a changelog in `docs/CHANGELOG-vX.Y.Z.md`
-4. Creates a release commit and annotated tag
+### CI/CD Pipelines
 
-GitHub Actions then:
-- **CI** (`.github/workflows/ci.yml`): Runs on every push/PR — syntax check, JSON validation, tests
-- **Release** (`.github/workflows/release.yml`): Triggers on `v*` tags — validates, creates GitHub Release with auto-generated notes
+- **CI** (`.github/workflows/ci.yml`): Every push/PR — syntax check, JSON validation, tests
+- **Release** (`.github/workflows/release.yml`): Manual trigger or `v*` tag push — full release pipeline
 
 ## Code of Conduct
 

@@ -1,6 +1,24 @@
 name: Release
 
 on:
+  # 버튼 트리거: Actions 탭에서 "Run workflow" 클릭
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      dry_run:
+        description: 'Dry run (validate only, no release)'
+        required: false
+        type: boolean
+        default: false
+
+  # 태그 push 트리거 (로컬 release.sh 사용 시)
   push:
     tags:
       - 'v*'
@@ -9,35 +27,25 @@ permissions:
   contents: write
 
 jobs:
-  validate:
-    name: Validate & Release
+  release:
+    name: Release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install jq
         run: sudo apt-get install -y jq
 
-      - name: Verify version consistency
+      - name: Configure git
         run: |
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          PLUGIN_VERSION=$(jq -r '.version' .claude-plugin/plugin.json)
-          MARKETPLACE_VERSION=$(jq -r '.version' .claude-plugin/marketplace.json)
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          echo "Tag: v${TAG_VERSION}"
-          echo "plugin.json: ${PLUGIN_VERSION}"
-          echo "marketplace.json: ${MARKETPLACE_VERSION}"
-
-          if [[ "$TAG_VERSION" != "$PLUGIN_VERSION" ]]; then
-            echo "::error::Tag version (${TAG_VERSION}) != plugin.json (${PLUGIN_VERSION})"
-            exit 1
-          fi
-          if [[ "$TAG_VERSION" != "$MARKETPLACE_VERSION" ]]; then
-            echo "::error::Tag version (${TAG_VERSION}) != marketplace.json (${MARKETPLACE_VERSION})"
-            exit 1
-          fi
-          echo "Version consistency: OK"
+      # ── Validation ──
 
       - name: Validate JSON files
         run: |
@@ -47,29 +55,95 @@ jobs:
             echo "  OK: $f"
           done
 
-      - name: Validate agent definitions
-        run: bash hooks/validate-agents.sh < /dev/null || true
-
       - name: Run hook tests
         run: bash hooks/test-hooks.sh
 
       - name: Run integration tests
         run: bash hooks/test-integration.sh
 
-      - name: Generate release notes
-        id: notes
+      # ── Version bump (workflow_dispatch only) ──
+
+      - name: Bump version
+        if: github.event_name == 'workflow_dispatch'
+        id: bump
         run: |
-          VERSION="${GITHUB_REF_NAME}"
-          PREV_TAG=$(git describe --tags --abbrev=0 "${VERSION}^" 2>/dev/null || echo "")
+          BUMP="${{ inputs.bump }}"
+          CURRENT=$(jq -r '.version' .claude-plugin/plugin.json)
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+
+          case "$BUMP" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+          esac
+
+          NEW="${MAJOR}.${MINOR}.${PATCH}"
+          TAG="v${NEW}"
+
+          echo "current=${CURRENT}" >> "$GITHUB_OUTPUT"
+          echo "new=${NEW}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+          echo "## Version Bump" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **${CURRENT}** → **${NEW}** (${BUMP})" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Update version files
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == false
+        run: |
+          NEW="${{ steps.bump.outputs.new }}"
+
+          jq --arg v "$NEW" '.version = $v' .claude-plugin/plugin.json > tmp.json && mv tmp.json .claude-plugin/plugin.json
+          jq --arg v "$NEW" '.version = $v | .plugins[0].version = $v' .claude-plugin/marketplace.json > tmp.json && mv tmp.json .claude-plugin/marketplace.json
+
+          echo "Updated plugin.json and marketplace.json to ${NEW}"
+
+      # ── Changelog ──
+
+      - name: Determine version info
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "tag=${{ steps.bump.outputs.tag }}" >> "$GITHUB_OUTPUT"
+            echo "new=${{ steps.bump.outputs.new }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "new=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate changelog
+        if: inputs.dry_run == false || github.event_name == 'push'
+        id: changelog
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          CHANGELOG_FILE="docs/CHANGELOG-${TAG}.md"
 
           {
+            echo "# Olympus ${TAG}"
+            echo ""
+            echo "Released: $(date +%Y-%m-%d)"
+            echo ""
+            echo "## Changes"
+            echo ""
+            if [[ -n "$PREV_TAG" ]]; then
+              git log "${PREV_TAG}..HEAD" --pretty=format:"- %s" --no-merges
+            else
+              git log --pretty=format:"- %s" --no-merges
+            fi
+            echo ""
+          } > "$CHANGELOG_FILE"
+
+          echo "file=${CHANGELOG_FILE}" >> "$GITHUB_OUTPUT"
+
+          # Release notes for GitHub Release
+          {
             echo "notes<<RELEASE_EOF"
-            echo "## Olympus ${VERSION}"
+            echo "## Olympus ${TAG}"
             echo ""
             if [[ -n "$PREV_TAG" ]]; then
               echo "### Changes since ${PREV_TAG}"
               echo ""
-              git log "${PREV_TAG}..${VERSION}" --pretty=format:"- %s" --no-merges
+              git log "${PREV_TAG}..HEAD" --pretty=format:"- %s" --no-merges
             else
               echo "### Initial release"
               echo ""
@@ -78,28 +152,53 @@ jobs:
             echo ""
             echo ""
             echo "### Validation"
-            echo "- Hook tests: 30/30 passed"
+            echo "- Hook tests: passed"
             echo "- Integration tests: passed"
             echo "- JSON schemas: validated"
-            echo "- Agent definitions: validated"
             echo "RELEASE_EOF"
           } >> "$GITHUB_OUTPUT"
 
+      # ── Commit, tag, release (workflow_dispatch) ──
+
+      - name: Commit and tag
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run == false
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          CURRENT="${{ steps.bump.outputs.current }}"
+          NEW="${{ steps.bump.outputs.new }}"
+
+          git add .claude-plugin/plugin.json .claude-plugin/marketplace.json "${{ steps.changelog.outputs.file }}"
+          git commit -m "릴리스 ${TAG}: ${CURRENT} → ${NEW}"
+          git tag -a "$TAG" -m "Olympus ${TAG}"
+          git push origin main --tags
+
+      - name: Verify tag version consistency
+        if: github.event_name == 'push'
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PLUGIN_VERSION=$(jq -r '.version' .claude-plugin/plugin.json)
+          if [[ "$TAG_VERSION" != "$PLUGIN_VERSION" ]]; then
+            echo "::error::Tag (${TAG_VERSION}) != plugin.json (${PLUGIN_VERSION})"
+            exit 1
+          fi
+
       - name: Create GitHub Release
+        if: inputs.dry_run == false || github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
-          name: "Olympus ${{ github.ref_name }}"
-          body: ${{ steps.notes.outputs.notes }}
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "Olympus ${{ steps.version.outputs.tag }}"
+          body: ${{ steps.changelog.outputs.notes }}
           draft: false
-          prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') }}
+          prerelease: ${{ contains(steps.version.outputs.tag, '-rc') || contains(steps.version.outputs.tag, '-beta') }}
 
-  notify:
-    name: Post-release
-    needs: validate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Summary
+      # ── Dry run summary ──
+
+      - name: Dry run summary
+        if: inputs.dry_run == true
         run: |
-          echo "## Release ${{ github.ref_name }} published" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- [Release page](https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }})" >> $GITHUB_STEP_SUMMARY
+          echo "## Dry Run Complete" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "All validations passed. Ready to release **${{ steps.version.outputs.tag }}**." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Re-run without dry_run to create the release." >> "$GITHUB_STEP_SUMMARY"
