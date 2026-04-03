@@ -131,6 +131,29 @@ Validation:
     - Auto: proceed with warning logged
 
 Create artifact directory: .olympus/review-pr-{YYYYMMDD}-{short-uuid}/
+
+── Review Start Notification ──────────────────────────────────────────
+
+If PR number is available (interactive with PR number, or auto mode):
+  Post a PR comment to signal review has begun:
+
+    gh api repos/{owner}/{repo}/issues/{pr}/comments \
+      -f body="🏛️ **Olympus Review Started**
+
+    Analyzing this PR from multiple perspectives...
+
+    | Phase | Status |
+    |:------|:-------|
+    | Reconnaissance | ⏳ |
+    | Perspective Generation | ⏳ |
+    | Multi-Perspective Review | ⏳ |
+    | Adversarial Challenge | ⏳ |
+    | Synthesis & Verdict | ⏳ |
+
+    _This review is powered by [Olympus](https://github.com/devy1540/olympus) — 14 agents argue, challenge, and verify._"
+
+  Save the comment ID for later update:
+    REVIEW_START_COMMENT_ID = response.id
 ```
 
 ### Phase 0.5: Spec Context Resolution (optional)
@@ -370,6 +393,28 @@ Orchestrator aggregates all reviewer results into .olympus/{id}/review-findings.
 ### Phase 6: Output & GitHub Integration
 
 ```
+── Update Start Comment ───────────────────────────────────────────────
+
+If REVIEW_START_COMMENT_ID exists:
+  Update the start comment with completion status:
+
+    VERDICT_EMOJI = APPROVE → ✅ | REQUEST_CHANGES → ❌ | COMMENT_ONLY → 💬
+
+    gh api repos/{owner}/{repo}/issues/comments/{REVIEW_START_COMMENT_ID} \
+      -X PATCH -f body="🏛️ **Olympus Review Complete** {VERDICT_EMOJI}
+
+    | Phase | Status |
+    |:------|:-------|
+    | Reconnaissance | ✅ |
+    | Perspective Generation | ✅ |
+    | Multi-Perspective Review | ✅ |
+    | Adversarial Challenge | ✅ |
+    | Synthesis & Verdict | ✅ **{VERDICT}** |
+
+    **{CRITICAL_COUNT}** critical · **{WARNING_COUNT}** warning · **{INFO_COUNT}** info
+
+    _Full review posted below. Powered by [Olympus](https://github.com/devy1540/olympus)._"
+
 ── Auto mode ──────────────────────────────────────────────────────────
 
   1. Determine post event:
