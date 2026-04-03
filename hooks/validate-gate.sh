@@ -245,6 +245,10 @@ case "$FILENAME" in
     if [[ ! -f "${DIR}/spec.md" && ! -f "${DIR}/../spec.md" ]]; then
       # For odyssey, spec.md may be in a parent or sibling artifact directory
       OLYMPUS_ROOT=$(echo "$FILE_PATH" | sed -n 's|\(.*\.olympus/\).*|\1|p' || true)
+      # Re-validate: path must end with /.olympus/
+      if [[ -n "$OLYMPUS_ROOT" && "$OLYMPUS_ROOT" != *"/.olympus/" ]]; then
+        OLYMPUS_ROOT=""
+      fi
       if [[ -n "$OLYMPUS_ROOT" ]]; then
         SPEC_FOUND=$(find "$OLYMPUS_ROOT" -name "spec.md" -maxdepth 3 2>/dev/null | head -1 || true)
         if [[ -z "$SPEC_FOUND" ]]; then

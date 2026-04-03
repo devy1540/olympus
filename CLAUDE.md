@@ -34,6 +34,11 @@ bash hooks/validate-state.sh     # 상태 전이 검증
 bash hooks/verify-artifacts.sh   # 아티팩트 계약 검증
 bash hooks/test-hooks.sh         # 훅 통합 테스트
 bash hooks/test-integration.sh   # 전체 파이프라인 통합 테스트
+
+# 릴리스
+bash scripts/release.sh patch    # 패치 릴리스 (x.x.X)
+bash scripts/release.sh minor    # 마이너 릴리스 (x.X.0)
+bash scripts/release.sh major    # 메이저 릴리스 (X.0.0)
 ```
 
 ## Architecture
@@ -53,8 +58,8 @@ Oracle → Genesis → Pantheon → Plan → Execute → Tribunal
 ### 에이전트 권한 모델
 
 - **Write/Edit 금지 (9)**: Hermes, Apollo, Metis, Ares, Poseidon, Athena, Themis, Eris, Helios — `SendMessage`로 결과를 오케스트레이터에 전달, 오케스트레이터가 파일 기록. Hermes·Poseidon은 Bash 허용 (디렉토리 탐색·보안 스캔 목적)
-- **Write (2)**: Hera (테스트, Edit 금지), Hephaestus (빌드/테스트 실행, 코드 수정은 하지 않음)
-- **Full (3)**: Zeus (계획), Prometheus (구현), Artemis (디버깅)
+- **Write, Edit 금지 (1)**: Hera (테스트 실행·품질 판정, Edit 불가)
+- **Full (4)**: Zeus (계획), Prometheus (구현), Artemis (디버깅), Hephaestus (빌드/테스트 실행)
 
 위임 패턴 (`Read-only → SendMessage → Orchestrator → Write`)은 보안 경계. `hooks/enforce-permissions.sh`가 강제.
 

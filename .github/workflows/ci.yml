@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Shell syntax check
+        run: |
+          echo "Checking shell syntax..."
+          for f in hooks/*.sh hooks/lib/*.sh; do
+            bash -n "$f" || { echo "::error::Syntax error in $f"; exit 1; }
+            echo "  OK: $f"
+          done
+
+      - name: Validate JSON files
+        run: |
+          echo "Validating JSON..."
+          for f in docs/shared/*.json hooks/hooks.json .claude-plugin/*.json; do
+            python3 -c "import json; json.load(open('$f'))" || { echo "::error::Invalid JSON: $f"; exit 1; }
+            echo "  OK: $f"
+          done
+
+      - name: Run hook tests
+        run: bash hooks/test-hooks.sh
+
+      - name: Run integration tests
+        run: bash hooks/test-integration.sh

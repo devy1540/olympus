@@ -26,9 +26,9 @@ bash hooks/test-integration.sh
 ```
 olympus/
   agents/           # 14 agent definitions (.md with YAML frontmatter)
-  skills/           # 8 skill orchestrations (SKILL.md)
-  hooks/            # 8 shell hook scripts + 1 library
-  docs/shared/      # 5 schemas + 9 protocols
+  skills/           # 10 skill orchestrations (SKILL.md)
+  hooks/            # 7 hook scripts + 3 test/utility + 1 library
+  docs/shared/      # 5 schemas + 12 protocols
   .claude-plugin/   # Plugin registration
 ```
 
@@ -114,6 +114,30 @@ bash hooks/test-integration.sh
 # Self-audit passes (inside Claude Code)
 /olympus:audit
 ```
+
+## Releasing
+
+Releases are automated via `scripts/release.sh` and GitHub Actions.
+
+```bash
+# Bump version, run tests, create commit + tag
+bash scripts/release.sh patch    # 1.0.0 → 1.0.1
+bash scripts/release.sh minor    # 1.0.0 → 1.1.0
+bash scripts/release.sh major    # 1.0.0 → 2.0.0
+
+# Push to trigger GitHub Release
+git push origin main --tags
+```
+
+The release script:
+1. Validates clean working tree and runs all tests
+2. Bumps version in `plugin.json` and `marketplace.json`
+3. Generates a changelog in `docs/CHANGELOG-vX.Y.Z.md`
+4. Creates a release commit and annotated tag
+
+GitHub Actions then:
+- **CI** (`.github/workflows/ci.yml`): Runs on every push/PR — syntax check, JSON validation, tests
+- **Release** (`.github/workflows/release.yml`): Triggers on `v*` tags — validates, creates GitHub Release with auto-generated notes
 
 ## Code of Conduct
 
