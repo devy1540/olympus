@@ -88,59 +88,61 @@ Gen 4: convergence 0.96 — CONVERGED (≥ 0.95)
 
 ## Example 3: Multi-Perspective Analysis
 
-**Scenario**: You need to evaluate a database migration strategy.
+**Scenario**: You just finished a spec with Oracle and want to stress-test it before implementation.
 
 ```
 You:  /olympus:pantheon
-
-      "We're migrating from MySQL to PostgreSQL. Evaluate the migration plan."
 ```
+
+Pantheon reads the spec.md from your previous Oracle run and kicks off analysis.
 
 **What happens:**
 
-1. **Hermes** explores your codebase — finds ORM usage, raw queries, stored procedures
-2. **Helios** generates 4 orthogonal perspectives:
-   - Performance (query patterns, indexing differences)
-   - Data integrity (type mapping, constraint migration)
-   - Security (permission model, encryption differences)
-   - Operational risk (rollback strategy, downtime)
-3. **Ares + Poseidon + Zeus** analyze in parallel from each perspective
-4. **Eris** (Devil's Advocate): "You assume ORM abstracts all differences — but you have 23 raw SQL queries with MySQL-specific syntax at..."
-5. Consensus: 75% (Working) — PASS
+1. **Hermes** explores your codebase — maps existing modules, dependencies, test coverage
+2. **Helios** assesses complexity and generates orthogonal perspectives:
+   - Code quality (coupling, cohesion, existing patterns)
+   - Security (attack surface, auth boundaries, data flow)
+   - Architecture (where the new feature fits, integration points)
+3. **Ares + Poseidon + Zeus** analyze in parallel — each writes findings with `file:line` evidence
+4. **Eris** (Devil's Advocate) challenges every conclusion:
+   "Ares says the service layer is clean, but `OrderService` at `src/order/service.ts:142` has 6 dependencies — that's not clean."
+5. Consensus: analysts vote, orchestrator tallies → 75% (Working) — PASS
+
+Output: `.olympus/{id}/analysis.md` — consolidated findings with evidence
 
 **When to use Pantheon:**
-- Evaluating architectural decisions
-- Risk assessment before a major change
-- Need to see blind spots in your analysis
+- After Oracle, before building — stress-test your spec
+- Reviewing a module you're about to refactor
+- Need multiple expert viewpoints on your code
 
 ---
 
 ## Example 4: Technical Decision Making
 
-**Scenario**: Your team can't agree on REST vs GraphQL for a new API.
+**Scenario**: You need to decide how to handle a growing technical debt — refactor the payment module now or wrap it with an adapter.
 
 ```
 You:  /olympus:agora
 
-      "Should we use REST or GraphQL for our new public API?
-       Context: 50+ endpoints, mobile + web clients, team of 8"
+      "결제 모듈을 지금 리팩토링할지, 어댑터로 감싸서 나중에 할지 결정해줘"
 ```
 
 **What happens:**
 
-1. **Framing**: Orchestrator structures the debate (stakeholders, constraints, criteria)
-2. **Committee** (3 roles):
-   - Zeus (Architect): "GraphQL reduces over-fetching for mobile"
-   - Ares (Engineer): "REST is simpler to cache and rate-limit"
-   - UX Critic: "Mobile clients need flexible queries — GraphQL wins here"
-3. **Debate** (up to 3 rounds): Each role responds to others' arguments
-4. **Eris** challenges: "You all assume the team has GraphQL expertise. What's the ramp-up cost?"
-5. **Decision**: Structured verdict with majority position and dissenting views
+1. **Framing**: Orchestrator structures the question — who's affected, what constraints, what criteria
+2. **Committee** (3 roles debate):
+   - Zeus (Architect): "Adapter is lower risk, keeps the release on track"
+   - Ares (Engineer): "Adapter adds a layer of indirection that nobody will remove later"
+   - UX Critic: "Users don't care about internal structure — ship the feature first"
+3. **Debate** (up to 3 rounds): Each responds to others' points
+4. **Eris** challenges all positions:
+   "Everyone assumes 'later' means next quarter. Show me the last time this team actually went back to fix wrapped code."
+5. **Decision**: Structured verdict with majority reasoning and dissenting views recorded
 
 **When to use Agora:**
-- Team disagreements on technical direction
-- "Build vs buy" decisions
-- Choosing between competing approaches
+- "Do it now vs later" decisions
+- Choosing between two competing implementation approaches
+- When you need a structured argument, not a gut feeling
 
 ---
 
