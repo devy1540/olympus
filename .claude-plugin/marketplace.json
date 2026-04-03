@@ -4,13 +4,13 @@
     "name": "hjyoon"
   },
   "description": "Olympus — Harness engineering plugin marketplace",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "homepage": "https://github.com/devy1540/olympus",
   "plugins": [
     {
       "name": "olympus",
       "description": "Harness engineering plugin — 14 agents perform requirement refinement, multi-perspective analysis, evolution loops, and evaluation",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "source": "./",
       "category": "engineering",
       "tags": [
