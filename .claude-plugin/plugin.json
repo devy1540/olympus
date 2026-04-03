@@ -6,8 +6,5 @@
   "author": {
     "name": "hjyoon"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/devy1540/olympus"
-  }
+  "repository": "https://github.com/devy1540/olympus"
 }
