@@ -77,6 +77,9 @@ claude plugin install olympus@olympus-marketplace
 # Verify installation
 /olympus:setup
 
+# Project onboarding — scan your project and get a recommendation
+/olympus:hestia
+
 # Refine your requirements
 /olympus:oracle
 
