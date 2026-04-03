@@ -23,7 +23,8 @@
   <a href="#philosophy">Philosophy</a> ·
   <a href="#the-pipeline">Pipeline</a> ·
   <a href="#skills">Skills</a> ·
-  <a href="#the-fourteen-gods">Agents</a>
+  <a href="#the-fourteen-gods">Agents</a> ·
+  <a href="docs/EXAMPLES.md">Examples</a>
 </p>
 
 ---
