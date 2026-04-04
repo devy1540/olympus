@@ -125,6 +125,41 @@ run_check "Skills: ${SKILL_COUNT}/11" "[ $SKILL_COUNT -eq 11 ]"
 SCHEMA_COUNT=$(ls docs/shared/*.json 2>/dev/null | wc -l | tr -d ' ')
 run_check "Schemas: ${SCHEMA_COUNT}/5" "[ $SCHEMA_COUNT -ge 5 ]"
 
+# --- Harness Pattern Checks ---
+echo ""
+echo -e "${BOLD}[Harness Patterns]${NC}"
+
+# All grep pipelines must be safe under set -euo pipefail
+SPAWN_SKILLS=$(grep -rl "Agent(name:" skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+
+BANNED_WAIT=$({ grep -r "Wait for messages — do not act until prompted" skills/*/SKILL.md 2>/dev/null || true; } | { grep -v "NEVER" || true; } | wc -l | tr -d ' ')
+run_check "No banned 'Wait for messages' (${BANNED_WAIT})" "[ $BANNED_WAIT -eq 0 ]"
+
+PROACTIVE_RULE=$(grep -rl "PROACTIVE SPAWN RULE" skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+run_check "PROACTIVE SPAWN RULE: ${PROACTIVE_RULE}/${SPAWN_SKILLS}" "[ $PROACTIVE_RULE -ge $SPAWN_SKILLS ]"
+
+IMMEDIATE=$(grep -rl "IMMEDIATE TASK" skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+run_check "IMMEDIATE TASK pattern: ${IMMEDIATE}/${SPAWN_SKILLS}" "[ $IMMEDIATE -ge $SPAWN_SKILLS ]"
+
+MANDATORY=$(grep -rl "MANDATORY" skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+run_check "MANDATORY consultation: ${MANDATORY}/${SPAWN_SKILLS}" "[ $MANDATORY -ge $SPAWN_SKILLS ]"
+
+RO_SENDMSG=0
+for a in hermes apollo metis ares poseidon athena themis eris helios nemesis; do
+  if grep -q 'SendMessage.*leader' "agents/${a}.md" 2>/dev/null; then
+    RO_SENDMSG=$((RO_SENDMSG + 1))
+  fi
+done
+run_check "Read-only agents SendMessage: ${RO_SENDMSG}/10" "[ $RO_SENDMSG -eq 10 ]"
+
+XREF_ARES=$(grep -c "poseidon\|CROSS-REFERENCE" agents/ares.md 2>/dev/null || echo 0)
+XREF_POSEIDON=$(grep -c "ares\|CROSS-REFERENCE" agents/poseidon.md 2>/dev/null || echo 0)
+run_check "ares↔poseidon cross-ref" "[ $XREF_ARES -ge 2 ] && [ $XREF_POSEIDON -ge 2 ]"
+
+GATE_AMB=$(python3 -c "import json;t=json.load(open('docs/shared/gate-thresholds.json'));print(t['ambiguity']['threshold'])" 2>/dev/null || echo "?")
+GATE_CON=$(python3 -c "import json;t=json.load(open('docs/shared/gate-thresholds.json'));print(t['consensus']['threshold'])" 2>/dev/null || echo "?")
+run_check "Gate thresholds: amb=${GATE_AMB} con=${GATE_CON}" "[ '$GATE_AMB' = '0.2' ] && [ '$GATE_CON' = '0.67' ]"
+
 # --- Summary ---
 echo ""
 echo -e "${BOLD}=========================================${NC}"
