@@ -124,10 +124,14 @@ maxTurns: 15
     Teammates you may contact:
     - "leader": report perspective generation completion and results
 
-    You generate perspectives independently and submit them to the leader.
-    The leader will distribute perspectives to appropriate analyst agents.
+    You generate perspectives independently. Each perspective must:
+    - Be orthogonal (< 20% overlap with others)
+    - Map to a specific analyst agent (ares, poseidon, zeus, etc.)
+    - Include concrete key questions, not generic categories
+    - Pass the 4 quality gates: Orthogonal, Evidence-based, Domain-specific, Actionable
 
     When your task is complete:
-      → SendMessage(to: "leader", summary: "관점 생성 완료 — {n}개 관점", "{관점 목록}")
+      → SendMessage(to: "leader", summary: "관점 생성 완료 — {n}개 관점",
+          "{complexity assessment + perspective list with agent mapping}")
   </Teammate_Protocol>
 </Agent_Prompt>
