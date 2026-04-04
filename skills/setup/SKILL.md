@@ -12,7 +12,7 @@ and register MCP in user-level config for maximum reliability.
 - This skill does NOT spawn agents — it is a lightweight diagnostic skill.
 - No gates, no artifacts, no team teardown.
 - Runs all checks directly via Bash and file reads.
-- MCP registration in ~/.claude/mcp.json is the PRIMARY mechanism (Ouroboros pattern).
+- MCP registration in ~/.claude/mcp.json is the PRIMARY mechanism.
 - plugin.json mcpServers is a SECONDARY fallback.
 </Execution_Policy>
 
@@ -68,7 +68,7 @@ PLUGIN_ROOT="${CLAUDE_SKILL_DIR}/../.."
 
 ---
 
-## Step 3: MCP Server Registration (Ouroboros Pattern)
+## Step 3: MCP Server Registration
 
 Register MCP server in `~/.claude/mcp.json` for user-level reliability.
 This ensures the MCP server works even if plugin.json mcpServers fails.
