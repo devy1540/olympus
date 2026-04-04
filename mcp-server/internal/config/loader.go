@@ -80,8 +80,22 @@ func Load(pluginRoot, dataDir string) (*Config, error) {
 
 	statesFile := filepath.Join(sharedDir, "pipeline-states.json")
 	if _, err := os.Stat(statesFile); err == nil {
-		if err := loadJSON(statesFile, &cfg.Transitions); err != nil {
+		// pipeline-states.json is a JSON Schema — transitions are nested at OdysseyPhases.transitions
+		var raw map[string]json.RawMessage
+		if err := loadJSON(statesFile, &raw); err != nil {
 			return nil, fmt.Errorf("pipeline-states.json: %w", err)
+		}
+		if odysseyRaw, ok := raw["OdysseyPhases"]; ok {
+			var odyssey struct {
+				Phases      []string            `json:"enum"`
+				Transitions map[string][]string `json:"transitions"`
+			}
+			if err := json.Unmarshal(odysseyRaw, &odyssey); err == nil {
+				cfg.Transitions = TransitionRule{
+					Phases:      odyssey.Phases,
+					Transitions: odyssey.Transitions,
+				}
+			}
 		}
 	}
 

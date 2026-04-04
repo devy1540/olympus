@@ -345,6 +345,147 @@ fi
 
 # ============================================================
 echo ""
+echo "--- Phase 7: Real SKILL.md flow simulation ---"
+# ============================================================
+# Simulate the EXACT sequence a SKILL.md orchestrator would call:
+#   start_pipeline → next_phase → register_spawn × N → gate_check → next_phase → ...
+
+# Simulate EXACT SKILL.md sequence with separate sessions (matches real CC behavior)
+INIT='{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
+
+# Flow Step 1: start_pipeline
+F_START=$(printf '%s\n%s\n' "$INIT" '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_start_pipeline","arguments":{"skill":"oracle","pipeline_id":"flow-001"}}}' | "$BIN" serve 2>/dev/null)
+F100=$(echo "$F_START" | python3 -c "
+import sys,json
+for l in sys.stdin:
+    try:
+        m=json.loads(l.strip())
+        if m.get('id')==1:
+            for x in m.get('result',{}).get('content',[]):
+                if x.get('type')=='text': print(x['text']); break
+            break
+    except: pass
+" 2>/dev/null)
+assert_eq "flow: start_pipeline first_phase" "oracle" "$(jq_field "$F100" "first_phase")"
+
+# Flow Step 2: next_phase (should work — phase is now "oracle", transitions exist)
+F_NEXT=$(printf '%s\n%s\n' "$INIT" '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_next_phase","arguments":{"pipeline_id":"flow-001"}}}' | "$BIN" serve 2>/dev/null)
+F101=$(echo "$F_NEXT" | python3 -c "
+import sys,json
+for l in sys.stdin:
+    try:
+        m=json.loads(l.strip())
+        if m.get('id')==1:
+            for x in m.get('result',{}).get('content',[]):
+                if x.get('type')=='text': print(x['text']); break
+            break
+    except: pass
+" 2>/dev/null)
+assert_contains "flow: next_phase returns valid phase" "next_phase" "$F101"
+TOTAL=$((TOTAL + 1))
+if echo "$F101" | grep -q "실패"; then
+  echo -e "  ${RED}FAIL${NC}  flow: next_phase should not fail (got: ${F101:0:80})"
+  FAIL=$((FAIL + 1))
+else
+  echo -e "  ${GREEN}PASS${NC}  flow: next_phase succeeds after start"
+  PASS=$((PASS + 1))
+fi
+
+# Flow Step 3: register spawns + gate + new tools
+F_OPS=$(cat << 'OPS' | "$BIN" serve 2>/dev/null
+{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
+{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"olympus_register_agent_spawn","arguments":{"pipeline_id":"flow-001","agent_name":"hermes"}}}
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"olympus_register_agent_spawn","arguments":{"pipeline_id":"flow-001","agent_name":"apollo"}}}
+OPS
+)
+F102=$(echo "$F_OPS" | python3 -c "
+import sys,json
+for l in sys.stdin:
+    try:
+        m=json.loads(l.strip())
+        if m.get('id')==2:
+            for x in m.get('result',{}).get('content',[]):
+                if x.get('type')=='text': print(x['text']); break
+            break
+    except: pass
+" 2>/dev/null)
+assert_eq "flow: spawn hermes" "true" "$(jq_field "$F102" "registered")"
+
+# Flow Step 4: gate check
+F_GATE=$(printf '%s\n%s\n' "$INIT" '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"flow-001","gate_type":"ambiguity","score":0.15}}}' | "$BIN" serve 2>/dev/null)
+F106=$(echo "$F_GATE" | python3 -c "
+import sys,json
+for l in sys.stdin:
+    try:
+        m=json.loads(l.strip())
+        if m.get('id')==1:
+            for x in m.get('result',{}).get('content',[]):
+                if x.get('type')=='text': print(x['text']); break
+            break
+    except: pass
+" 2>/dev/null)
+assert_eq "flow: ambiguity gate pass" "true" "$(jq_field "$F106" "passed")"
+
+# Flow Step 5: new teammate tools
+F_ACTION=$(printf '%s\n%s\n' "$INIT" '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_next_action","arguments":{"pipeline_id":"flow-001"}}}' | "$BIN" serve 2>/dev/null)
+F107=$(echo "$F_ACTION" | python3 -c "
+import sys,json
+for l in sys.stdin:
+    try:
+        m=json.loads(l.strip())
+        if m.get('id')==1:
+            for x in m.get('result',{}).get('content',[]):
+                if x.get('type')=='text': print(x['text']); break
+            break
+    except: pass
+" 2>/dev/null)
+assert_contains "flow: next_action (leader)" "action" "$F107"
+
+F_AGENT=$(printf '%s\n%s\n' "$INIT" '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_next_action","arguments":{"pipeline_id":"flow-001","agent":"hermes"}}}' | "$BIN" serve 2>/dev/null)
+F108=$(echo "$F_AGENT" | python3 -c "
+import sys,json
+for l in sys.stdin:
+    try:
+        m=json.loads(l.strip())
+        if m.get('id')==1:
+            for x in m.get('result',{}).get('content',[]):
+                if x.get('type')=='text': print(x['text']); break
+            break
+    except: pass
+" 2>/dev/null)
+assert_contains "flow: next_action (agent=hermes)" "hermes" "$F108"
+
+F_COLLAB=$(printf '%s\n%s\n' "$INIT" '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_log_collaboration","arguments":{"pipeline_id":"flow-001","from":"prometheus","to":"hermes","summary":"코드 구조 확인"}}}' | "$BIN" serve 2>/dev/null)
+F109=$(echo "$F_COLLAB" | python3 -c "
+import sys,json
+for l in sys.stdin:
+    try:
+        m=json.loads(l.strip())
+        if m.get('id')==1:
+            for x in m.get('result',{}).get('content',[]):
+                if x.get('type')=='text': print(x['text']); break
+            break
+    except: pass
+" 2>/dev/null)
+assert_eq "flow: log_collaboration" "true" "$(jq_field "$F109" "logged")"
+
+# Flow Step 6: final status
+F_STATUS=$(printf '%s\n%s\n' "$INIT" '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_pipeline_status","arguments":{"pipeline_id":"flow-001"}}}' | "$BIN" serve 2>/dev/null)
+F110=$(echo "$F_STATUS" | python3 -c "
+import sys,json
+for l in sys.stdin:
+    try:
+        m=json.loads(l.strip())
+        if m.get('id')==1:
+            for x in m.get('result',{}).get('content',[]):
+                if x.get('type')=='text': print(x['text']); break
+            break
+    except: pass
+" 2>/dev/null)
+assert_eq "flow: final status skill" "oracle" "$(jq_field "$F110" "skill")"
+
+# ============================================================
+echo ""
 echo "=== E2E Results: ${PASS}/${TOTAL} passed, ${FAIL} failed ==="
 
 if [[ $FAIL -gt 0 ]]; then
