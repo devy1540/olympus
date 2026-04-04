@@ -63,6 +63,18 @@ Oracle → Genesis → Pantheon → Plan → Execute → Tribunal
 
 위임 패턴 (`Read-only → SendMessage → Orchestrator → Write`)은 보안 경계. `hooks/enforce-permissions.sh`가 강제.
 
+### 하이브리드 스폰 패턴
+
+대부분 서브에이전트(Agent tool), 반복/토론 구간만 팀메이트(TeamCreate + SendMessage):
+
+| 구간 | 모드 | 이유 |
+|:-----|:-----|:-----|
+| Genesis Wonder/Reflect | **팀메이트** | 최대 30세대 반복 — 세대 간 기억 유지, 오케스트레이터 컨텍스트 경감 |
+| Tribunal Stage 3 | **팀메이트** | 순차 토론 — Eris가 Ares 의견을 보고 반박, Hera가 양쪽 종합 |
+| 그 외 전부 | **서브에이전트** | 1회성, 게이트 후 종료 |
+
+상세: `docs/shared/orchestrator-protocol.md §6`
+
 ### 에이전트 스폰 필수 규칙
 
 SKILL.md에서 "Spawn {Agent} as a Task"로 명시된 에이전트는 **반드시** Agent tool로 스폰해야 한다. 오케스트레이터가 직접 Grep/Read로 대체 수행하거나 단계를 생략하면 안 된다. 역할 분리가 이 플러그인의 핵심 가치 — "내가 직접 하면 더 빠르다"는 이유로 스킵하면 적대적 검증이 무력화된다. 상세: `docs/shared/orchestrator-protocol.md §0`.

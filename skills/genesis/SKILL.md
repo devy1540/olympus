@@ -7,12 +7,20 @@ description: "Creation — evolutionary loop that refines specs/designs generati
 
 Core Ouroboros pattern. Evolves specs/designs generation by generation until convergence.
 
-## Agents (subagent_type bindings)
-- **Metis**: Wonder (inquiry) — fundamental questions → `subagent_type: "olympus:metis"`
-- **Eris**: Reflect (audit) — logical validation → `subagent_type: "olympus:eris"`
-- **Orchestrator**: Seed (crystallization) + convergence check
+## Agents
 
-**⚠ MANDATORY**: Metis and Eris MUST be spawned via Agent tool in each generation cycle. The orchestrator handles only Seed (Phase 3) and convergence check (Phase 4). See orchestrator-protocol.md §0.
+**Teammate pattern** (persist across generations):
+- **Metis**: Wonder (inquiry) — fundamental questions → `TeamCreate` name: `metis-wonder`
+- **Eris**: Reflect (audit) — logical validation → `TeamCreate` name: `eris-reflect`
+- **Orchestrator**: Seed (crystallization) + convergence check + gate enforcement
+
+**⚠ Why teammates, not subagents:**
+Genesis runs Metis and Eris repeatedly (up to 30 generations). Teammates:
+- **Remember previous generations** in their own context — wonder.md Gen 3 builds on Gen 2 insights
+- **Reduce orchestrator context pressure** — only SendMessage payloads accumulate, not full results
+- **Cheaper per-generation cost** — no prompt re-send per cycle
+
+See orchestrator-protocol.md §5 for hybrid spawn mode selection criteria.
 
 ## Gate
 - Ontology convergence ≥ 0.95
@@ -39,7 +47,7 @@ Phase 0 (Seed) → Phase 1 (Wonder) → Phase 2 (Reflect) → Phase 3 (Seed) →
                                                                          Phase 5 (Lineage)
 ```
 
-### Phase 0: Initial Seed
+### Phase 0: Initial Seed + Team Creation
 
 ```
 Input: spec.md (from Oracle) or direct user input
@@ -53,6 +61,28 @@ Input: spec.md (from Oracle) or direct user input
    mkdir -p .olympus/{id}/gen-1/
    - Save ontology.json
    - Copy spec.md
+
+3. Create evolution team (teammates persist across all generations):
+
+   TeamCreate:
+     name: "metis-wonder"
+     subagent_type: "olympus:metis"
+     prompt: "You are Metis, ontologist of the gods.
+       You will be called repeatedly across generations to ask fundamental questions.
+       Artifact directory: .olympus/{id}/
+       IMPORTANT: You retain memory of previous generations within this session.
+       Build on your earlier insights — do not repeat questions already explored.
+       Each generation, Read the latest gen-{n}/spec.md and gen-{n}/ontology.json."
+
+   TeamCreate:
+     name: "eris-reflect"
+     subagent_type: "olympus:eris"
+     prompt: "You are Eris, logical auditor of evolution.
+       You will be called repeatedly across generations to validate ontology mutations.
+       Artifact directory: .olympus/{id}/
+       IMPORTANT: You retain memory of previous generations within this session.
+       Track mutation patterns across generations — catch recurring fallacies.
+       Each generation, Read wonder.md and compare prev/current ontology.json."
 ```
 
 ### Phase 1: Wonder (Inquiry)
@@ -60,10 +90,12 @@ Input: spec.md (from Oracle) or direct user input
 "What do we still not know?"
 
 ```
-1. Spawn Metis as a Task:
-   - Prompt: artifact directory path + current generation number
-   - Instruction: "Use Read to load .olympus/{id}/gen-{n}/spec.md and .olympus/{id}/gen-{n}/ontology.json directly" (do NOT inject full content)
-   - Mission: answer 4 fundamental questions
+1. SendMessage to metis-wonder:
+   summary: "Gen {n} wonder"
+   message: "Generation {n}.
+     Read .olympus/{id}/gen-{n}/spec.md and .olympus/{id}/gen-{n}/ontology.json.
+     {If n > 1: "Previous reflection: Read .olympus/{id}/gen-{n-1}/reflect.md for Eris's feedback."}
+     Answer the 4 fundamental questions. Save results to .olympus/{id}/gen-{n}/wonder.md."
 
 2. Metis's 4 fundamental questions (Ouroboros ontologist):
    a. Essence: "What is the essential nature of each concept?"
@@ -82,28 +114,31 @@ Input: spec.md (from Oracle) or direct user input
       - Identify assumptions implicitly embedded in the spec
       - Assess validity of each assumption
 
-3. Save results to gen-{n}/wonder.md
+3. Metis saves results to gen-{n}/wonder.md (Metis has Write access as teammate)
 ```
 
 ### Phase 2: Reflect (Audit)
 
 ```
-1. Compare previous and current generation ontologies
+1. Orchestrator compares previous and current generation ontologies
 2. Identify ontology mutations:
    - Field changes: properties added/removed/modified
    - Type changes: concept classification changed
    - Description changes: definition refinement
 
-3. Spawn Eris as a Task (logical audit):
-   - Prompt: artifact directory path + previous/current generation numbers
-   - Instruction: "Use Read to load .olympus/{id}/gen-{n}/wonder.md, gen-{n-1}/ontology.json, gen-{n}/ontology.json directly" (do NOT inject full content)
-   - Mission: validate logical soundness of evolutionary decisions
-   - Uses fallacy-catalog for verification
+3. SendMessage to eris-reflect:
+   summary: "Gen {n} reflect"
+   message: "Generation {n}.
+     Read .olympus/{id}/gen-{n}/wonder.md for Metis's questions.
+     Read .olympus/{id}/gen-{n-1}/ontology.json and .olympus/{id}/gen-{n}/ontology.json.
+     {If n > 1: "Previous wonder: Read .olympus/{id}/gen-{n-1}/wonder.md to track question evolution."}
+     Validate logical soundness of evolutionary decisions using fallacy-catalog.md.
+     Save results to .olympus/{id}/gen-{n}/reflect.md."
 
 4. Eris validates:
    - Confirm logical justification for each mutation
    - Detect circular reasoning, contradictions, etc.
-   - Save results to gen-{n}/reflect.md
+   - Eris saves results to gen-{n}/reflect.md (Eris has Write access as teammate)
 ```
 
 ### Phase 3: Seed (Crystallization)
@@ -203,4 +238,12 @@ Rewind support:
 
 ### Team Teardown
 
-Shut down Metis and Eris per the team-teardown.md protocol.
+Shut down the evolution team per the team-teardown.md protocol:
+
+```
+1. SendMessage(to: "metis-wonder", message: { type: "shutdown_request", reason: "Evolution converged" })
+   → Await shutdown_response (approve: true)
+2. SendMessage(to: "eris-reflect", message: { type: "shutdown_request", reason: "Evolution converged" })
+   → Await shutdown_response (approve: true)
+3. TeamDelete to clean up team resources
+```

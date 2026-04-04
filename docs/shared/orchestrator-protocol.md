@@ -215,3 +215,50 @@ Reverse transitions (e.g., Tribunal → Oracle) are not handled by modifying the
 ### 5.3 Checkpoint & Recovery
 
 The `checkpoint.sh` hook automatically backs up state files to `.checkpoints/` whenever they are saved. Recovery can resume from the most recent valid checkpoint.
+
+---
+
+## 6. Hybrid Spawn Mode (Subagent vs Teammate)
+
+Olympus uses two agent execution modes. The default is subagent (Agent tool). Teammates (TeamCreate + SendMessage) are used only where their benefits justify the added complexity.
+
+### 6.1 Selection Criteria
+
+| Condition | Mode | Reason |
+|:----------|:-----|:-------|
+| One-shot analysis (no follow-up) | **Subagent** | Clean context, no lifecycle management |
+| Parallel independent work | **Subagent** (parallel Agent calls) | No cross-reference needed |
+| Iterative loop (same agents, multiple cycles) | **Teammate** | Retains memory across cycles, reduces orchestrator context pressure |
+| Sequential debate (agent B must see agent A's output) | **Teammate** | Direct cross-reference within session |
+
+### 6.2 Current Teammate Usage
+
+| Skill | Phase | Teammates | Reason |
+|:------|:------|:----------|:-------|
+| **Genesis** | Phase 1-2 (Wonder/Reflect loop) | metis-wonder, eris-reflect | Up to 30 generations — teammates remember previous insights |
+| **Tribunal** | Stage 3 (Consensus debate) | ares-proposer, eris-da, hera-synth | Sequential debate — Eris must see Ares's position |
+
+All other phases use subagents.
+
+### 6.3 Teammate Lifecycle Rules
+
+1. **Create at phase start**: TeamCreate before the first SendMessage
+2. **Gate enforcement stays with orchestrator**: Teammates report results, orchestrator checks gates by reading artifact files
+3. **Shutdown on phase end**: Send `shutdown_request` → await `shutdown_response` → TeamDelete
+4. **No cross-phase persistence**: Teammates do NOT survive across skill boundaries (e.g., Genesis teammates die before Pantheon starts)
+5. **Write permissions**: Teammates created with `subagent_type: "olympus:metis"` inherit Metis's permissions. Read-only agents remain read-only as teammates — they SendMessage results to the orchestrator who writes files
+
+### 6.4 Context Pressure Comparison
+
+```
+Genesis (10 generations):
+
+  Subagent mode:
+    Orchestrator context: +10 Metis results + 10 Eris results = 20 full results
+    Metis context: fresh each time (no cross-gen memory)
+
+  Teammate mode:
+    Orchestrator context: +10 SendMessage exchanges (summary-level only)
+    Metis context: accumulates across 10 generations (own memory)
+    Net effect: orchestrator ~60% lighter, Metis has cross-gen memory
+```

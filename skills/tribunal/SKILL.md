@@ -7,17 +7,22 @@ description: "Trial of the Gods — 3-stage evaluation pipeline"
 
 A pipeline that evaluates implementations through three stages: mechanical verification → semantic evaluation → consensus evaluation.
 
-## Agents (subagent_type bindings)
+## Agents
+
+**Subagent pattern** (Stages 1-2, one-shot):
 - **Hephaestus**: Mechanical verification (Stage 1) → `subagent_type: "olympus:hephaestus"`
 - **Athena**: Semantic evaluation (Stage 2) → `subagent_type: "olympus:athena"`
-- **Ares**: Consensus Proposer (Stage 3) → `subagent_type: "olympus:ares"`
-- **Eris**: Consensus DA (Stage 3) → `subagent_type: "olympus:eris"`
-- **Hera**: Consensus Synthesizer (Stage 3) → `subagent_type: "olympus:hera"`
 
-**⚠ MANDATORY**: All agents above MUST be spawned via the Agent tool.
-- **Stage 3 is NOT optional** when trigger conditions apply (see Phase 3 below). Do NOT skip to APPROVED after Athena alone.
-- Ares, Eris, and Hera in Stage 3 MUST run as 3 separate parallel Agent calls.
-See orchestrator-protocol.md §0.
+**Teammate pattern** (Stage 3, debate requires cross-reference):
+- **Ares**: Consensus Proposer → `TeamCreate` name: `ares-proposer`
+- **Eris**: Consensus DA → `TeamCreate` name: `eris-da`
+- **Hera**: Consensus Synthesizer → `TeamCreate` name: `hera-synth`
+
+**⚠ MANDATORY**:
+- Stages 1-2: Spawn via Agent tool (one-shot analysis, no cross-reference needed).
+- **Stage 3 is NOT optional** when trigger conditions apply. Do NOT skip to APPROVED after Athena alone.
+- Stage 3 uses **sequential debate via teammates**: Ares proposes → Eris counter-argues (seeing Ares's position) → Hera synthesizes (seeing both). This is not possible with independent parallel subagents.
+See orchestrator-protocol.md §0 and §5.
 
 ## Final Verdict
 APPROVED / BLOCKED / INCOMPLETE / REJECTED
@@ -87,29 +92,72 @@ If no trigger conditions apply, Stage 2 result yields APPROVED directly.
 
 ```
 When triggered:
-1. Spawn three agents as Tasks in parallel:
 
-   Ares (Proposer):
-   - Role: argue for approval or rejection from a quality perspective
-   - Instruction: "Use Read to load .olympus/{id}/semantic-matrix.md directly, then explore the relevant code"
-   - Output: approve or reject + rationale
+1. Create debate team:
 
-   Eris (Devil's Advocate):
-   - Role: counter-argue against Ares's position
-   - Instruction: "Use Read to load .olympus/{id}/semantic-matrix.md directly, then counter Ares's argument"
-   - Output: counter-argument + evidence
+   TeamCreate:
+     name: "ares-proposer"
+     subagent_type: "olympus:ares"
+     prompt: "You are Ares, proposer in a consensus debate.
+       Artifact directory: .olympus/{id}/
+       You will receive a debate prompt and must argue your position.
+       Read semantic-matrix.md and relevant code to form your argument."
 
-   Hera (Synthesizer):
-   - Role: synthesize both arguments + collect test execution evidence
-   - Instruction: "Synthesize both arguments, then run tests via Bash to collect evidence"
-   - Output: synthesized verdict
+   TeamCreate:
+     name: "eris-da"
+     subagent_type: "olympus:eris"
+     prompt: "You are Eris, devil's advocate in a consensus debate.
+       Artifact directory: .olympus/{id}/
+       You will receive Ares's position and must counter-argue.
+       Read semantic-matrix.md and challenge Ares's reasoning with evidence."
 
-2. Approval criterion: supermajority >= 66%
-   - 2 of 3 approve → APPROVED
-   - Only 1 approves → REJECTED + dissent recorded
-   - All reject → REJECTED
+   TeamCreate:
+     name: "hera-synth"
+     subagent_type: "olympus:hera"
+     prompt: "You are Hera, synthesizer in a consensus debate.
+       Artifact directory: .olympus/{id}/
+       You will receive both Ares's position and Eris's counter-argument.
+       Synthesize both, then run tests via Bash to collect evidence.
+       Produce a final synthesized verdict."
 
-3. Save voting results to consensus-record.json
+2. Sequential debate (each sees the previous):
+
+   Round 1 — Ares proposes:
+     SendMessage(to: "ares-proposer"):
+       summary: "Propose verdict"
+       message: "Read .olympus/{id}/semantic-matrix.md and explore the relevant code.
+         Argue for APPROVE or REJECT from a quality perspective.
+         Include file:line evidence for every claim."
+     → Ares responds with position + rationale
+
+   Round 2 — Eris counter-argues (sees Ares's position):
+     SendMessage(to: "eris-da"):
+       summary: "Counter-argue"
+       message: "Ares's position: {Ares response summary}.
+         Read .olympus/{id}/semantic-matrix.md.
+         Counter-argue against Ares's position with evidence.
+         Challenge logical fallacies per fallacy-catalog.md."
+     → Eris responds with counter-argument + evidence
+
+   Round 3 — Hera synthesizes (sees both):
+     SendMessage(to: "hera-synth"):
+       summary: "Synthesize verdict"
+       message: "Ares argues: {Ares summary}. Eris counters: {Eris summary}.
+         Read .olympus/{id}/semantic-matrix.md.
+         Synthesize both arguments, run tests for evidence, produce final verdict."
+     → Hera responds with synthesized verdict
+
+3. Tally votes:
+   - Extract APPROVE/REJECT from each response
+   - Supermajority >= 66%:
+     - 2 of 3 approve → APPROVED
+     - Only 1 approves → REJECTED + dissent recorded
+     - All reject → REJECTED
+
+4. Teardown debate team:
+   SendMessage shutdown_request to each → await response → TeamDelete
+
+5. Save voting results to consensus-record.json
 ```
 
 ### Final Verdict
