@@ -86,6 +86,14 @@ test_hook "verify-art" "$SCRIPT_DIR/verify-artifacts.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/codebase-context.md\",\"content\":\"# Context\"}}" \
   "silent" "Phase 1 artifact with no predecessors passes"
 
+# Test: DA mandatory — analysis.md without da-evaluation.md → warning
+PANTHEON_DIR=$(mktemp -d)/pantheon-test/.olympus/pantheon-20260404-test
+mkdir -p "$PANTHEON_DIR"
+test_hook "verify-art" "$SCRIPT_DIR/verify-artifacts.sh" \
+  "{\"tool_input\":{\"file_path\":\"${PANTHEON_DIR}/analysis.md\",\"content\":\"# Analysis\"}}" \
+  "allow" "Pantheon analysis.md without da-evaluation.md → DA warning"
+rm -rf "$(dirname "$(dirname "$(dirname "$PANTHEON_DIR")")")"
+
 # ============================================================
 echo "--- validate-gate.sh ---"
 # ============================================================
@@ -107,6 +115,15 @@ rm -f "${ARTIFACT_DIR}/interview-log.md"
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/ambiguity-scores.json\",\"content\":\"{\\\"goal\\\":0.9,\\\"constraints\\\":0.9,\\\"ac\\\":0.9}\"}}" \
   "allow" "Ambiguity pass but no interview-log → evidence warning"
+
+# Test: suspiciously low ambiguity on complex project → calibration warning
+echo '## Round 1' > "${ARTIFACT_DIR}/interview-log.md"
+# Create a 60-line codebase-context.md to simulate complex project
+printf '# Context\n%.0s' {1..60} > "${ARTIFACT_DIR}/codebase-context.md"
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/ambiguity-scores.json\",\"content\":\"{\\\"goal\\\":0.95,\\\"constraints\\\":0.95,\\\"ac\\\":0.95}\"}}" \
+  "allow" "Suspiciously low ambiguity on complex project → calibration warning"
+rm -f "${ARTIFACT_DIR}/codebase-context.md"
 
 # Test: mechanical-result.json all pass → silent
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \

@@ -106,4 +106,85 @@ if [[ -n "$MISSING_ARTIFACTS" ]]; then
   exit 0
 fi
 
+# --- Agent spawn verification ---
+# Check that artifacts with a "source" agent were actually produced by that agent,
+# not by the orchestrator directly. This prevents the orchestrator from doing agent work.
+#
+# How it works:
+# - artifact-contracts.json has "source" field indicating which agent should produce the content
+# - odyssey-state.json has "agentTurns" recording which agents were actually spawned per phase
+# - If an artifact's source agent is not in agentTurns for the current phase, warn
+
+ARTIFACT_SOURCE=$(jq -r --arg skill "$SKILL_NAME" --arg file "$FILENAME" \
+  '.[$skill][$file].source // empty' "$CONTRACTS_FILE" 2>/dev/null || true)
+
+# Handle gen-{n}/ pattern
+if [[ -z "$ARTIFACT_SOURCE" && "$PARENT_DIR" =~ ^gen-[0-9]+$ ]]; then
+  GEN_FILENAME="gen-{n}/${FILENAME}"
+  ARTIFACT_SOURCE=$(jq -r --arg skill "$SKILL_NAME" --arg file "$GEN_FILENAME" \
+    '.[$skill][$file].source // empty' "$CONTRACTS_FILE" 2>/dev/null || true)
+fi
+
+# Skip if no source agent defined (orchestrator-owned artifact) or source is an array
+if [[ -n "$ARTIFACT_SOURCE" && "$ARTIFACT_SOURCE" != "null" && "$ARTIFACT_SOURCE" != "["* ]]; then
+  # Find odyssey-state.json or {skill}-state.json in the artifact directory
+  STATE_FILE=""
+  for candidate in "${ARTIFACT_DIR}/odyssey-state.json" "${ARTIFACT_DIR}/../odyssey-state.json"; do
+    if [[ -f "$candidate" ]]; then
+      STATE_FILE="$candidate"
+      break
+    fi
+  done
+
+  if [[ -n "$STATE_FILE" ]]; then
+    # Map skill to odyssey phase name
+    PHASE_KEY="$SKILL_NAME"
+
+    # Check if the source agent appears in agentTurns for this phase
+    AGENT_SPAWNED=$(jq -r --arg phase "$PHASE_KEY" --arg agent "$ARTIFACT_SOURCE" \
+      '.phaseTimings[$phase].agentTurns[$agent] // 0' "$STATE_FILE" 2>/dev/null || echo "0")
+
+    if [[ "$AGENT_SPAWNED" == "0" || "$AGENT_SPAWNED" == "null" ]]; then
+      emit_allow_with_context \
+        "AGENT SPAWN WARNING: '${FILENAME}' should be produced by agent '${ARTIFACT_SOURCE}' (per artifact-contracts.json), but '${ARTIFACT_SOURCE}' has not been spawned in phase '${PHASE_KEY}' (agentTurns shows 0). The orchestrator MUST NOT perform agent work directly — spawn the agent and let it produce this artifact. See orchestrator-protocol.md §0." \
+        "spawn"
+      exit 0
+    fi
+  fi
+fi
+
+# --- DA evaluation mandatory check ---
+# If writing analysis.md (Pantheon output), verify da-evaluation.md exists and is non-empty
+if [[ "$FILENAME" == "analysis.md" && "$SKILL_NAME" == "pantheon" ]]; then
+  DA_FILE="${ARTIFACT_DIR}/da-evaluation.md"
+  if [[ ! -f "$DA_FILE" ]]; then
+    emit_allow_with_context \
+      "DA MANDATORY WARNING: Writing analysis.md but da-evaluation.md does not exist. Eris (Devil's Advocate) challenge is MANDATORY for Pantheon — do NOT skip to consensus without DA evaluation. Spawn Eris and produce da-evaluation.md first." \
+      "da-required"
+    exit 0
+  fi
+  DA_SIZE=$(wc -c < "$DA_FILE" 2>/dev/null || echo "0")
+  if [[ "$DA_SIZE" -lt 100 ]]; then
+    emit_allow_with_context \
+      "DA MANDATORY WARNING: da-evaluation.md exists but is nearly empty (${DA_SIZE} bytes). Eris must produce substantive adversarial evaluation. Re-spawn Eris if the previous attempt failed." \
+      "da-required"
+    exit 0
+  fi
+fi
+
+# --- DA evaluation mandatory for verdict.md in tribunal ---
+if [[ "$FILENAME" == "verdict.md" && "$SKILL_NAME" == "tribunal" ]]; then
+  # Check consensus-record.json exists when Stage 3 should have been triggered
+  SEMANTIC_FILE="${ARTIFACT_DIR}/semantic-matrix.md"
+  if [[ -f "$SEMANTIC_FILE" ]]; then
+    CONSENSUS_FILE="${ARTIFACT_DIR}/consensus-record.json"
+    if [[ ! -f "$CONSENSUS_FILE" ]]; then
+      emit_allow_with_context \
+        "CONSENSUS WARNING: Writing verdict.md but consensus-record.json does not exist. If Stage 3 trigger conditions apply, the consensus debate is MANDATORY. Check Tribunal SKILL.md Stage 3 trigger conditions." \
+        "consensus-required"
+      exit 0
+    fi
+  fi
+fi
+
 exit 0

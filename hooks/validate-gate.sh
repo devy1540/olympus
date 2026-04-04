@@ -108,6 +108,28 @@ case "$FILENAME" in
         fi
       fi
     fi
+
+    # --- Suspiciously low score warning ---
+    # If ambiguity score is very low (< 0.1), check if codebase-context.md exists
+    # and has substantial content — extremely low scores on complex projects
+    # are a sign of insufficient interview depth
+    if [[ -n "$SCORE" ]]; then
+      IS_VERY_LOW=$(echo "$SCORE" | awk '{ print ($1 < 0.1) ? "true" : "false" }')
+      if [[ "$IS_VERY_LOW" == "true" ]]; then
+        CONTEXT_FILE="${DIR}/codebase-context.md"
+        if [[ -f "$CONTEXT_FILE" ]]; then
+          CONTEXT_LINES=$(wc -l < "$CONTEXT_FILE" 2>/dev/null || echo "0")
+          # If codebase context is substantial (50+ lines = complex project)
+          # but ambiguity is < 0.1, the interview may have been too shallow
+          if [[ "$CONTEXT_LINES" -gt 50 ]]; then
+            emit_allow_with_context \
+              "AMBIGUITY CALIBRATION WARNING: Score ${SCORE} is unusually low for a project with substantial codebase context (${CONTEXT_LINES} lines in codebase-context.md). Complex projects rarely have ambiguity < 0.1 after only a few interview rounds. Consider whether edge cases, error handling, and technical constraints have been fully explored." \
+              "calibration"
+            exit 0
+          fi
+        fi
+      fi
+    fi
     ;;
 
   convergence.json)
