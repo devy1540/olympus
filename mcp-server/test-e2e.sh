@@ -1,0 +1,330 @@
+#!/usr/bin/env bash
+# test-e2e.sh — Olympus MCP Server End-to-End Test Suite
+# Strategy: one MCP session to create state → CLI queries to verify
+# Run: bash mcp-server/test-e2e.sh
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+BIN="${PROJECT_ROOT}/bin/olympus-mcp"
+export OLYMPUS_DATA_DIR="/tmp/olympus-mcp-e2e-$$"
+export OLYMPUS_PLUGIN_ROOT="$PROJECT_ROOT"
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+PASS=0
+FAIL=0
+TOTAL=0
+
+cleanup() { rm -rf "$OLYMPUS_DATA_DIR"; }
+trap cleanup EXIT
+
+assert_eq() {
+  local name="$1" expected="$2" actual="$3"
+  TOTAL=$((TOTAL + 1))
+  if [[ "$expected" == "$actual" ]]; then
+    echo -e "  ${GREEN}PASS${NC}  $name"
+    PASS=$((PASS + 1))
+  else
+    echo -e "  ${RED}FAIL${NC}  $name (expected='$expected', got='$actual')"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
+assert_contains() {
+  local name="$1" needle="$2" haystack="$3"
+  TOTAL=$((TOTAL + 1))
+  if echo "$haystack" | grep -q "$needle"; then
+    echo -e "  ${GREEN}PASS${NC}  $name"
+    PASS=$((PASS + 1))
+  else
+    echo -e "  ${RED}FAIL${NC}  $name (expected to contain '$needle', got='${haystack:0:100}')"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
+jq_field() {
+  echo "$1" | python3 -c "
+import sys,json
+v = json.loads(sys.stdin.read()).get('$2', '')
+if isinstance(v, bool): print('true' if v else 'false')
+elif isinstance(v, list): print(json.dumps(v))
+else: print(v)
+" 2>/dev/null
+}
+
+if [[ ! -x "$BIN" ]]; then
+  echo -e "${RED}Binary not found: $BIN${NC}"
+  exit 1
+fi
+
+echo "=== Olympus MCP E2E Test Suite ==="
+echo ""
+
+# ============================================================
+echo "--- Phase 1: Setup state via MCP session ---"
+# ============================================================
+
+# Create interview log for ambiguity test
+mkdir -p "$OLYMPUS_DATA_DIR"
+cat > "${OLYMPUS_DATA_DIR}/interview.md" << 'EOF'
+# Interview Log
+## Round 1: Scope
+**Q**: What is the goal?
+**A**: Add push notifications.
+## Round 2: Constraints
+**Q**: Volume?
+**A**: TBD, probably around 10k/day.
+## Round 3: AC
+**Q**: How to test?
+**A**: GIVEN user action WHEN triggered THEN push within 5s.
+EOF
+
+# Session 1: Create pipeline (must complete before other operations)
+cat << 'S1' | "$BIN" serve >/dev/null 2>&1
+{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_start_pipeline","arguments":{"skill":"odyssey","pipeline_id":"e2e-001"}}}
+S1
+
+# Session 2: Register spawns + gate checks + record executions + status
+MCP_OUTPUT=$(cat << 'S2' | "$BIN" serve 2>/dev/null
+{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
+{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"olympus_register_agent_spawn","arguments":{"pipeline_id":"e2e-001","agent_name":"hermes"}}}
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"olympus_register_agent_spawn","arguments":{"pipeline_id":"e2e-001","agent_name":"apollo"}}}
+{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"olympus_register_agent_spawn","arguments":{"pipeline_id":"e2e-001","agent_name":"metis"}}}
+{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"ambiguity","score":0.12}}}
+{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"ambiguity","score":0.25}}}
+{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"convergence","score":0.96}}}
+{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"convergence","score":0.90}}}
+{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"consensus","score":0.75}}}
+{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"consensus","score":0.50}}}
+{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"olympus_record_execution","arguments":{"pipeline_id":"e2e-001","phase":"oracle","agent_name":"hermes","duration_ms":3500,"token_count":8000}}}
+{"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"olympus_record_execution","arguments":{"pipeline_id":"e2e-001","phase":"oracle","agent_name":"apollo","duration_ms":12000,"token_count":25000}}}
+{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"olympus_pipeline_status","arguments":{"pipeline_id":"e2e-001"}}}
+S2
+)
+
+# Parse MCP responses
+get_mcp_result() {
+  local id=$1
+  echo "$MCP_OUTPUT" | python3 -c "
+import sys, json
+for line in sys.stdin:
+    try:
+        m = json.loads(line.strip())
+        if m.get('id') == $id:
+            c = m.get('result', {}).get('content', [])
+            for x in c:
+                if x.get('type') == 'text':
+                    print(x['text'])
+                    break
+            break
+    except: pass
+" 2>/dev/null
+}
+
+echo ""
+echo "--- Phase 2: Verify MCP tool responses ---"
+
+# 1. Pipeline creation (verified via CLI since it was session 1)
+CLI_P=$("$BIN" query pipeline-status e2e-001 2>/dev/null || true)
+assert_eq "start_pipeline: id" "e2e-001" "$(jq_field "$CLI_P" "id")"
+assert_eq "start_pipeline: skill" "odyssey" "$(jq_field "$CLI_P" "skill")"
+
+# 2-4. Spawn registration
+R2=$(get_mcp_result 2)
+R3=$(get_mcp_result 3)
+R4=$(get_mcp_result 4)
+assert_eq "register hermes" "true" "$(jq_field "$R2" "registered")"
+assert_eq "register apollo" "true" "$(jq_field "$R3" "registered")"
+assert_eq "register metis" "true" "$(jq_field "$R4" "registered")"
+
+# 5-10. Gate checks
+R5=$(get_mcp_result 5)
+R6=$(get_mcp_result 6)
+R7=$(get_mcp_result 7)
+R8=$(get_mcp_result 8)
+R9=$(get_mcp_result 9)
+R10=$(get_mcp_result 10)
+assert_eq "ambiguity 0.12 ≤ 0.2 → pass" "true" "$(jq_field "$R5" "passed")"
+assert_eq "ambiguity 0.25 > 0.2 → fail" "false" "$(jq_field "$R6" "passed")"
+assert_eq "convergence 0.96 ≥ 0.95 → pass" "true" "$(jq_field "$R7" "passed")"
+assert_eq "convergence 0.90 < 0.95 → fail" "false" "$(jq_field "$R8" "passed")"
+assert_eq "consensus 0.75 ≥ 0.67 → pass" "true" "$(jq_field "$R9" "passed")"
+assert_eq "consensus 0.50 < 0.67 → fail" "false" "$(jq_field "$R10" "passed")"
+
+# 11-12. Execution history
+R11=$(get_mcp_result 11)
+R12=$(get_mcp_result 12)
+assert_eq "record hermes execution" "true" "$(jq_field "$R11" "recorded")"
+assert_eq "record apollo execution" "true" "$(jq_field "$R12" "recorded")"
+
+# 13. Pipeline status
+R13=$(get_mcp_result 13)
+assert_eq "status: skill" "odyssey" "$(jq_field "$R13" "skill")"
+assert_eq "status: status" "active" "$(jq_field "$R13" "status")"
+assert_contains "status: hermes spawned" "hermes" "$R13"
+assert_contains "status: apollo spawned" "apollo" "$R13"
+assert_contains "status: metis spawned" "metis" "$R13"
+
+# ============================================================
+echo ""
+echo "--- Phase 3: CLI query verification ---"
+# ============================================================
+
+# Pipeline status
+CLI_STATUS=$("$BIN" query pipeline-status e2e-001 2>/dev/null)
+assert_eq "CLI: pipeline skill" "odyssey" "$(jq_field "$CLI_STATUS" "skill")"
+assert_eq "CLI: pipeline status" "active" "$(jq_field "$CLI_STATUS" "status")"
+assert_contains "CLI: hermes in spawned" "hermes" "$CLI_STATUS"
+
+# Spawned agents (positive)
+HERMES=$("$BIN" query is-spawned e2e-001 hermes 2>/dev/null || true)
+assert_eq "CLI: hermes spawned=true" "true" "$(jq_field "$HERMES" "spawned")"
+
+APOLLO=$("$BIN" query is-spawned e2e-001 apollo 2>/dev/null || true)
+assert_eq "CLI: apollo spawned=true" "true" "$(jq_field "$APOLLO" "spawned")"
+
+# Spawned agents (negative)
+ERIS_EXIT=0
+"$BIN" query is-spawned e2e-001 eris >/dev/null 2>&1 || ERIS_EXIT=$?
+assert_eq "CLI: eris not spawned → exit 1" "1" "$ERIS_EXIT"
+
+ZEUS_EXIT=0
+"$BIN" query is-spawned e2e-001 zeus >/dev/null 2>&1 || ZEUS_EXIT=$?
+assert_eq "CLI: zeus not spawned → exit 1" "1" "$ZEUS_EXIT"
+
+# Gate status — store in separate session to avoid race condition
+cat << 'GS' | "$BIN" serve >/dev/null 2>&1
+{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"ambiguity","score":0.15}}}
+GS
+GATE=$("$BIN" query gate-status e2e-001 ambiguity 2>/dev/null || true)
+assert_contains "CLI: ambiguity gate has score" "score" "$GATE"
+
+SEM_EXIT=0
+"$BIN" query gate-status e2e-001 semantic >/dev/null 2>&1 || SEM_EXIT=$?
+assert_eq "CLI: unscored gate → exit 1" "1" "$SEM_EXIT"
+
+# ============================================================
+echo ""
+echo "--- Phase 4: Error handling ---"
+# ============================================================
+
+# Duplicate pipeline
+DUP_OUTPUT=$(cat << 'REQ' | "$BIN" serve 2>/dev/null
+{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_start_pipeline","arguments":{"skill":"odyssey","pipeline_id":"e2e-001"}}}
+REQ
+)
+DUP_R=$(echo "$DUP_OUTPUT" | python3 -c "
+import sys, json
+for line in sys.stdin:
+    try:
+        m = json.loads(line.strip())
+        if m.get('id') == 1:
+            c = m.get('result', {}).get('content', [])
+            for x in c:
+                if x.get('type') == 'text':
+                    print(x['text']); break
+            break
+    except: pass
+" 2>/dev/null)
+assert_contains "duplicate pipeline → error" "실패" "$DUP_R"
+
+# Nonexistent pipeline
+CLI_ERR=$("$BIN" query pipeline-status nonexistent-999 2>/dev/null || true)
+assert_contains "CLI: nonexistent pipeline → error" "error" "$CLI_ERR"
+
+# ============================================================
+echo ""
+echo "--- Phase 5: Mechanical ambiguity scoring ---"
+# ============================================================
+
+AMB_OUTPUT=$(cat << REQUESTS | "$BIN" serve 2>/dev/null
+{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_calculate_ambiguity","arguments":{"pipeline_id":"e2e-001","interview_log_path":"${OLYMPUS_DATA_DIR}/interview.md"}}}
+REQUESTS
+)
+AMB_R=$(echo "$AMB_OUTPUT" | python3 -c "
+import sys, json
+for line in sys.stdin:
+    try:
+        m = json.loads(line.strip())
+        if m.get('id') == 1:
+            c = m.get('result', {}).get('content', [])
+            for x in c:
+                if x.get('type') == 'text':
+                    print(x['text']); break
+            break
+    except: pass
+" 2>/dev/null)
+
+assert_contains "ambiguity: has mechanical_score" "mechanical_score" "$AMB_R"
+assert_contains "ambiguity: has dimensions" "dimensions" "$AMB_R"
+assert_contains "ambiguity: has indicators" "indicators" "$AMB_R"
+
+# TBD and "probably" should increase ambiguity
+AMB_SCORE=$(echo "$AMB_R" | python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('mechanical_score', 0))" 2>/dev/null)
+TOTAL=$((TOTAL + 1))
+IS_POSITIVE=$(echo "$AMB_SCORE" | awk '{ print ($1 > 0) ? "true" : "false" }')
+if [[ "$IS_POSITIVE" == "true" ]]; then
+  echo -e "  ${GREEN}PASS${NC}  mechanical score > 0 (detected TBD/probably): ${AMB_SCORE}"
+  PASS=$((PASS + 1))
+else
+  echo -e "  ${RED}FAIL${NC}  mechanical score should be > 0: ${AMB_SCORE}"
+  FAIL=$((FAIL + 1))
+fi
+
+# Nonexistent file
+AMB_ERR_OUTPUT=$(cat << 'REQ' | "$BIN" serve 2>/dev/null
+{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_calculate_ambiguity","arguments":{"pipeline_id":"e2e-001","interview_log_path":"/nonexistent.md"}}}
+REQ
+)
+AMB_ERR_R=$(echo "$AMB_ERR_OUTPUT" | python3 -c "
+import sys, json
+for line in sys.stdin:
+    try:
+        m = json.loads(line.strip())
+        if m.get('id') == 1:
+            c = m.get('result', {}).get('content', [])
+            for x in c:
+                if x.get('type') == 'text':
+                    print(x['text']); break
+            break
+    except: pass
+" 2>/dev/null)
+assert_contains "nonexistent interview log → error" "실패" "$AMB_ERR_R"
+
+# ============================================================
+echo ""
+echo "--- Phase 6: DB integrity ---"
+# ============================================================
+
+DB_FILE="${OLYMPUS_DATA_DIR}/olympus.db"
+TOTAL=$((TOTAL + 1))
+if [[ -f "$DB_FILE" ]]; then
+  DB_SIZE=$(wc -c < "$DB_FILE")
+  if [[ "$DB_SIZE" -gt 1000 ]]; then
+    echo -e "  ${GREEN}PASS${NC}  DB persisted (${DB_SIZE} bytes)"
+    PASS=$((PASS + 1))
+  else
+    echo -e "  ${RED}FAIL${NC}  DB too small (${DB_SIZE} bytes)"
+    FAIL=$((FAIL + 1))
+  fi
+else
+  echo -e "  ${RED}FAIL${NC}  DB file not found"
+  FAIL=$((FAIL + 1))
+fi
+
+# ============================================================
+echo ""
+echo "=== E2E Results: ${PASS}/${TOTAL} passed, ${FAIL} failed ==="
+
+if [[ $FAIL -gt 0 ]]; then
+  exit 1
+fi
