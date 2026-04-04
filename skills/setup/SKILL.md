@@ -32,8 +32,8 @@ and register MCP in user-level config for maximum reliability.
    If missing: suggest brew install jq (macOS) / apt install jq (Linux)
 
 3. Plugin root:
-   Verify ${CLAUDE_PLUGIN_ROOT} or fallback to cwd
-   Check: hooks/hooks.json, agents/, skills/ exist
+   Set: PLUGIN_ROOT="${CLAUDE_SKILL_DIR}/../.."
+   Check: ${PLUGIN_ROOT}/hooks/hooks.json, ${PLUGIN_ROOT}/agents/, ${PLUGIN_ROOT}/skills/ exist
 
 4. git (optional):
    Run: which git
@@ -44,20 +44,22 @@ and register MCP in user-level config for maximum reliability.
 ## Step 2: MCP Server Binary Setup
 
 ```
-1. Check: ${CLAUDE_PLUGIN_ROOT}/bin/olympus-mcp exists
+PLUGIN_ROOT="${CLAUDE_SKILL_DIR}/../.."
+
+1. Check: ${PLUGIN_ROOT}/bin/olympus-mcp exists
    IF exists: run --version, report
    IF missing: auto-download from GitHub Release
 
 2. Download (if missing):
    Detect platform: uname -s → darwin/linux
    Detect arch: uname -m → arm64/amd64
-   Get version from plugin.json
+   Get version: jq -r '.version' ${PLUGIN_ROOT}/.claude-plugin/plugin.json
    URL: https://github.com/devy1540/olympus/releases/download/v{version}/olympus-mcp-{platform}-{arch}
-   Save to: ${CLAUDE_PLUGIN_ROOT}/bin/olympus-mcp
+   Save to: ${PLUGIN_ROOT}/bin/olympus-mcp
    chmod +x, verify --version
 
 3. If download fails AND Go is available:
-   Fallback: cd ${CLAUDE_PLUGIN_ROOT}/mcp-server && go build -o ${CLAUDE_PLUGIN_ROOT}/bin/olympus-mcp ./cmd/olympus-mcp/
+   Fallback: cd ${PLUGIN_ROOT}/mcp-server && go build -o ${PLUGIN_ROOT}/bin/olympus-mcp ./cmd/olympus-mcp/
 
 4. If all fail:
    Report: "MCP 기능 비활성, 스킬/에이전트/훅은 정상 작동"
@@ -113,7 +115,9 @@ This ensures the MCP server works even if plugin.json mcpServers fails.
 ## Step 4: Hook Validation
 
 ```
-1. For each script in hooks.json:
+PLUGIN_ROOT="${CLAUDE_SKILL_DIR}/../.."
+
+1. For each script in ${PLUGIN_ROOT}/hooks/hooks.json:
    Check exists + executable
    Run: bash -n (syntax check)
 
@@ -121,25 +125,36 @@ This ensures the MCP server works even if plugin.json mcpServers fails.
    echo '{"test": true}' | jq -r '.test'
 
 3. Verify gate-thresholds.json parseable:
-   jq '.' docs/shared/gate-thresholds.json
+   jq '.' ${CLAUDE_SKILL_DIR}/../../docs/shared/gate-thresholds.json
 ```
+
+IMPORTANT: All file paths in this skill MUST use `${CLAUDE_SKILL_DIR}/../..` as the plugin root.
+The cwd is the USER'S PROJECT directory, NOT the plugin directory.
+- Plugin root: `${CLAUDE_SKILL_DIR}/../..` (resolves to the olympus plugin directory)
+- DO NOT use relative paths like `docs/shared/` or `agents/` — they will fail.
 
 ---
 
 ## Step 5: Agent & Skill Verification
 
 ```
+PLUGIN_ROOT="${CLAUDE_SKILL_DIR}/../.."
+
 1. Agents (15 expected):
-   List agents/*.md, verify YAML frontmatter
+   List ${PLUGIN_ROOT}/agents/*.md, verify YAML frontmatter
    Report: {found}/15
 
 2. Skills (11 expected including setup):
-   List skills/*/SKILL.md
+   List ${PLUGIN_ROOT}/skills/*/SKILL.md
    Report: {found}/11
 
 3. Shared documents (5 core schemas):
-   agent-schema.json, gate-thresholds.json, pipeline-states.json,
-   artifact-contracts.json, hook-responses.json
+   Check existence of:
+     ${PLUGIN_ROOT}/docs/shared/agent-schema.json
+     ${PLUGIN_ROOT}/docs/shared/gate-thresholds.json
+     ${PLUGIN_ROOT}/docs/shared/pipeline-states.json
+     ${PLUGIN_ROOT}/docs/shared/artifact-contracts.json
+     ${PLUGIN_ROOT}/docs/shared/hook-responses.json
    Report: {found}/5
 ```
 
