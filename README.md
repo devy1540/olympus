@@ -15,7 +15,7 @@
 <p align="center">
   <em>"The gods merely pose questions. Fate lies in what I ask — the answers are yours to find."</em>
   <br/>
-  <sub>14 gods argue, challenge, and verify — so your software doesn't ship on assumptions.</sub>
+  <sub>15 gods argue, challenge, and verify — so your software doesn't ship on assumptions.</sub>
 </p>
 
 <p align="center">
@@ -31,7 +31,7 @@
 
 > *The gods don't agree. That's the point.*
 
-Olympus is a **harness engineering plugin** for Claude Code. 14 agents — each a Greek deity with a distinct role and strict permissions — refine requirements, analyze from multiple perspectives, implement, and evaluate your software through structured adversarial collaboration.
+Olympus is a **harness engineering plugin** for Claude Code. 15 agents — each a Greek deity with a distinct role and strict permissions — refine requirements, analyze from multiple perspectives, implement, and evaluate your software through structured adversarial collaboration.
 
 Most AI coding fails because nobody questioned the requirements. Olympus forces the question before allowing the answer.
 
@@ -271,7 +271,7 @@ Benchmark → Dogfood → Evaluate (5 dims) → Diagnose → Refine → Audit �
 
 ### The Delegation Pattern
 
-9 of 14 agents are **read-only**. They cannot write files. Instead:
+10 of 15 agents are **read-only**. They cannot write files. Instead:
 
 ```
 Read-only Agent → SendMessage(result) → Orchestrator → Write(file)

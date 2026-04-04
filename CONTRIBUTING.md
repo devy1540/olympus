@@ -25,8 +25,8 @@ bash hooks/test-integration.sh
 
 ```
 olympus/
-  agents/           # 14 agent definitions (.md with YAML frontmatter)
-  skills/           # 10 skill orchestrations (SKILL.md)
+  agents/           # 15 agent definitions (.md with YAML frontmatter)
+  skills/           # 11 skill orchestrations (SKILL.md)
   hooks/            # 7 hook scripts + 3 test/utility + 1 library
   docs/shared/      # 5 schemas + 12 protocols
   .claude-plugin/   # Plugin registration

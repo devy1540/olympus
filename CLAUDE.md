@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Olympus는 Claude Code 하네스 엔지니어링 플러그인. 14개 전문 에이전트(그리스 신)가 요구사항 정제, 다관점 분석, 구현, 평가를 구조적 적대적 협업과 수학적 게이트로 수행한다.
+Olympus는 Claude Code 하네스 엔지니어링 플러그인. 15개 전문 에이전트(그리스 신)가 요구사항 정제, 다관점 분석, 구현, 평가를 구조적 적대적 협업과 수학적 게이트로 수행한다.
 
 **Node.js/npm 프로젝트가 아님** — 순수 Claude Code 플러그인 (Markdown 에이전트 + shell hook + skill 오케스트레이션).
 
@@ -57,7 +57,7 @@ Oracle → Genesis → Pantheon → Plan → Execute → Tribunal
 
 ### 에이전트 권한 모델
 
-- **Write/Edit 금지 (9)**: Hermes, Apollo, Metis, Ares, Poseidon, Athena, Themis, Eris, Helios — `SendMessage`로 결과를 오케스트레이터에 전달, 오케스트레이터가 파일 기록. Hermes·Poseidon은 Bash 허용 (디렉토리 탐색·보안 스캔 목적)
+- **Write/Edit 금지 (10)**: Hermes, Apollo, Metis, Ares, Poseidon, Athena, Themis, Eris, Helios, Nemesis — `SendMessage`로 결과를 오케스트레이터에 전달, 오케스트레이터가 파일 기록. Hermes·Poseidon은 Bash 허용 (디렉토리 탐색·보안 스캔 목적)
 - **Write, Edit 금지 (1)**: Hera (테스트 실행·품질 판정, Edit 불가)
 - **Full (4)**: Zeus (계획), Prometheus (구현), Artemis (디버깅), Hephaestus (빌드/테스트 실행)
 
