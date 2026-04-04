@@ -28,3 +28,12 @@ Thumbs.db
 
 # Logs
 *.log
+
+# MCP server binary
+bin/
+
+# SQLite
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
