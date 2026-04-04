@@ -21,6 +21,18 @@ A pipeline that analyzes problems from multiple perspectives and validates logic
 - Analyst agents MUST run in parallel via separate Agent tool calls.
 See orchestrator-protocol.md §0.
 
+## MCP Integration
+
+If MCP tool `olympus_register_agent_spawn` is available:
+
+```
+After each agent spawn: olympus_register_agent_spawn(pipeline_id, agent_name)
+  → hermes, helios, ares, poseidon, zeus, eris (all 6 must be registered)
+Gate check:             olympus_gate_check(pipeline_id, "consensus", percentage)
+  → Server checks score AND verifies eris was spawned (DA mandatory)
+After each completes:   olympus_record_execution(pipeline_id, "pantheon", agent_name, duration_ms, token_count)
+```
+
 ## Gate
 - Normal: Consensus ≥ Working (67%)
 - Hell mode (--hell): Unanimous

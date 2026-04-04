@@ -14,6 +14,20 @@ A pipeline that systematically refines requirements into a structured spec.md.
 
 **⚠ MANDATORY**: Each agent listed above MUST be spawned via the Agent tool with the specified subagent_type. The orchestrator MUST NOT perform Hermes's exploration, Apollo's interview, or Metis's gap analysis directly. See orchestrator-protocol.md §0.
 
+## MCP Integration
+
+If MCP tool `olympus_register_agent_spawn` is available, call it after EACH agent spawn:
+
+```
+After spawning Hermes:  olympus_register_agent_spawn(pipeline_id, "hermes")
+After spawning Apollo:  olympus_register_agent_spawn(pipeline_id, "apollo")
+After spawning Metis:   olympus_register_agent_spawn(pipeline_id, "metis")
+Gate check:             olympus_gate_check(pipeline_id, "ambiguity", score)
+After each completes:   olympus_record_execution(pipeline_id, "oracle", agent_name, duration_ms, token_count)
+```
+
+The MCP server independently verifies that all required agents were spawned before allowing the gate to pass.
+
 ## Gate
 - Ambiguity score ≤ 0.2
 

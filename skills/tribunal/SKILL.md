@@ -24,6 +24,16 @@ A pipeline that evaluates implementations through three stages: mechanical verif
 - Stage 3 uses **sequential debate via teammates**: Ares proposes → Eris counter-argues (seeing Ares's position) → Hera synthesizes (seeing both). This is not possible with independent parallel subagents.
 See orchestrator-protocol.md §0 and §5.
 
+## MCP Integration
+
+If MCP tool `olympus_register_agent_spawn` is available:
+
+```
+After each agent spawn: olympus_register_agent_spawn(pipeline_id, agent_name)
+  → hephaestus, athena, ares, eris, hera (all must be registered)
+After each completes:   olympus_record_execution(pipeline_id, "tribunal", agent_name, duration_ms, token_count)
+```
+
 ## Final Verdict
 APPROVED / BLOCKED / INCOMPLETE / REJECTED
 

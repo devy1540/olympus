@@ -22,6 +22,18 @@ Genesis runs Metis and Eris repeatedly (up to 30 generations). Teammates:
 
 See orchestrator-protocol.md §5 for hybrid spawn mode selection criteria.
 
+## MCP Integration
+
+If MCP tool `olympus_register_agent_spawn` is available:
+
+```
+After team creation:    olympus_register_agent_spawn(pipeline_id, "metis")
+                        olympus_register_agent_spawn(pipeline_id, "eris")
+Each generation:        olympus_record_execution(pipeline_id, "genesis", "metis", duration_ms, token_count)
+                        olympus_record_execution(pipeline_id, "genesis", "eris", duration_ms, token_count)
+Gate check:             olympus_gate_check(pipeline_id, "convergence", similarity)
+```
+
 ## Gate
 - Ontology convergence ≥ 0.95
 

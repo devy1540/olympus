@@ -88,6 +88,39 @@ Conforms to **pipeline-states.json** PipelineState schema (ported from Claude Co
 
 State file: `.olympus/{id}/odyssey-state.json`
 
+## MCP Pipeline Integration
+
+**⚠ MANDATORY**: If the MCP tool `olympus_start_pipeline` is available, the orchestrator MUST call MCP tools at each lifecycle point. The MCP server tracks state independently and enforces gates that the orchestrator cannot bypass.
+
+```
+Phase 0 (Init):
+  Call: olympus_start_pipeline(skill: "odyssey", pipeline_id: "{id}")
+  → Receive: required_agents list, first_phase
+
+Each agent spawn:
+  Call: olympus_register_agent_spawn(pipeline_id: "{id}", agent_name: "{agent}")
+  → Server records spawn for later gate_check verification
+
+Each gate check:
+  Call: olympus_gate_check(pipeline_id: "{id}", gate_type: "{type}", score: {value})
+  → Server verifies score AND checks all required agents were spawned
+  → If missing spawns: response includes missing_spawns warning
+
+Phase transition:
+  Call: olympus_next_phase(pipeline_id: "{id}")
+  → Server returns valid next phases (enforces transition rules)
+
+After each agent completes:
+  Call: olympus_record_execution(pipeline_id: "{id}", phase: "{phase}", agent_name: "{agent}", duration_ms: {ms}, token_count: {tokens})
+  → Server accumulates execution history for future plan validation
+
+Before Zeus planning (Phase 4):
+  Call: olympus_validate_plan(pipeline_id: "{id}", skill: "odyssey", phase: "execution", agent: "prometheus", estimated_calls: {N})
+  → Server checks against historical data and warns if estimate is unrealistic
+```
+
+If MCP tools are not available (binary not installed), the orchestrator proceeds without MCP — hooks provide fallback validation.
+
 **Validation:** `validate-state.sh` enforces:
 - Phase enum (pipeline-states.json OdysseyPhases)
 - Transition rules (oracle→genesis|pantheon, etc.)
@@ -102,12 +135,15 @@ State file: `.olympus/{id}/odyssey-state.json`
 ## Phase 1: Oracle
 
 ```
+0. MCP: olympus_next_phase(pipeline_id) → confirm "oracle" is valid
 1. Execute /olympus:oracle
 2. Result: spec.md
-3. Gate check:
+3. MCP gate check:
    - ambiguityScore = read ambiguity-scores.json
-   - ambiguityScore ≤ 0.2 → Phase 2
-   - else → Oracle re-run (user override allowed)
+   - Call: olympus_gate_check(pipeline_id, "ambiguity", ambiguityScore)
+   - If passed → Phase 2
+   - If failed → Oracle re-run (user override allowed)
+   - If missing_spawns in response → warn and re-spawn missing agents
 4. Update odyssey-state.json:
    - phase: "genesis" (or "pantheon" if genesis disabled)
    - transition: { status: "continue", reason: "next_phase" }
@@ -160,6 +196,9 @@ When enabled:
 ## Phase 4: Zeus Planning + Themis Critique
 
 ```
+0. MCP: olympus_validate_plan(pipeline_id, "odyssey", "execution", "prometheus", estimated_calls)
+   → If unrealistic: adjust plan scope before proceeding
+
 1. Spawn Zeus as a Task:
    - Prompt: artifact directory path
    - Instruction: "Use Read to load spec.md and analysis.md directly"
