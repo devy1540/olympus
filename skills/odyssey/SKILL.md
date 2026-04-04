@@ -157,9 +157,9 @@ Refine requirements into spec.md through Socratic interview.
 3. Hermes exploration:
    SendMessage(to: "hermes", summary: "코드베이스 탐색",
      "Explore codebase for: {user_input}.
-      Save results to ${ARTIFACT_DIR}/codebase-context.md.
-      Report completion to leader.")
-   WAIT for hermes completion → leader writes codebase-context.md
+      DO NOT write files — you are read-only.
+      Send your findings to leader via SendMessage when done.")
+   WAIT for hermes SendMessage → leader writes codebase-context.md from hermes findings
    olympus_record_execution(pipeline_id, "oracle", "hermes", ...)
 
 4. Apollo interview loop:
@@ -167,11 +167,11 @@ Refine requirements into spec.md through Socratic interview.
      "Read ${ARTIFACT_DIR}/codebase-context.md for project context.
       User requirement: {user_input}. Complexity: {level}.
       Conduct interview via AskUserQuestion. One question at a time.
-      After each answer, update ambiguity scores.
-      Save interview-log.md and ambiguity-scores.json to ${ARTIFACT_DIR}/.
+      After each answer, track ambiguity scores internally.
+      DO NOT write files — you are read-only.
       Terminate when ambiguity ≤ 0.2 or max 10 rounds.
-      Report completion to leader.")
-   WAIT for apollo completion → leader writes artifacts
+      Send interview log + ambiguity scores to leader via SendMessage when done.")
+   WAIT for apollo SendMessage → leader writes interview-log.md + ambiguity-scores.json
    olympus_record_execution(pipeline_id, "oracle", "apollo", ...)
 
 5. Ambiguity gate:

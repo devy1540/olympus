@@ -118,15 +118,16 @@ SendMessage(to: "apollo", summary: "인터뷰 시작",
    User requirement: {user_input}. Complexity: {level}.
    Conduct Socratic interview via AskUserQuestion. One question at a time.
    After each answer:
-     a. Update ambiguity scores (per ambiguity-scoring.md)
-     b. Update interview-log.md
-     c. Update ambiguity-scores.json
+     a. Track ambiguity scores internally (per ambiguity-scoring.md)
+     b. Track interview log internally
+     c. Track ambiguity scores internally
+   DO NOT write files — you are read-only.
    Stagnation detection:
      - Spinning: same topic 3 times → move on
      - Oscillation: A↔B repetition → ask user to decide
      - Diminishing: delta < 0.02 → terminate dimension
    Terminate when: ambiguity ≤ 0.2 OR max rounds reached.
-   Report completion to leader.")
+   Send interview log + ambiguity scores to leader via SendMessage when done.")
 
 WAIT for apollo → leader writes interview-log.md, ambiguity-scores.json
 olympus_record_execution(pipeline_id, "oracle", "apollo", ...)
