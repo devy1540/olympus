@@ -50,7 +50,17 @@ mkdir -p "$BIN_DIR"
 if curl -fsSL -o "$BINARY" "$URL" 2>/dev/null; then
     chmod +x "$BINARY"
     exec "$BINARY" "$@"
-else
-    echo "Failed to download MCP binary from ${URL}" >&2
-    exit 1
 fi
+
+# Download failed — try source build
+MCP_SRC="${PLUGIN_ROOT}/mcp-server"
+if command -v go >/dev/null 2>&1 && [[ -f "$MCP_SRC/go.mod" ]]; then
+    echo "Downloading failed. Building from source..." >&2
+    (cd "$MCP_SRC" && go build -o "$BINARY" ./cmd/olympus-mcp) 2>&1 && {
+        chmod +x "$BINARY"
+        exec "$BINARY" "$@"
+    }
+fi
+
+echo "Failed to obtain MCP binary (download and source build both failed)" >&2
+exit 1
