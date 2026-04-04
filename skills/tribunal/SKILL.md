@@ -16,9 +16,21 @@ All agents operate as teammates. Stage 3 debate uses direct inter-agent SendMess
 - Do NOT perform agent work directly.
 - Leader handles ONLY: team management, gate checks, artifact writing, verdict compilation.
 - IMPORTANT: Do NOT skip ToolSearch at Step 0.
-- TEAMMATE RESPONSE RULE: When a teammate goes idle without sending results,
-  send a follow-up: SendMessage(to: "{agent}", "Report your findings now via SendMessage. Keep under 5000 chars.")
-  Retry up to 3 times. NEVER do the agent's work directly — this violates §0.
+
+- PROACTIVE SPAWN RULE (§6.3): Every Agent() call MUST include the agent's IMMEDIATE TASK or ROLE
+  in the prompt. NEVER use "Wait for messages — do not act until prompted."
+  The agent starts working the moment it spawns. SendMessage is ONLY for follow-up tasks.
+
+- MANDATORY CONSULTATION (§7): athena MUST consult hephaestus for any AC where evidence is
+  ambiguous BEFORE reporting final results to the leader. Reports lacking consultation evidence
+  for ambiguous ACs are incomplete — send athena back to consult.
+  Stage 3 debate: each agent MUST respond to the previous agent's specific points.
+  This is a dialogue, not parallel monologues.
+
+- RESPONSE RULE: If a teammate does not report within reasonable time:
+  1. SendMessage(to: "{agent}", "Report your findings now. Include consultation results. Keep under 5000 chars.")
+  2. Retry up to 3 times.
+  3. NEVER do the agent's work directly — this violates §0.
 </Execution_Policy>
 
 <Team_Structure>
@@ -65,10 +77,12 @@ Call ToolSearch("+olympus pipeline") to load MCP tools.
 IF "hephaestus" not in team:
   Agent(name: "hephaestus", team_name: ${TEAM},
         subagent_type: "olympus:hephaestus",
-        prompt: "You are Hephaestus, a teammate in ${TEAM}.
-          Run build/lint/test/type-check when requested.
-          Artifact directory: ${ARTIFACT_DIR}/
-          Wait for messages — do not act until prompted.")
+        run_in_background: true,
+        prompt: "You are Hephaestus in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+          IMMEDIATE TASK: Run mechanical verification — build, lint, type-check, and test suite in order.
+          Save results to ${ARTIFACT_DIR}/mechanical-result.json.
+          When done: SendMessage(to: 'leader', summary: '기계적 검증 완료', '{results}')
+          Then STAY AVAILABLE throughout Tribunal — respond to queries from athena via SendMessage.")
   olympus_register_agent_spawn(pipeline_id, "hephaestus")
 
 SendMessage(to: "hephaestus", summary: "기계적 검증",
@@ -93,10 +107,21 @@ Decision:
 IF "athena" not in team:
   Agent(name: "athena", team_name: ${TEAM},
         subagent_type: "olympus:athena",
-        prompt: "You are Athena, a teammate in ${TEAM}.
-          You may query 'hephaestus' for additional test evidence.
-          Artifact directory: ${ARTIFACT_DIR}/
-          Wait for messages — do not act until prompted.")
+        run_in_background: true,
+        prompt: "You are Athena in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+          IMMEDIATE TASK: Perform semantic evaluation of AC compliance.
+          DO NOT write files — you are read-only.
+          Read ${ARTIFACT_DIR}/spec.md and mechanical-result.json.
+          Extract AC list from spec.md.
+          For each AC: search for implementation evidence (file:line).
+          Status: MET (1.0) / PARTIALLY_MET (0.5) / NOT_MET (0.0).
+          MANDATORY CONSULTATION: For any AC where evidence is ambiguous,
+            query 'hephaestus': SendMessage(to: 'hephaestus', summary: 'AC 증거 확인', '{specific test or file to verify}')
+            Wait for hephaestus response before finalizing that AC's status.
+          Calculate overall score: sum / count.
+          When done: SendMessage(to: 'leader', summary: '의미적 평가 완료 — score: {score}',
+            '{semantic-matrix + hephaestus consultation log}')
+          Then STAY AVAILABLE for Stage 3 queries.")
   olympus_register_agent_spawn(pipeline_id, "athena")
 
 SendMessage(to: "athena", summary: "의미적 평가",
@@ -105,8 +130,10 @@ SendMessage(to: "athena", summary: "의미적 평가",
    Extract AC list from spec.md.
    For each AC: search for implementation evidence (file:line).
    Status: MET (1.0) / PARTIALLY_MET (0.5) / NOT_MET (0.0).
+   CONSULTATION: For any AC where evidence is ambiguous,
+     query 'hephaestus': SendMessage(to: 'hephaestus', summary: 'AC 증거 확인', '{specific test}')
    Calculate overall score: sum / count.
-   Report semantic-matrix.md to leader.")
+   Report semantic-matrix.md to leader with consultation log.")
 
 WAIT → leader writes semantic-matrix.md
 olympus_record_execution(pipeline_id, "tribunal", "athena", ...)
@@ -137,60 +164,90 @@ WHEN triggered:
    IF "ares" not in team:
      Agent(name: "ares", team_name: ${TEAM},
            subagent_type: "olympus:ares",
-           prompt: "You are Ares, consensus proposer in ${TEAM}.
-             You will debate with 'eris'. Read semantic-matrix.md and code.
-             Wait for messages — do not act until prompted.")
+           run_in_background: true,
+           prompt: "You are Ares in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+             ROLE: Consensus proposer for Tribunal Stage 3 debate.
+             DO NOT write files — you are read-only.
+             Read ${ARTIFACT_DIR}/semantic-matrix.md and explore relevant code now.
+             You will be asked to open the debate via SendMessage.
+             When debating: include file:line evidence for every claim.
+             STAY AVAILABLE throughout Stage 3 — you may be asked to rebut eris's counter-argument.")
      olympus_register_agent_spawn(pipeline_id, "ares")
 
    IF "eris" not in team:
      Agent(name: "eris", team_name: ${TEAM},
            subagent_type: "olympus:eris",
-           prompt: "You are Eris, devil's advocate in ${TEAM}.
-             You will counter-argue against 'ares' with evidence.
-             Wait for messages — do not act until prompted.")
+           run_in_background: true,
+           prompt: "You are Eris in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+             ROLE: Devil's advocate for Tribunal Stage 3 debate.
+             DO NOT write files — you are read-only.
+             Read ${ARTIFACT_DIR}/semantic-matrix.md now.
+             You will receive ares's full argument via SendMessage.
+             When challenging: use fallacy-catalog.md, include file:line counter-evidence.
+             IMPORTANT: Respond SPECIFICALLY to ares's points — do not make independent arguments.
+             This is a dialogue, not parallel monologues.
+             STAY AVAILABLE throughout Stage 3.")
      olympus_register_agent_spawn(pipeline_id, "eris")
 
    IF "hera" not in team:
      Agent(name: "hera", team_name: ${TEAM},
            subagent_type: "olympus:hera",
-           prompt: "You are Hera, synthesizer in ${TEAM}.
-             You will see both Ares and Eris positions.
-             Run tests for evidence. Produce final verdict.
-             Wait for messages — do not act until prompted.")
+           run_in_background: true,
+           prompt: "You are Hera in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+             ROLE: Final judge for Tribunal Stage 3 — synthesize the debate and produce verdict.
+             You will receive the full debate transcript (ares opening + eris rebuttal + ares rebuttal).
+             You may query 'hephaestus' for test evidence to settle factual disputes:
+               SendMessage(to: 'hephaestus', summary: '판정 근거 확인', '{what to verify}')
+             STAY AVAILABLE for verdict task.")
      olympus_register_agent_spawn(pipeline_id, "hera")
 
-2. Sequential debate (EACH SEES THE PREVIOUS):
+2. Sequential debate (EACH SEES THE PREVIOUS) — THIS IS A REAL DEBATE:
 
    a. Ares proposes:
-      SendMessage(to: "ares", summary: "토론 제안",
+      SendMessage(to: "ares", summary: "토론 개시",
         "DO NOT write files — you are read-only.
          Read ${ARTIFACT_DIR}/semantic-matrix.md and explore relevant code.
          Argue for APPROVE or REJECT from quality perspective.
          Include file:line evidence for every claim.
+         This will be shared with Eris for counter-argument.
          Report position to leader.")
       WAIT → receive ares_position
+      olympus_log_collaboration(pipeline_id, "ares", "eris", "Tribunal debate: ares opening")
 
-   b. Eris counter-argues (sees Ares):
+   b. Eris counter-argues — SEES ares's full argument:
       SendMessage(to: "eris", summary: "반박",
-        "DO NOT write files — you are read-only.
-         Ares's position: {ares_position_summary}.
-         Read ${ARTIFACT_DIR}/semantic-matrix.md.
-         Counter-argue with evidence. Challenge fallacies per fallacy-catalog.md.
+        "ARES ARGUES: {ares_full_position}.
+         Your job: find logical fallacies, unsupported claims, overlooked evidence.
+         Use fallacy-catalog.md. Include file:line counter-evidence.
+         IMPORTANT: Respond SPECIFICALLY to ares's points — do not make independent arguments.
+         This is a dialogue, not parallel monologues.
          Report counter-argument to leader.")
       WAIT → receive eris_counter
+      olympus_log_collaboration(pipeline_id, "eris", "ares", "Tribunal debate: eris rebuttal")
 
-   c. Hera synthesizes (sees both):
+   c. OPTIONAL: Ares rebuttal (if eris raised substantive new points):
+      SendMessage(to: "ares", summary: "재반박",
+        "ERIS COUNTERS: {eris_full_counter}.
+         Respond ONLY to new points eris raised. Do not repeat your opening.
+         Concede where eris is right. Defend where you have stronger evidence.")
+      WAIT → receive ares_rebuttal (if applicable)
+
+   d. Hera synthesizes — SEES the full debate transcript:
       SendMessage(to: "hera", summary: "종합 판정",
-        "Ares argues: {ares_summary}. Eris counters: {eris_summary}.
-         Read ${ARTIFACT_DIR}/semantic-matrix.md.
-         Synthesize both arguments. Run tests via Bash for evidence.
-         Produce final synthesized verdict: APPROVE or REJECT.
+        "DEBATE TRANSCRIPT:
+         === ARES OPENING === {ares_position}
+         === ERIS REBUTTAL === {eris_counter}
+         === ARES REBUTTAL === {ares_rebuttal or 'N/A'}
+         Synthesize the debate. Where ares and eris disagree, determine who has stronger evidence.
+         You may query 'hephaestus' for test evidence to settle factual disputes:
+           SendMessage(to: 'hephaestus', summary: '판정 근거 확인', '{specific test}')
+         Produce final synthesized verdict: APPROVE or REJECT with reasoned synthesis.
          Report to leader.")
       WAIT → receive hera_verdict
 
 3. Tally votes:
    Extract APPROVE/REJECT from each response.
-   Supermajority >= 66%:
+   Supermajority >= 67%:
      - 2+ approve → APPROVED
      - 1 approve → REJECTED + dissent recorded
      - 0 approve → REJECTED
@@ -250,10 +307,11 @@ ELSE:
   - olympus_start_pipeline: Step 1 (MUST)
   - olympus_register_agent_spawn: after each spawn (MUST)
   - olympus_record_execution: after each agent (SHOULD)
+  - olympus_log_collaboration: Stage 3 debate exchanges (SHOULD)
 
   Team Tools:
   - TeamCreate: Step 1 (standalone only)
-  - Agent (name + team_name): spawn teammates
+  - Agent (name + team_name + run_in_background: true): spawn teammates
   - SendMessage: SEQUENTIAL for debate (Ares → Eris → Hera, each sees previous)
   - TeamDelete: Step 6 (standalone only)
 </Tool_Usage>

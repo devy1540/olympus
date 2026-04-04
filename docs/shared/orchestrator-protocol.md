@@ -274,47 +274,79 @@ Each skill creates one team. Odyssey creates a single team that spans all sub-sk
 
 When Odyssey invokes a sub-skill (e.g., Oracle phase), agents are spawned into the **Odyssey team** — not a separate Oracle team. This enables cross-phase reuse (e.g., Hermes spawned in Oracle is reused in Execution).
 
-### 6.3 Lazy Spawn Strategy
+### 6.3 Proactive Spawn Strategy
 
-Agents are spawned **on first need**, not all at once:
+**CRITICAL RULE: Spawn with Immediate Task, not passive waiting.**
 
-```
-Phase 1 (Oracle):    spawn hermes, apollo, metis, eris     → 4 active
-Phase 2 (Genesis):   reuse metis, eris                     → 4 active (2 idle)
-Phase 3 (Pantheon):  spawn helios, ares, poseidon, zeus    → 8 active (reuse hermes, eris)
-Phase 4 (Planning):  reuse zeus                             → 8 active (others idle)
-Phase 5 (Execution): spawn prometheus, artemis, hephaestus → 11 active
-Phase 6 (Tribunal):  spawn athena, hera                    → 13 active (reuse ares, eris)
-```
+The old pattern (`Agent(prompt: "Wait for messages")` → later `SendMessage(task)`) is **BANNED**. It causes:
+- Agents idling without work, wasting resources
+- Task delivery failures when SendMessage doesn't reach the idle agent
+- Leader falling back to direct execution (§0 violation)
 
-**Spawn check pattern** (used in SKILL.md):
+**Proactive Spawn Pattern** (mandatory for all SKILL.md):
 ```
+# FIRST SPAWN — agent gets its task immediately
 IF "{agent}" not in team:
-  Agent(name: "{agent}", team_name: "${TEAM}", subagent_type: "olympus:{agent}", prompt: "...")
+  Agent(name: "{agent}", team_name: "${TEAM}", subagent_type: "olympus:{agent}",
+        run_in_background: true,
+        prompt: "You are {Agent} in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+          IMMEDIATE TASK: {concrete task description with all context}.
+          CONSULTATION: Before reporting, consult '{peer}' about {topic} via SendMessage.
+          When done: SendMessage(to: 'leader', summary: '{완료 요약}', '{결과}')
+          Then STAY AVAILABLE for follow-up queries from teammates.")
   olympus_register_agent_spawn(pipeline_id, "{agent}")
+
+# REUSE — agent already in team, send follow-up task
 ELSE:
-  SendMessage(to: "{agent}", "{new task}")   ← reuse existing teammate
+  SendMessage(to: "{agent}", summary: "{태스크 요약}", "{new task details}")
 ```
 
-Memory impact: ~125MB per concurrent in-process teammate. With lazy spawn + idle state, peak is manageable (~750MB at 6 concurrent active).
+**Key differences from old pattern:**
+| Aspect | Old (BANNED) | New (Proactive) |
+|:-------|:-------------|:----------------|
+| Spawn prompt | "Wait for messages" | Concrete task + context |
+| Task delivery | Separate SendMessage (unreliable) | In spawn prompt (guaranteed) |
+| Agent behavior | Passive → idle → maybe activate | Immediately working |
+| Peer consultation | Optional afterthought | Mandatory before report |
+| After first task | Unknown state | "Stay available" for reuse |
 
-### 6.4 Inter-Agent Communication
+**Sequential spawn within a phase:**
+Agents with dependencies are spawned SEQUENTIALLY, not all at once:
+```
+Phase 1 (Oracle):
+  1. spawn hermes (with task: explore) → WAIT for result
+  2. spawn apollo (with task: interview, hermes available) → WAIT for result
+  3. spawn metis (with task: gap analysis) → WAIT for result
+  4. eris spawned lazily only if DA challenge needed
+
+Phase 3 (Pantheon):
+  1. spawn helios (with task: perspectives) → WAIT for result
+  2. spawn ares, poseidon IN PARALLEL (with task: analysis + cross-consult)
+  3. eris reused (SendMessage: DA challenge)
+```
+
+Memory impact: ~125MB per concurrent in-process teammate. Sequential spawn keeps peak lower (~500MB at 4 concurrent active).
+
+### 6.4 Inter-Agent Communication & Mandatory Consultation
 
 Teammates communicate via SendMessage. The leader does NOT need to relay every message.
 
 **Permitted direct communication paths:**
 
-| From | To | Purpose |
-|:-----|:---|:--------|
-| prometheus | hermes | Codebase structure queries during implementation |
-| prometheus | artemis | Debugging assistance during implementation |
-| prometheus | hephaestus | Quick build checks during implementation |
-| apollo | hermes | Codebase context during interview |
-| apollo | metis | Gap analysis feedback during interview |
-| metis | eris | Wonder/Reflect loop (Genesis) |
-| ares | eris | Debate exchange (Tribunal Stage 3) |
-| hera | hephaestus | Evidence collection for verdict |
-| Any agent | leader | Task completion, results, escalation |
+| From | To | Purpose | Consultation Type |
+|:-----|:---|:--------|:-----------------|
+| prometheus | hermes | Codebase structure queries during implementation | On-demand |
+| prometheus | artemis | Debugging assistance during implementation | On-demand |
+| prometheus | hephaestus | Quick build checks during implementation | On-demand |
+| apollo | hermes | Codebase context during interview | Mandatory per round |
+| apollo | metis | Gap analysis feedback during interview | On-demand |
+| metis | eris | Wonder/Reflect loop (Genesis) | Mandatory (dialogue) |
+| ares | eris | Debate exchange (Tribunal Stage 3) | Mandatory (dialogue) |
+| ares | poseidon | Cross-reference: quality ↔ security findings | Mandatory (Pantheon) |
+| poseidon | ares | Cross-reference: security ↔ quality findings | Mandatory (Pantheon) |
+| hera | hephaestus | Evidence collection for verdict | Mandatory |
+| athena | hephaestus | AC evidence verification | On-demand |
+| Any agent | leader | Task completion, results, escalation | Mandatory |
 
 **Communication rules:**
 1. All messages use `SendMessage(to: "{name}", summary: "{5-10 words}", "{content}")`
@@ -322,6 +354,34 @@ Teammates communicate via SendMessage. The leader does NOT need to relay every m
 3. Agents MUST NOT bypass the leader for phase transitions or gate checks
 4. Agents MUST NOT spawn other teammates (only the leader can spawn)
 5. Message order is NOT strictly guaranteed — do not rely on ordering for correctness
+
+**Mandatory Consultation Protocol:**
+
+Agents with "Mandatory" consultation type MUST complete at least one consultation exchange before reporting final results to the leader. This transforms isolated analysis into collaborative dialogue.
+
+```
+CONSULTATION EXCHANGE (minimum 2 turns):
+  1. Agent A → SendMessage(to: "agent_b", summary: "협의 요청: {topic}",
+       "My findings so far: {key points}. Questions for you:
+        - {specific question 1}
+        - {specific question 2}")
+
+  2. Agent B → SendMessage(to: "agent_a", summary: "협의 응답: {topic}",
+       "Feedback on your findings:
+        - {agreement/disagreement with evidence}
+        - {additional insight from my perspective}
+        - {recommendation}")
+
+  3. Agent A incorporates B's feedback into final report
+  4. Agent A → SendMessage(to: "leader", summary: "{완료}",
+       "... Consultation with {agent_b}: {what changed based on feedback}")
+```
+
+**Why Mandatory Consultation matters:**
+- Isolated agents produce narrow findings. Cross-pollination catches blind spots.
+- Ares finds a God Class but misses its security implications → Poseidon catches it.
+- Apollo asks a user question but misses a codebase fact → Hermes corrects it.
+- The consultation log in the final report provides audit trail of collaborative reasoning.
 
 ### 6.5 Teammate Lifecycle Rules
 
@@ -382,3 +442,121 @@ When teammate features are unavailable or fail:
 | Memory pressure (too many active) | Send idle agents `shutdown_request`, re-spawn if needed later |
 
 **Important**: Fallback to subagent mode loses cross-phase context and inter-agent communication. Log a warning when this occurs: `"FALLBACK: {agent} teammate spawn failed, using subagent mode. Cross-phase context will be lost."`
+
+---
+
+## 7. Inter-Agent Conversation Protocol
+
+### 7.1 Design Philosophy
+
+Olympus's core value is **collaborative multi-agent dialogue**, not parallel isolated execution. Agents don't just produce results — they **discuss, challenge, and refine** each other's work through structured conversation.
+
+**Anti-pattern (BANNED):**
+```
+Leader spawns Agent A → A produces result → Leader reads result
+Leader spawns Agent B → B produces result → Leader reads result
+Leader aggregates results
+```
+This is just parallel execution with aggregation. No dialogue occurred.
+
+**Required pattern:**
+```
+Leader spawns Agent A with task + consultation mandate
+A does initial analysis
+A consults Agent B: "Here's what I found. What do you think about X?"
+B responds: "I agree on Y, but Z has security implications you missed."
+A incorporates feedback into final result
+A reports to leader with consultation log
+```
+This produces higher-quality results because findings are cross-validated before reporting.
+
+### 7.2 Conversation Types
+
+| Type | Participants | Turns | When |
+|:-----|:------------|:------|:-----|
+| **Consultation** | 2 agents, 2-turn min | A→B, B→A | Before final report |
+| **Cross-Reference** | 2+ agents, parallel exchange | A↔B, A↔C | Pantheon analysis |
+| **Dialogue** | 2 agents, multi-turn | A→B→A→B... | Genesis wonder/reflect |
+| **Debate** | 2-3 agents, structured | A→B→C (sequential) | Tribunal Stage 3 |
+| **Service Query** | 2 agents, request/response | A→B, B→A | Implementation (hermes queries) |
+
+### 7.3 Conversation Rules
+
+1. **No monologue reports.** Every agent that produces analysis MUST include what they learned from peer consultation in their final report.
+
+2. **Consultation before reporting.** Agents with Mandatory consultation type (§6.4) MUST complete their consultation exchange BEFORE sending final results to the leader.
+
+3. **Evidence in every message.** Inter-agent messages must include `file:line` references or concrete data, not vague assertions. This applies to consultation messages too, not just final reports.
+
+4. **Disagreement is valuable.** When Agent B disagrees with Agent A's findings, the disagreement and its resolution MUST appear in the final report. Suppressing disagreement defeats the purpose.
+
+5. **Leader monitors but doesn't mediate.** The leader can observe inter-agent messages via `olympus_log_collaboration` MCP calls, but should NOT inject itself into ongoing consultations unless deadlock is detected.
+
+6. **Conversation logging.** Every inter-agent exchange SHOULD be logged:
+   ```
+   olympus_log_collaboration(pipeline_id, from: "ares", to: "poseidon",
+     summary: "코드 품질 → 보안 크로스레퍼런스")
+   ```
+
+### 7.4 Phase-Specific Conversation Patterns
+
+**Oracle Phase:**
+```
+hermes explores → apollo reads hermes's context
+apollo interviews user → between rounds, apollo queries hermes for fact verification
+metis analyzes gaps → metis may consult hermes for codebase verification
+```
+
+**Pantheon Phase:**
+```
+helios generates perspectives
+ares analyzes quality, poseidon analyzes security → MANDATORY cross-reference exchange
+  ares → poseidon: "Found God Class at X. Any security concerns?"
+  poseidon → ares: "Yes, that class handles auth tokens. Splitting requires careful scope."
+eris challenges ALL findings with evidence
+```
+
+**Execution Phase:**
+```
+prometheus implements → queries hermes for structure, artemis for debugging
+prometheus ↔ hephaestus: build verification loop
+artemis ↔ hephaestus: test failure root cause analysis
+```
+
+**Tribunal Phase:**
+```
+hephaestus runs mechanical checks
+athena evaluates semantics → may query hephaestus for evidence
+Stage 3 debate: ares presents → eris challenges → hera synthesizes
+  Each sees and responds to previous arguments (genuine debate, not isolated opinions)
+```
+
+### 7.5 Deadlock Detection & Resolution
+
+If two agents are waiting for each other (circular SendMessage dependency):
+
+```
+Detection: Leader observes no progress for 60 seconds after both agents are spawned.
+Resolution:
+  1. Leader sends: SendMessage(to: "{agent_a}", "Proceed with current information.
+     Report what you have so far. {agent_b} will provide feedback after.")
+  2. Break the cycle by making one agent report first.
+```
+
+### 7.6 Conversation Quality Metrics
+
+The leader SHOULD track in odyssey-state.json:
+
+```json
+{
+  "conversationMetrics": {
+    "totalInterAgentMessages": 0,
+    "consultationExchanges": 0,
+    "crossReferences": 0,
+    "disagreementsResolved": 0,
+    "agentsWithZeroConsultation": []
+  }
+}
+```
+
+If `agentsWithZeroConsultation` is non-empty at pipeline end, log a warning — it means some agents worked in isolation, which degrades result quality.

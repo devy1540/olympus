@@ -31,22 +31,22 @@ func isSpawnedCmd(dataDir string) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			st, err := store.OpenRO(dataDir)
 			if err != nil {
-				return outputJSON(map[string]interface{}{"spawned": false, "error": err.Error()})
+				return outputJSON(map[string]any{"spawned": false, "error": err.Error()})
 			}
 			defer st.Close()
 
 			// Verify pipeline exists first — if not, return error so
 			// hooks don't misinterpret "pipeline unknown" as "agent not spawned"
 			if _, err := st.GetPipeline(args[0]); err != nil {
-				return outputJSON(map[string]interface{}{"spawned": false, "error": "pipeline not found"})
+				return outputJSON(map[string]any{"spawned": false, "error": "pipeline not found"})
 			}
 
 			spawned, phase, err := st.IsSpawned(args[0], args[1])
 			if err != nil {
-				return outputJSON(map[string]interface{}{"spawned": false})
+				return outputJSON(map[string]any{"spawned": false})
 			}
 
-			result := map[string]interface{}{"spawned": spawned}
+			result := map[string]any{"spawned": spawned}
 			if spawned {
 				result["phase"] = phase
 			}
@@ -70,7 +70,7 @@ func gateStatusCmd(dataDir string) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			st, err := store.OpenRO(dataDir)
 			if err != nil {
-				return outputJSON(map[string]interface{}{"error": err.Error()})
+				return outputJSON(map[string]any{"error": err.Error()})
 			}
 			defer st.Close()
 
@@ -81,7 +81,7 @@ func gateStatusCmd(dataDir string) *cobra.Command {
 				return nil
 			}
 
-			result := map[string]interface{}{
+			result := map[string]any{
 				"passed": gs.Passed,
 				"score":  gs.Score,
 			}
@@ -105,16 +105,16 @@ func nextPhaseCmd(dataDir string) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			st, err := store.OpenRO(dataDir)
 			if err != nil {
-				return outputJSON(map[string]interface{}{"error": err.Error()})
+				return outputJSON(map[string]any{"error": err.Error()})
 			}
 			defer st.Close()
 
 			p, err := st.GetPipeline(args[0])
 			if err != nil {
-				return outputJSON(map[string]interface{}{"error": err.Error()})
+				return outputJSON(map[string]any{"error": err.Error()})
 			}
 
-			return outputJSON(map[string]interface{}{
+			return outputJSON(map[string]any{
 				"current": p.Phase,
 			})
 		},
@@ -129,13 +129,13 @@ func pipelineStatusCmd(dataDir string) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			st, err := store.OpenRO(dataDir)
 			if err != nil {
-				return outputJSON(map[string]interface{}{"error": err.Error()})
+				return outputJSON(map[string]any{"error": err.Error()})
 			}
 			defer st.Close()
 
 			p, err := st.GetPipeline(args[0])
 			if err != nil {
-				return outputJSON(map[string]interface{}{"error": err.Error()})
+				return outputJSON(map[string]any{"error": err.Error()})
 			}
 
 			spawns, _ := st.ListSpawns(args[0])
@@ -144,7 +144,7 @@ func pipelineStatusCmd(dataDir string) *cobra.Command {
 				spawnNames[i] = s.AgentName
 			}
 
-			return outputJSON(map[string]interface{}{
+			return outputJSON(map[string]any{
 				"id":      p.ID,
 				"skill":   p.Skill,
 				"phase":   p.Phase,
@@ -155,7 +155,7 @@ func pipelineStatusCmd(dataDir string) *cobra.Command {
 	}
 }
 
-func outputJSON(v interface{}) error {
+func outputJSON(v any) error {
 	data, err := json.Marshal(v)
 	if err != nil {
 		return err

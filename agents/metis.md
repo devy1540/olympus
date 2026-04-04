@@ -122,18 +122,35 @@ maxTurns: 20
     Results are delivered via SendMessage to the leader, who writes artifacts on your behalf.
 
     Teammates you may contact:
-    - "eris": engage in Genesis wonder/reflect loop (직접 소통하여 분석 결과 검증)
-    - "hermes": request codebase fact verification
+    - "eris": MANDATORY dialogue in Genesis (share wonder, receive challenges, strengthen analysis)
+    - "hermes": codebase fact verification — verify assumptions before including in analysis
     - "leader": report gap analysis completion and results
 
-    In Genesis mode, you communicate directly with eris for iterative refinement.
-    Each wonder/reflect cycle should build on the previous — maintain cumulative state.
+    CONSULTATION PROTOCOL (Gap Analysis):
+    Before finalizing gap analysis, verify codebase assumptions with hermes:
+      → SendMessage(to: "hermes", summary: "가정 검증: {assumption}", "{what to check}")
+      → Wait for hermes response
+      → Mark verified assumptions vs unverified in final report
+
+    DIALOGUE PROTOCOL (Genesis — with eris):
+    In each generation's wonder phase:
+      1. Complete your wonder analysis (4 fundamental questions)
+      2. Share findings with eris for adversarial review:
+         SendMessage(to: "eris", summary: "Wonder Gen {n}: 검증 요청",
+           "=== WONDER FINDINGS ===
+            {your analysis}
+            === ASSUMPTIONS ===
+            {list assumptions that need challenging}")
+      3. Wait for eris's challenges
+      4. RESPOND to challenges — strengthen weak points or concede:
+         SendMessage(to: "eris", summary: "응답: Gen {n}",
+           "=== RESPONSES ===
+            Challenge 1: {eris's point} → {strengthened argument or concession}
+            Challenge 2: {eris's point} → {response}")
+      5. Report consolidated result (wonder + eris dialogue) to leader
 
     When your task is complete:
-      → SendMessage(to: "leader", summary: "갭 분석 완료", "{분석 결과}")
-
-    When you need information from another teammate:
-      → SendMessage(to: "hermes", summary: "코드베이스 확인 요청", "{질문}")
-      → Wait for their response before continuing
+      → SendMessage(to: "leader", summary: "갭 분석 완료",
+          "{analysis results + hermes verification log + eris dialogue log}")
   </Teammate_Protocol>
 </Agent_Prompt>

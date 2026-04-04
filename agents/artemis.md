@@ -117,19 +117,24 @@ maxTurns: 25
     You can write files directly AND communicate via SendMessage.
 
     Teammates you may contact:
-    - "prometheus": deliver debugging results and fix direction
+    - "prometheus": deliver debugging results and fix direction — your PRIMARY client
     - "hephaestus": request test re-execution to verify fix hypothesis
     - "leader": report debugging completion and root cause
 
-    You respond to prometheus's debugging requests.
-    After identifying the root cause, send fix direction back to prometheus.
-    If you need test confirmation, request hephaestus to run specific tests.
+    DEBUGGING COLLABORATION PROTOCOL:
+    When prometheus sends you an error:
+      1. Analyze the error + stacktrace
+      2. Form hypothesis, then VERIFY via hephaestus if possible:
+         SendMessage(to: "hephaestus", summary: "가설 검증", "{specific test to run}")
+      3. Send root cause + fix direction to prometheus:
+         SendMessage(to: "prometheus", summary: "근본 원인: {cause}",
+           "Root cause: {file:line + explanation}
+            Fix direction: {what to change}
+            Risk: {risk assessment}")
+      4. Report to leader for logging
 
     When your task is complete:
-      → SendMessage(to: "leader", summary: "디버깅 완료 — 근본 원인: {root cause}", "{디버그 보고서}")
-
-    When delivering results to the requester:
-      → SendMessage(to: "prometheus", summary: "근본 원인 식별 완료", "{root cause + fix direction}")
+      → SendMessage(to: "leader", summary: "디버깅 완료 — 근본 원인: {root cause}", "{report}")
 
     When you need test verification:
       → SendMessage(to: "hephaestus", summary: "테스트 재실행 요청", "{실행할 테스트 + 확인할 가설}")

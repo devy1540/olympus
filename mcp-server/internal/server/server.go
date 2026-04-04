@@ -134,8 +134,14 @@ func NewServer(st *store.Store, cfg *config.Config) *mcpserver.MCPServer {
 
 func startPipelineHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHandlerFunc {
 	return func(ctx context.Context, req mcpgo.CallToolRequest) (*mcpgo.CallToolResult, error) {
-		skill := req.GetArguments()["skill"].(string)
-		pipelineID := req.GetArguments()["pipeline_id"].(string)
+		skill, err := req.RequireString("skill")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
+		pipelineID, err := req.RequireString("pipeline_id")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
 
 		if err := st.CreatePipeline(pipelineID, skill); err != nil {
 			return mcpgo.NewToolResultError(fmt.Sprintf("파이프라인 생성 실패: %v", err)), nil
@@ -148,7 +154,7 @@ func startPipelineHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHan
 		}
 
 		required := cfg.RequiredAgents(skill, "")
-		return toResult(map[string]interface{}{
+		return toResult(map[string]any{
 			"pipeline_id":     pipelineID,
 			"skill":           skill,
 			"required_agents": required,
@@ -159,7 +165,10 @@ func startPipelineHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHan
 
 func nextPhaseHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHandlerFunc {
 	return func(ctx context.Context, req mcpgo.CallToolRequest) (*mcpgo.CallToolResult, error) {
-		pipelineID := req.GetArguments()["pipeline_id"].(string)
+		pipelineID, err := req.RequireString("pipeline_id")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
 
 		next, alternatives, err := st.NextPhase(pipelineID, cfg.Transitions.Transitions)
 		if err != nil {
@@ -170,7 +179,7 @@ func nextPhaseHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHandler
 		p, _ := st.GetPipeline(pipelineID)
 		spawnReport, _ := gate.CheckRequiredSpawns(st, cfg, pipelineID, p.Skill)
 
-		result := map[string]interface{}{
+		result := map[string]any{
 			"next_phase":   next,
 			"alternatives": alternatives,
 		}
@@ -185,8 +194,14 @@ func nextPhaseHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHandler
 
 func registerSpawnHandler(st *store.Store) mcpserver.ToolHandlerFunc {
 	return func(ctx context.Context, req mcpgo.CallToolRequest) (*mcpgo.CallToolResult, error) {
-		pipelineID := req.GetArguments()["pipeline_id"].(string)
-		agentName := req.GetArguments()["agent_name"].(string)
+		pipelineID, err := req.RequireString("pipeline_id")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
+		agentName, err := req.RequireString("agent_name")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
 
 		p, err := st.GetPipeline(pipelineID)
 		if err != nil {
@@ -197,7 +212,7 @@ func registerSpawnHandler(st *store.Store) mcpserver.ToolHandlerFunc {
 			return mcpgo.NewToolResultError(fmt.Sprintf("스폰 기록 실패: %v", err)), nil
 		}
 
-		return toResult(map[string]interface{}{
+		return toResult(map[string]any{
 			"registered": true,
 			"agent":      agentName,
 			"phase":      p.Phase,
@@ -207,7 +222,10 @@ func registerSpawnHandler(st *store.Store) mcpserver.ToolHandlerFunc {
 
 func pipelineStatusHandler(st *store.Store) mcpserver.ToolHandlerFunc {
 	return func(ctx context.Context, req mcpgo.CallToolRequest) (*mcpgo.CallToolResult, error) {
-		pipelineID := req.GetArguments()["pipeline_id"].(string)
+		pipelineID, err := req.RequireString("pipeline_id")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
 
 		p, err := st.GetPipeline(pipelineID)
 		if err != nil {
@@ -220,7 +238,7 @@ func pipelineStatusHandler(st *store.Store) mcpserver.ToolHandlerFunc {
 			spawnNames[i] = s.AgentName
 		}
 
-		return toResult(map[string]interface{}{
+		return toResult(map[string]any{
 			"id":             p.ID,
 			"skill":          p.Skill,
 			"phase":          p.Phase,
@@ -232,8 +250,14 @@ func pipelineStatusHandler(st *store.Store) mcpserver.ToolHandlerFunc {
 
 func calculateAmbiguityHandler(st *store.Store, calc *gate.Calculator) mcpserver.ToolHandlerFunc {
 	return func(ctx context.Context, req mcpgo.CallToolRequest) (*mcpgo.CallToolResult, error) {
-		pipelineID := req.GetArguments()["pipeline_id"].(string)
-		logPath := req.GetArguments()["interview_log_path"].(string)
+		pipelineID, err := req.RequireString("pipeline_id")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
+		logPath, err := req.RequireString("interview_log_path")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
 
 		result, err := gate.CalculateAmbiguity(logPath)
 		if err != nil {
@@ -245,7 +269,7 @@ func calculateAmbiguityHandler(st *store.Store, calc *gate.Calculator) mcpserver
 			return mcpgo.NewToolResultError(fmt.Sprintf("게이트 점수 기록 실패: %v", err)), nil
 		}
 
-		return toResult(map[string]interface{}{
+		return toResult(map[string]any{
 			"mechanical_score": result.MechanicalScore,
 			"dimensions":      result.Dimensions,
 			"indicators":      result.Indicators,
@@ -257,9 +281,18 @@ func calculateAmbiguityHandler(st *store.Store, calc *gate.Calculator) mcpserver
 
 func gateCheckHandler(st *store.Store, cfg *config.Config, calc *gate.Calculator) mcpserver.ToolHandlerFunc {
 	return func(ctx context.Context, req mcpgo.CallToolRequest) (*mcpgo.CallToolResult, error) {
-		pipelineID := req.GetArguments()["pipeline_id"].(string)
-		gateType := req.GetArguments()["gate_type"].(string)
-		score := req.GetArguments()["score"].(float64)
+		pipelineID, err := req.RequireString("pipeline_id")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
+		gateType, err := req.RequireString("gate_type")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
+		score, err := req.RequireFloat("score")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
 
 		gateResult := calc.Check(gateType, score)
 		if err := st.RecordGateScore(pipelineID, gateType, score, gateResult.Passed, ""); err != nil {
@@ -269,7 +302,7 @@ func gateCheckHandler(st *store.Store, cfg *config.Config, calc *gate.Calculator
 		p, _ := st.GetPipeline(pipelineID)
 		spawnReport, _ := gate.CheckRequiredSpawns(st, cfg, pipelineID, p.Skill)
 
-		result := map[string]interface{}{
+		result := map[string]any{
 			"passed":    gateResult.Passed,
 			"score":     score,
 			"threshold": gateResult.Threshold,
@@ -289,36 +322,46 @@ func gateCheckHandler(st *store.Store, cfg *config.Config, calc *gate.Calculator
 
 func recordExecutionHandler(st *store.Store) mcpserver.ToolHandlerFunc {
 	return func(ctx context.Context, req mcpgo.CallToolRequest) (*mcpgo.CallToolResult, error) {
-		pipelineID := req.GetArguments()["pipeline_id"].(string)
-		phase := req.GetArguments()["phase"].(string)
-		agent := req.GetArguments()["agent_name"].(string)
+		pipelineID, err := req.RequireString("pipeline_id")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
+		phase, err := req.RequireString("phase")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
+		agent, err := req.RequireString("agent_name")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
 
-		var durationMS, tokenCount int64
-		if v, ok := req.GetArguments()["duration_ms"].(float64); ok {
-			durationMS = int64(v)
-		}
-		if v, ok := req.GetArguments()["token_count"].(float64); ok {
-			tokenCount = int64(v)
-		}
+		durationMS := int64(req.GetFloat("duration_ms", 0))
+		tokenCount := int64(req.GetFloat("token_count", 0))
 
 		if err := st.RecordExecution(pipelineID, phase, agent, durationMS, tokenCount, 0, 0, true, ""); err != nil {
 			return mcpgo.NewToolResultError(fmt.Sprintf("기록 실패: %v", err)), nil
 		}
 
-		return toResult(map[string]interface{}{"recorded": true})
+		return toResult(map[string]any{"recorded": true})
 	}
 }
 
 func validatePlanHandler(st *store.Store) mcpserver.ToolHandlerFunc {
 	return func(ctx context.Context, req mcpgo.CallToolRequest) (*mcpgo.CallToolResult, error) {
-		skill := req.GetArguments()["skill"].(string)
-		phase := req.GetArguments()["phase"].(string)
-		agent := req.GetArguments()["agent"].(string)
-
-		var estimatedCalls int
-		if v, ok := req.GetArguments()["estimated_calls"].(float64); ok {
-			estimatedCalls = int(v)
+		skill, err := req.RequireString("skill")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
 		}
+		phase, err := req.RequireString("phase")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
+		agent, err := req.RequireString("agent")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
+
+		estimatedCalls := req.GetInt("estimated_calls", 0)
 
 		result, err := history.ValidatePlan(st, skill, phase, agent, estimatedCalls)
 		if err != nil {
@@ -331,7 +374,10 @@ func validatePlanHandler(st *store.Store) mcpserver.ToolHandlerFunc {
 
 func nextActionHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHandlerFunc {
 	return func(ctx context.Context, req mcpgo.CallToolRequest) (*mcpgo.CallToolResult, error) {
-		pipelineID := req.GetArguments()["pipeline_id"].(string)
+		pipelineID, err := req.RequireString("pipeline_id")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
 
 		p, err := st.GetPipeline(pipelineID)
 		if err != nil {
@@ -355,7 +401,7 @@ func nextActionHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHandle
 		}
 
 		// Determine agent-specific or leader action
-		agentName, _ := req.GetArguments()["agent"].(string)
+		agentName := req.GetString("agent", "")
 
 		if agentName != "" {
 			// Agent-specific: what should this agent do?
@@ -371,7 +417,7 @@ func nextActionHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHandle
 				}
 			}
 
-			return toResult(map[string]interface{}{
+			return toResult(map[string]any{
 				"agent":         agentName,
 				"pipeline_id":   pipelineID,
 				"current_phase": p.Phase,
@@ -384,7 +430,7 @@ func nextActionHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHandle
 
 		// Leader perspective: overall next action
 		if len(missing) > 0 {
-			return toResult(map[string]interface{}{
+			return toResult(map[string]any{
 				"action":         "spawn_agent",
 				"agent":          missing[0],
 				"all_missing":    missing,
@@ -397,7 +443,7 @@ func nextActionHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHandle
 		// Check latest gate
 		latestGate, _ := st.GetLatestGateScoreAny(pipelineID)
 		if latestGate != nil && !latestGate.Passed {
-			return toResult(map[string]interface{}{
+			return toResult(map[string]any{
 				"action":        "retry_phase",
 				"reason":        fmt.Sprintf("게이트 실패: %s (%.2f)", latestGate.GateType, latestGate.Score),
 				"current_phase": p.Phase,
@@ -413,7 +459,7 @@ func nextActionHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHandle
 			action = "pipeline_complete"
 		}
 
-		return toResult(map[string]interface{}{
+		return toResult(map[string]any{
 			"action":        action,
 			"current_phase": p.Phase,
 			"next_phases":   nextPhases,
@@ -424,10 +470,22 @@ func nextActionHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHandle
 
 func logCollaborationHandler(st *store.Store) mcpserver.ToolHandlerFunc {
 	return func(ctx context.Context, req mcpgo.CallToolRequest) (*mcpgo.CallToolResult, error) {
-		pipelineID := req.GetArguments()["pipeline_id"].(string)
-		from := req.GetArguments()["from"].(string)
-		to := req.GetArguments()["to"].(string)
-		summary := req.GetArguments()["summary"].(string)
+		pipelineID, err := req.RequireString("pipeline_id")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
+		from, err := req.RequireString("from")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
+		to, err := req.RequireString("to")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
+		summary, err := req.RequireString("summary")
+		if err != nil {
+			return mcpgo.NewToolResultError(err.Error()), nil
+		}
 
 		p, err := st.GetPipeline(pipelineID)
 		if err != nil {
@@ -438,7 +496,7 @@ func logCollaborationHandler(st *store.Store) mcpserver.ToolHandlerFunc {
 			return mcpgo.NewToolResultError(fmt.Sprintf("기록 실패: %v", err)), nil
 		}
 
-		return toResult(map[string]interface{}{
+		return toResult(map[string]any{
 			"logged": true,
 			"from":   from,
 			"to":     to,
@@ -447,7 +505,7 @@ func logCollaborationHandler(st *store.Store) mcpserver.ToolHandlerFunc {
 	}
 }
 
-func toResult(v interface{}) (*mcpgo.CallToolResult, error) {
+func toResult(v any) (*mcpgo.CallToolResult, error) {
 	data, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		return mcpgo.NewToolResultError(fmt.Sprintf("JSON 변환 실패: %v", err)), nil

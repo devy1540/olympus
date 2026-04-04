@@ -31,9 +31,9 @@ type AgentRegistry struct {
 }
 
 type ArtifactEntry struct {
-	Phase  interface{} `json:"phase"` // can be int or string
+	Phase  any `json:"phase"` // can be int or string
 	Writer string      `json:"writer"`
-	Source interface{} `json:"source"` // can be string or []string
+	Source any `json:"source"` // can be string or []string
 }
 
 type TransitionRule struct {
@@ -125,7 +125,7 @@ func (c *Config) RequiredAgents(skill, phase string) []string {
 			if src != "" && src != "orchestrator" {
 				agentSet[src] = true
 			}
-		case []interface{}:
+		case []any:
 			for _, s := range src {
 				if str, ok := s.(string); ok && str != "orchestrator" {
 					agentSet[str] = true
@@ -148,7 +148,7 @@ func (c *Config) ValidTransitions(fromPhase string) []string {
 	return nil
 }
 
-func loadJSON(path string, v interface{}) error {
+func loadJSON(path string, v any) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return err

@@ -16,9 +16,12 @@ Committee members operate as teammates for multi-round debate with context reten
 - Eris DA challenge is MANDATORY — do NOT skip even if committee agrees.
 - Leader handles ONLY: framing, round management, consensus measurement, report.
 - IMPORTANT: Do NOT skip ToolSearch at Step 0.
-- TEAMMATE RESPONSE RULE: When a teammate goes idle without sending results,
-  send a follow-up: SendMessage(to: "{agent}", "Report your findings now via SendMessage. Keep under 5000 chars.")
-  Retry up to 3 times. NEVER do the agent's work directly — this violates §0.
+- PROACTIVE SPAWN RULE (§6.3): Every Agent() call MUST include IMMEDIATE TASK in prompt.
+  NEVER use "Wait for messages — do not act until prompted."
+- MANDATORY CONSULTATION (§7): Debate members MUST react to each other's prior statements,
+  not present independent opinions. Round 2+ responses MUST explicitly reference a prior speaker.
+  A position that does not engage with any prior argument is incomplete.
+- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
 </Execution_Policy>
 
 <Team_Structure>
@@ -84,35 +87,48 @@ Spawn committee teammates (lazy):
 IF "zeus" not in team:
   Agent(name: "zeus", team_name: ${TEAM},
         subagent_type: "olympus:zeus",
+        run_in_background: true,
         prompt: "You are Zeus, planner and tie-breaker in a committee debate.
-          You will debate across multiple rounds. Build on previous arguments.
-          You may communicate directly with 'ares' and 'eris'.
+          IMMEDIATE TASK: You will present positions and respond to other members each round.
+          CONSULTATION: In Round 2+, you MUST explicitly reference ares's or eris's prior argument
+          and either agree, rebut, or qualify it. Independent opinions without engagement are incomplete.
+          You may send direct cross-questions to 'ares' and 'eris' via SendMessage at any time.
           Artifact directory: ${ARTIFACT_DIR}/
-          Wait for messages — do not act until prompted.")
+          STAY AVAILABLE — respond to each round's debate task promptly.")
   olympus_register_agent_spawn(pipeline_id, "zeus")
 
 IF "ares" not in team:
   Agent(name: "ares", team_name: ${TEAM},
         subagent_type: "olympus:ares",
+        run_in_background: true,
         prompt: "You are Ares, engineering critic in a committee debate.
-          Evaluate from technical feasibility, maintainability, scalability.
-          You may communicate directly with 'zeus' and 'eris'.
-          Wait for messages — do not act until prompted.")
+          IMMEDIATE TASK: You will evaluate options from technical feasibility, maintainability, scalability.
+          CONSULTATION: In Round 2+, you MUST explicitly reference zeus's or eris's prior argument
+          and either agree, rebut, or qualify it with technical evidence. Independent opinions are incomplete.
+          You may send direct cross-questions to 'zeus' and 'eris' via SendMessage at any time.
+          STAY AVAILABLE — respond to each round's debate task promptly.")
   olympus_register_agent_spawn(pipeline_id, "ares")
 
 IF "eris" not in team:
   Agent(name: "eris", team_name: ${TEAM},
         subagent_type: "olympus:eris",
+        run_in_background: true,
         prompt: "You are Eris, devil's advocate in a committee debate.
-          Challenge ALL positions. Apply fallacy-catalog.md.
-          Wait for messages — do not act until prompted.")
+          IMMEDIATE TASK: You will challenge ALL positions using fallacy-catalog.md.
+          CONSULTATION: You MUST target specific claims made by zeus or ares — not abstract positions.
+          Quote the claim you are challenging, then deliver your challenge.
+          You may send direct challenges to 'zeus' and 'ares' via SendMessage between rounds.
+          STAY AVAILABLE — respond to each round's debate task promptly.")
   olympus_register_agent_spawn(pipeline_id, "eris")
 
 Spawn UX critic (general-purpose, always fresh):
   Agent(name: "ux-critic", team_name: ${TEAM},
+        run_in_background: true,
         prompt: "You are a UX critic in a committee debate.
-          Evaluate from user experience, accessibility, usability.
-          Wait for messages — do not act until prompted.")
+          IMMEDIATE TASK: You will evaluate options from user experience, accessibility, usability.
+          CONSULTATION: In Round 2+, you MUST reference a prior speaker's claim and respond to it
+          from a UX lens. Independent opinions without engagement are incomplete.
+          STAY AVAILABLE — respond to each round's debate task promptly.")
   olympus_register_agent_spawn(pipeline_id, "ux-critic")
 ```
 
@@ -123,27 +139,56 @@ Spawn UX critic (general-purpose, always fresh):
 ```
 FOR each round (max 3):
 
-  1. Each committee member presents position (send in parallel):
-     SendMessage(to: "zeus", summary: "Round {n} 입장 제시",
+  1. Round 1 — Initial positions (send in parallel):
+     SendMessage(to: "zeus", summary: "Round 1 초기 입장",
        "Read ${ARTIFACT_DIR}/debate-frame.json.
-        {If round > 1: 'Previous positions: {summary of last round}'}
         Present: preferred option + rationale + pros/cons of others.
         Include evidence (file:line if applicable). Report to leader.")
-     SendMessage(to: "ares", summary: "Round {n} 입장 제시",
-       "DO NOT write files — you are read-only. ...")
-     SendMessage(to: "ux-critic", summary: "Round {n} 입장 제시", ...)
+     SendMessage(to: "ares", summary: "Round 1 초기 입장",
+       "DO NOT write files — you are read-only.
+        Read ${ARTIFACT_DIR}/debate-frame.json.
+        Present: preferred option from technical perspective + evidence. Report to leader.")
+     SendMessage(to: "ux-critic", summary: "Round 1 초기 입장",
+       "DO NOT write files — you are read-only.
+        Read ${ARTIFACT_DIR}/debate-frame.json.
+        Present: preferred option from UX perspective + evidence. Report to leader.")
+
+     WAIT for all → leader collects Round 1 positions
+
+  {If round > 1:}
+  1b. Round {n} — REACTIVE positions (send in parallel):
+     SendMessage(to: "zeus", summary: "Round {n} 반응적 입장",
+       "DO NOT write files — you are read-only.
+        Prior round positions: {summary of all round {n-1} positions}
+        MANDATORY: Explicitly reference ares's or eris's specific claim from last round.
+        Quote the claim, then agree/rebut/qualify with evidence.
+        Then state your current position. Report to leader.")
+     SendMessage(to: "ares", summary: "Round {n} 반응적 입장",
+       "DO NOT write files — you are read-only.
+        Prior round positions: {summary of all round {n-1} positions}
+        MANDATORY: Explicitly reference zeus's or eris's specific claim from last round.
+        Quote the claim, then counter with technical evidence.
+        Then state your current position. Report to leader.")
+     SendMessage(to: "ux-critic", summary: "Round {n} 반응적 입장",
+       "DO NOT write files — you are read-only.
+        Prior round positions: {summary of all round {n-1} positions}
+        MANDATORY: Reference a specific claim from last round and respond from a UX lens.
+        Then state your current position. Report to leader.")
 
      WAIT for all → leader collects positions
 
   2. Identify disagreements:
      Compare each member's preference. Articulate points of disagreement.
 
-  3. Cross-questioning (if disagreements):
-     SendMessage(to: "ares", summary: "반박",
+  3. Cross-questioning (if disagreements exist — agents directly challenge each other):
+     SendMessage(to: "ares", summary: "직접 반박",
        "DO NOT write files — you are read-only.
-        Zeus argues: {zeus_position}. Counter-argue with evidence.")
-     SendMessage(to: "zeus", summary: "반박",
-       "Ares argues: {ares_position}. Respond with evidence.")
+        Zeus argues: {zeus_position_verbatim}. Counter-argue with specific technical evidence.
+        Address zeus's argument point by point — do not present a new independent position.")
+     SendMessage(to: "zeus", summary: "직접 반박",
+       "DO NOT write files — you are read-only.
+        Ares argues: {ares_position_verbatim}. Respond to ares's specific technical objections.
+        Do not simply restate your prior position.")
      WAIT for rebuttals
 
   4. Measure consensus (per consensus-levels.md):
@@ -163,18 +208,23 @@ FOR each round (max 3):
 SendMessage(to: "eris", summary: "DA 챌린지",
   "DO NOT write files — you are read-only.
    Read all committee positions from previous rounds.
-   Challenge:
+   CONSULTATION: Send your challenges DIRECTLY to zeus and ares via SendMessage
+   (summary: 'Eris challenge: {specific claim you are targeting}').
+   Challenge each claim by name — do not issue abstract challenges.
+   Challenge areas:
      - Weaknesses of the consensus option
      - Overlooked strengths of rejected options
-     - Logical fallacies per fallacy-catalog.md
-   Report challenges to leader.")
+     - Logical fallacies per fallacy-catalog.md (cite the fallacy name)
+   After sending direct challenges to zeus/ares, report a summary to leader.")
 
-WAIT → receive eris challenges
+WAIT → receive eris challenges (including direct exchange with zeus/ares)
 olympus_record_execution(pipeline_id, "agora", "eris", ...)
 
-Committee response (if needed):
-  Forward challenges to committee members via SendMessage
-  Re-measure consensus if changed
+Committee response (MANDATORY — not optional):
+  zeus and ares MUST respond to eris's direct challenges:
+  SendMessage(to: "zeus", "Eris challenged your position: {eris_challenge_verbatim}. Respond specifically.")
+  SendMessage(to: "ares", "Eris challenged your position: {eris_challenge_verbatim}. Respond specifically.")
+  WAIT for responses → re-measure consensus if changed
 ```
 
 ---
@@ -194,7 +244,7 @@ Hell mode (--hell):
 Gate check:
   olympus_gate_check(pipeline_id, "consensus", consensus_percentage)
 
-Generate recommendation.md:
+Generate decision.md:
   ## Decision: {selected option}
   ### Rationale
   ### Committee Positions (table)
@@ -235,5 +285,7 @@ ELSE:
   | File | Step | Writer | Readers |
   |------|------|--------|---------|
   | debate-frame.json | 2 | Leader | All members |
-  | recommendation.md | 6 | Leader | User |
+  | committee-positions.md | 4 | Leader (from committee) | eris |
+  | da-challenges.md | 5 | Leader (from eris) | committee |
+  | decision.md | 6 | Leader | User |
 </Artifact_Contracts>

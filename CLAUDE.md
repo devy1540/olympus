@@ -63,21 +63,23 @@ Oracle → Genesis → Pantheon → Plan → Execute → Tribunal
 
 위임 패턴 (`Read-only → SendMessage → Orchestrator → Write`)은 보안 경계. `hooks/enforce-permissions.sh`가 강제.
 
-### 전면 팀메이트 모드
+### 전면 팀메이트 모드 + 유기적 대화
 
-모든 에이전트를 팀메이트(TeamCreate + SendMessage)로 스폰. Lazy spawn + 크로스 페이즈 재활용:
+모든 에이전트를 팀메이트(TeamCreate + SendMessage)로 스폰. Proactive spawn + 필수 협의(Mandatory Consultation):
 
 | 특성 | 설명 |
 |:-----|:-----|
-| 스폰 | Lazy — Phase에서 처음 필요할 때 spawn, 이후 재활용 |
+| 스폰 | Proactive — IMMEDIATE TASK를 스폰 prompt에 포함, "Wait for messages" 금지 (§6.3) |
 | 수명 | 스킬 종료까지 유지 (cross-phase context retention) |
-| 소통 | 에이전트 간 직접 SendMessage (리더 중계 불필요) |
-| 핵심 이점 | Prometheus가 수정 시 이전 구현 컨텍스트 유지 |
+| 소통 | 에이전트 간 직접 SendMessage + 필수 협의 라운드 (§7) |
+| 핵심 이점 | 에이전트 간 유기적 대화로 품질 향상 — 고립된 분석이 아닌 크로스 검증 |
 | 리더 역할 | Phase 전환, 게이트 판정, MCP 상태 관리만 |
+
+**필수 협의 경로**: apollo↔hermes (인터뷰 팩트검증), ares↔poseidon (품질↔보안 크로스레퍼런스), metis↔eris (Genesis 대화), ares↔eris (Tribunal 토론)
 
 SKILL.md는 XML 태그 구조(`<Purpose>`, `<Execution_Policy>`, `<Steps>`, `<Tool_Usage>`)로 작성되어 LLM의 지시 준수율 향상. 각 Step은 MCP tool call을 포함하여 데이터 의존성으로 스킵 불가.
 
-상세: `docs/shared/orchestrator-protocol.md §6`
+상세: `docs/shared/orchestrator-protocol.md §6-7`
 
 ### 에이전트 스폰 필수 규칙
 

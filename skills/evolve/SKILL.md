@@ -17,9 +17,12 @@ All agents operate as teammates for iterative evaluation and refinement with con
 - Prometheus MUST implement improvements (Step 6) — do NOT edit agent files directly.
 - Leader handles ONLY: team management, benchmark selection, convergence check, user approval.
 - IMPORTANT: Do NOT skip ToolSearch at Step 0.
-- TEAMMATE RESPONSE RULE: When a teammate goes idle without sending results,
-  send a follow-up: SendMessage(to: "{agent}", "Report your findings now via SendMessage. Keep under 5000 chars.")
-  Retry up to 3 times. NEVER do the agent's work directly — this violates §0.
+- PROACTIVE SPAWN RULE (§6.3): Every Agent() call MUST include IMMEDIATE TASK in prompt.
+  NEVER use "Wait for messages — do not act until prompted."
+- MANDATORY CONSULTATION (§7): metis and eris MUST cross-verify during diagnosis (Step 5).
+  metis sends gap analysis to eris; eris challenges it; metis revises before reporting to leader.
+  Reports without evidence of cross-verification are incomplete.
+- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
 </Execution_Policy>
 
 <Team_Structure>
@@ -100,9 +103,11 @@ Save to ${ARTIFACT_DIR}/dogfood-result.md
 IF "athena" not in team:
   Agent(name: "athena", team_name: ${TEAM},
         subagent_type: "olympus:athena",
+        run_in_background: true,
         prompt: "You are Athena, quality evaluator in ${TEAM}.
+          IMMEDIATE TASK: You will evaluate dogfood execution results across 5 quality dimensions.
           Artifact directory: ${ARTIFACT_DIR}/
-          Wait for messages — do not act until prompted.")
+          STAY AVAILABLE — respond to evaluation tasks promptly.")
   olympus_register_agent_spawn(pipeline_id, "athena")
 
 SendMessage(to: "athena", summary: "품질 평가",
@@ -128,42 +133,54 @@ olympus_record_execution(pipeline_id, "evolve", "athena", ...)
 IF "metis" not in team:
   Agent(name: "metis", team_name: ${TEAM},
         subagent_type: "olympus:metis",
+        run_in_background: true,
         prompt: "You are Metis, gap analyst in ${TEAM}.
-          You may cross-reference with 'eris' during diagnosis.
+          IMMEDIATE TASK: You will perform expected-actual gap analysis on evaluation results.
+          MANDATORY CONSULTATION: After forming your gap analysis draft, send it directly to 'eris'
+          via SendMessage (summary: 'Gap analysis draft for challenge').
+          Wait for eris's challenge response. Incorporate valid challenges before reporting to leader.
+          Your final report to leader MUST note which of eris's challenges you accepted/rejected.
           Artifact directory: ${ARTIFACT_DIR}/
-          Wait for messages — do not act until prompted.")
+          STAY AVAILABLE — respond to diagnosis tasks and eris's cross-questions promptly.")
   olympus_register_agent_spawn(pipeline_id, "metis")
 
 IF "eris" not in team:
   Agent(name: "eris", team_name: ${TEAM},
         subagent_type: "olympus:eris",
+        run_in_background: true,
         prompt: "You are Eris, evaluation challenger in ${TEAM}.
-          You may cross-reference with 'metis' during diagnosis.
+          IMMEDIATE TASK: You will challenge Athena's evaluation AND metis's gap analysis.
+          MANDATORY CONSULTATION: When metis sends you a gap analysis draft, respond directly to metis
+          via SendMessage with specific challenges. Target each claim metis makes — not abstract critiques.
+          Then send your own evaluation challenge report to leader.
           Artifact directory: ${ARTIFACT_DIR}/
-          Wait for messages — do not act until prompted.")
+          STAY AVAILABLE — respond to evaluation tasks and metis's consultation promptly.")
   olympus_register_agent_spawn(pipeline_id, "eris")
 
-Send BOTH in parallel:
+Send BOTH in parallel — MANDATORY CONSULTATION between them before reporting to leader:
 
-SendMessage(to: "metis", summary: "갭 분석",
+SendMessage(to: "metis", summary: "갭 분석 + eris 직접 검증",
   "DO NOT write files — you are read-only.
    Read ${ARTIFACT_DIR}/eval-matrix.md, dogfood-result.md, and agents/*.md.
    Trace quality issues to specific agent prompts:
      - Investigation_Protocol insufficient?
      - Output_Format fails to enforce specificity?
      - Constraints allow role drift?
-   Derive improvement proposals. Report to leader.")
+   Derive improvement proposals.
+   CONSULTATION: Send your draft gap analysis to 'eris' via SendMessage BEFORE reporting to leader.
+   Incorporate eris's valid challenges. Report FINAL gap analysis (with consultation evidence) to leader.")
 
-SendMessage(to: "eris", summary: "평가 챌린지",
+SendMessage(to: "eris", summary: "평가 챌린지 + metis 직접 검증",
   "DO NOT write files — you are read-only.
    Read ${ARTIFACT_DIR}/eval-matrix.md and dogfood-result.md.
    Verify Athena's evaluation accuracy:
      - Scoring too generous?
      - Missed problems?
      - Root causes or just symptoms?
-   Report to leader.")
+   CONSULTATION: When metis sends you a gap analysis draft, challenge each specific claim directly.
+   Also send your own evaluation challenge report to leader (separate from metis consultation).")
 
-WAIT for both → leader synthesizes into diagnosis.md
+WAIT for metis ↔ eris consultation + both final reports → leader synthesizes into diagnosis.md
 olympus_record_execution for each
 ```
 
@@ -180,10 +197,12 @@ IF user approves:
   IF "prometheus" not in team:
     Agent(name: "prometheus", team_name: ${TEAM},
           subagent_type: "olympus:prometheus",
+          run_in_background: true,
           prompt: "You are Prometheus, prompt improver in ${TEAM}.
+            IMMEDIATE TASK: You will implement prompt improvements specified in diagnosis.md.
             ONLY perform changes specified in diagnosis.md. No scope creep.
             Artifact directory: ${ARTIFACT_DIR}/
-            Wait for messages — do not act until prompted.")
+            STAY AVAILABLE — respond to improvement tasks promptly.")
     olympus_register_agent_spawn(pipeline_id, "prometheus")
 
   SendMessage(to: "prometheus", summary: "프롬프트 개선",

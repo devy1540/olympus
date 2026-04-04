@@ -16,9 +16,21 @@ All agents operate as teammates for cross-phase context retention.
 - Leader handles ONLY: team management, gate checks, artifact writing for read-only agents.
 - If MCP tools are unavailable, proceed without MCP — hooks provide fallback.
 - IMPORTANT: Do NOT skip ToolSearch at Step 0.
-- TEAMMATE RESPONSE RULE: When a teammate goes idle without sending results,
-  send a follow-up: SendMessage(to: "{agent}", "Report your findings now via SendMessage. Keep under 5000 chars.")
-  Retry up to 3 times. NEVER do the agent's work directly — this violates §0.
+- PROACTIVE SPAWN RULE (§6.3): Every Agent() call MUST include the agent's IMMEDIATE TASK
+  in the prompt. NEVER use "Wait for messages — do not act until prompted."
+  The agent starts working the moment it spawns. SendMessage is ONLY for follow-up tasks.
+
+- MANDATORY CONSULTATION (§7): apollo must consult hermes before user questions.
+  metis must verify assumptions via hermes. Reports without consultation are incomplete —
+  send agent back to consult.
+
+- SEQUENTIAL SPAWN: hermes first → apollo after hermes completes → metis after apollo completes.
+  Wait for prerequisite agent results before spawning dependent agents.
+
+- RESPONSE RULE: If a teammate does not report within reasonable time:
+  1. SendMessage(to: "{agent}", "Report your findings now. Include consultation results. Keep under 5000 chars.")
+  2. Retry up to 3 times.
+  3. NEVER do the agent's work directly — this violates §0.
 </Execution_Policy>
 
 <Team_Structure>
@@ -86,19 +98,16 @@ Complexity assessment:
 IF "hermes" not in team:
   Agent(name: "hermes", team_name: ${TEAM},
         subagent_type: "olympus:hermes",
-        prompt: "You are Hermes, a teammate in ${TEAM}.
-          Respond to codebase queries from apollo and leader.
-          Artifact directory: ${ARTIFACT_DIR}/
-          Wait for messages — do not act until prompted.")
+        run_in_background: true,
+        prompt: "You are Hermes in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+          IMMEDIATE TASK: Explore codebase related to: {user_input}.
+          DO NOT write files — you are read-only.
+          Gather: project structure, relevant modules, existing patterns, dependencies.
+          When done: SendMessage(to: 'leader', summary: '코드베이스 탐색 완료', '{결과}')
+          Then STAY AVAILABLE: respond to queries from apollo, metis via SendMessage.")
   olympus_register_agent_spawn(pipeline_id, "hermes")
 
-SendMessage(to: "hermes", summary: "코드베이스 탐색",
-  "DO NOT write files — you are read-only.
-   Explore codebase related to: {user_input}.
-   Gather: project structure, relevant modules, existing patterns, dependencies.
-   Report findings to leader.")
-
-WAIT for hermes → leader writes codebase-context.md
+WAIT for hermes SendMessage → leader writes codebase-context.md
 olympus_record_execution(pipeline_id, "oracle", "hermes", ...)
 ```
 
@@ -110,30 +119,26 @@ olympus_record_execution(pipeline_id, "oracle", "hermes", ...)
 IF "apollo" not in team:
   Agent(name: "apollo", team_name: ${TEAM},
         subagent_type: "olympus:apollo",
-        prompt: "You are Apollo, a teammate in ${TEAM}.
-          You retain memory across interview rounds — build on previous answers.
-          You may query 'hermes' for codebase context during interview.
-          Artifact directory: ${ARTIFACT_DIR}/
-          Wait for messages — do not act until prompted.")
+        run_in_background: true,
+        prompt: "You are Apollo in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+          IMMEDIATE TASK: Conduct Socratic interview about: {user_input}. Complexity: {level}.
+          DO NOT write files — you are read-only.
+          Read ${ARTIFACT_DIR}/codebase-context.md for project context.
+          MANDATORY CONSULTATION: Before each question, query 'hermes' to verify codebase facts:
+            SendMessage(to: 'hermes', summary: '팩트 확인', '{question about codebase}')
+            Wait for hermes response, then ask user with verified context.
+          Interview rules: One question at a time via AskUserQuestion.
+          Track ambiguity scores internally (per ambiguity-scoring.md). Terminate when ambiguity ≤ 0.2 or max 10 rounds.
+          Stagnation detection:
+            - Spinning: same topic 3 times → move on
+            - Oscillation: A↔B repetition → ask user to decide
+            - Diminishing: delta < 0.02 → terminate dimension
+          When done: SendMessage(to: 'leader', summary: '인터뷰 완료 — 모호성: {score}',
+            '{interview log + ambiguity scores + consultation log with hermes}')
+          Then STAY AVAILABLE for follow-up rounds.")
   olympus_register_agent_spawn(pipeline_id, "apollo")
 
-SendMessage(to: "apollo", summary: "인터뷰 시작",
-  "DO NOT write files — you are read-only.
-   Read ${ARTIFACT_DIR}/codebase-context.md for project context.
-   User requirement: {user_input}. Complexity: {level}.
-   Conduct Socratic interview via AskUserQuestion. One question at a time.
-   After each answer:
-     a. Track ambiguity scores internally (per ambiguity-scoring.md)
-     b. Track interview log internally
-     c. Track ambiguity scores internally
-   Stagnation detection:
-     - Spinning: same topic 3 times → move on
-     - Oscillation: A↔B repetition → ask user to decide
-     - Diminishing: delta < 0.02 → terminate dimension
-   Terminate when: ambiguity ≤ 0.2 OR max rounds reached.
-   Send interview log + ambiguity scores to leader via SendMessage when done.")
-
-WAIT for apollo → leader writes interview-log.md, ambiguity-scores.json
+WAIT for apollo SendMessage → leader writes interview-log.md, ambiguity-scores.json
 olympus_record_execution(pipeline_id, "oracle", "apollo", ...)
 ```
 
@@ -168,19 +173,21 @@ ELSE (rounds >= 10):
 IF "metis" not in team:
   Agent(name: "metis", team_name: ${TEAM},
         subagent_type: "olympus:metis",
-        prompt: "You are Metis, a teammate in ${TEAM}.
-          Artifact directory: ${ARTIFACT_DIR}/
-          Wait for messages — do not act until prompted.")
+        run_in_background: true,
+        prompt: "You are Metis in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+          IMMEDIATE TASK: Perform gap analysis on interview results.
+          DO NOT write files — you are read-only.
+          Read ${ARTIFACT_DIR}/interview-log.md and ${ARTIFACT_DIR}/codebase-context.md.
+          Analyze: Missing Questions, Undefined Guardrails, Scope Risks,
+          Unvalidated Assumptions, Acceptance Criteria, Edge Cases.
+          CONSULTATION: Query 'hermes' to verify any codebase assumptions:
+            SendMessage(to: 'hermes', summary: '가정 검증', '{assumption to verify}')
+          When done: SendMessage(to: 'leader', summary: '갭 분석 완료',
+            '{gap analysis results + hermes consultation log}')
+          Then STAY AVAILABLE for Genesis wonder phase.")
   olympus_register_agent_spawn(pipeline_id, "metis")
 
-SendMessage(to: "metis", summary: "갭 분석",
-  "DO NOT write files — you are read-only.
-   Read ${ARTIFACT_DIR}/interview-log.md and codebase-context.md.
-   Analyze: Missing Questions, Undefined Guardrails, Scope Risks,
-   Unvalidated Assumptions, Acceptance Criteria, Edge Cases.
-   Report results to leader.")
-
-WAIT for metis → leader writes gap-analysis.md
+WAIT for metis SendMessage → leader writes gap-analysis.md
 olympus_record_execution(pipeline_id, "oracle", "metis", ...)
 ```
 

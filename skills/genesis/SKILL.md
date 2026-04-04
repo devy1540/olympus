@@ -15,9 +15,13 @@ Metis and Eris operate as persistent teammates who remember previous generations
 - Do NOT perform Wonder (Metis's work) or Reflect (Eris's work) directly.
 - Leader handles: generation management, ontology comparison, convergence check, seed crystallization.
 - IMPORTANT: Do NOT skip ToolSearch at Step 0.
-- TEAMMATE RESPONSE RULE: When a teammate goes idle without sending results,
-  send a follow-up: SendMessage(to: "{agent}", "Report your findings now via SendMessage. Keep under 5000 chars.")
-  Retry up to 3 times. NEVER do the agent's work directly — this violates §0.
+- PROACTIVE SPAWN RULE (§6.3): Every Agent() call MUST include IMMEDIATE TASK in prompt.
+  NEVER use "Wait for messages — do not act until prompted."
+- MANDATORY CONSULTATION (§7): metis and eris MUST exchange at least one consultation
+  round per generation before reporting to leader. Reports without consultation evidence are incomplete.
+  metis shares wonder results directly to eris via SendMessage; eris challenges and responds;
+  metis reflects eris's challenges before finalizing report to leader.
+- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
 </Execution_Policy>
 
 <Team_Structure>
@@ -65,23 +69,29 @@ Call ToolSearch("+olympus pipeline") to load MCP tools.
    IF "metis" not in team:
      Agent(name: "metis", team_name: ${TEAM},
            subagent_type: "olympus:metis",
+           run_in_background: true,
            prompt: "You are Metis, ontologist of the gods, a teammate in ${TEAM}.
-             You will be called repeatedly across generations.
+             IMMEDIATE TASK: You will drive Wonder (inquiry) each generation.
              IMPORTANT: You retain memory — build on earlier insights, do NOT repeat questions.
-             You may communicate with 'eris' for cross-reference.
+             MANDATORY CONSULTATION: After each Wonder, send your findings to 'eris' via SendMessage
+             BEFORE reporting to leader. Wait for eris's challenge, then reflect it in your final report.
+             You may initiate cross-reference with 'eris' at any time.
              Artifact directory: ${ARTIFACT_DIR}/
-             Wait for messages — do not act until prompted.")
+             STAY AVAILABLE — respond to each generation's Wonder task promptly.")
      olympus_register_agent_spawn(pipeline_id, "metis")
 
    IF "eris" not in team:
      Agent(name: "eris", team_name: ${TEAM},
            subagent_type: "olympus:eris",
+           run_in_background: true,
            prompt: "You are Eris, logical auditor of evolution, a teammate in ${TEAM}.
-             You will be called repeatedly across generations.
+             IMMEDIATE TASK: You will drive Reflect (audit) each generation.
              IMPORTANT: You retain memory — track mutation patterns, catch recurring fallacies.
-             You may communicate with 'metis' for cross-reference.
+             MANDATORY CONSULTATION: When metis sends you Wonder results, respond with your challenge
+             directly to metis via SendMessage. Then report your Reflect findings to leader.
+             You may initiate cross-reference with 'metis' at any time.
              Artifact directory: ${ARTIFACT_DIR}/
-             Wait for messages — do not act until prompted.")
+             STAY AVAILABLE — respond to metis's consultation and each generation's Reflect task promptly.")
      olympus_register_agent_spawn(pipeline_id, "eris")
 ```
 
@@ -95,7 +105,7 @@ FOR each generation n:
   a. Create generation directory:
      mkdir -p ${ARTIFACT_DIR}/gen-{n}/
 
-  b. Wonder (Metis):
+  b. Wonder (Metis) → MANDATORY DIALOGUE with Eris:
      SendMessage(to: "metis", summary: "Gen {n} wonder",
        "DO NOT write files — you are read-only.
         Generation {n}.
@@ -106,21 +116,29 @@ FOR each generation n:
           2. Root Cause: Are we addressing root causes or symptoms?
           3. Preconditions: What must be true for this to work?
           4. Hidden Assumptions: What unvalidated assumptions exist?
-        Report results to leader.")
-     WAIT → leader writes gen-{n}/wonder.md
+        MANDATORY CONSULTATION: After forming your Wonder findings,
+        send them directly to 'eris' via SendMessage with summary 'Gen {n} wonder draft'.
+        Wait for eris's challenge response. Incorporate valid challenges into your final report.
+        Then report FINAL wonder results (including eris's challenges you accepted/rejected) to leader.")
+     WAIT for metis ↔ eris consultation to complete → leader writes gen-{n}/wonder.md
      olympus_record_execution(pipeline_id, "genesis", "metis", ...)
 
-  c. Reflect (Eris):
+  c. Reflect (Eris — responds to metis's direct message + leader task):
+     NOTE: Eris's challenge to metis's Wonder draft (b above) is the first part of Reflect.
+     After metis incorporates eris's challenge, leader also sends the formal Reflect task:
+
      Leader compares gen-{n-1} vs gen-{n} ontologies, identifies mutations.
 
      SendMessage(to: "eris", summary: "Gen {n} reflect",
        "DO NOT write files — you are read-only.
         Generation {n}.
-        Read ${ARTIFACT_DIR}/gen-{n}/wonder.md.
+        You have already challenged metis's Wonder draft. Now finalize your Reflect report.
+        Read ${ARTIFACT_DIR}/gen-{n}/wonder.md (metis's accepted final).
         Compare gen-{n-1}/ontology.json vs gen-{n}/ontology.json.
         {If n > 1: 'Previous wonder: Read gen-{n-1}/wonder.md to track question evolution.'}
         Validate logical soundness per fallacy-catalog.md.
-        Report results to leader.")
+        Note which of your challenges metis accepted/rejected and whether the rejections are justified.
+        Report FINAL reflect results to leader.")
      WAIT → leader writes gen-{n}/reflect.md
      olympus_record_execution(pipeline_id, "genesis", "eris", ...)
 

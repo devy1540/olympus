@@ -15,9 +15,11 @@ Hephaestus and Athena operate as teammates for cross-phase context sharing.
 - Do NOT perform validation directly. Hephaestus handles mechanical, Athena handles semantic.
 - Leader handles ONLY: team management, report synthesis.
 - IMPORTANT: Do NOT skip ToolSearch at Step 0.
-- TEAMMATE RESPONSE RULE: When a teammate goes idle without sending results,
-  send a follow-up: SendMessage(to: "{agent}", "Report your findings now via SendMessage. Keep under 5000 chars.")
-  Retry up to 3 times. NEVER do the agent's work directly — this violates §0.
+- PROACTIVE SPAWN RULE (§6.3): Every Agent() call MUST include IMMEDIATE TASK in prompt.
+  NEVER use "Wait for messages — do not act until prompted."
+- MANDATORY CONSULTATION (§7): Athena MUST read hephaestus results before reporting.
+  Athena's report without reference to audit-mechanical.json is incomplete.
+- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
 </Execution_Policy>
 
 <Team_Structure>
@@ -56,9 +58,17 @@ Call ToolSearch("+olympus pipeline") to load MCP tools.
 IF "hephaestus" not in team:
   Agent(name: "hephaestus", team_name: ${TEAM},
         subagent_type: "olympus:hephaestus",
+        run_in_background: true,
         prompt: "You are Hephaestus, mechanical validator in ${TEAM}.
           Artifact directory: ${ARTIFACT_DIR}/
-          Wait for messages — do not act until prompted.")
+          IMMEDIATE TASK: Validate Olympus plugin structural integrity:
+          1-1. YAML Frontmatter: validate agents/*.md against agent-schema.json
+          1-2. File existence: verify cross-references between agents and skills
+          1-3. Shared doc references: verify docs/shared/ references exist
+          1-4. artifact-contracts.json: verify writer/reader agents exist
+          1-5. Hook scripts: verify hooks.json scripts exist, are executable, pass bash -n
+          Report audit-mechanical.json to leader via SendMessage.
+          STAY AVAILABLE — athena will query you for additional mechanical evidence.")
   olympus_register_agent_spawn(pipeline_id, "hephaestus")
 
 SendMessage(to: "hephaestus", summary: "기계적 검증",
@@ -82,22 +92,32 @@ olympus_record_execution(pipeline_id, "audit", "hephaestus", ...)
 IF "athena" not in team:
   Agent(name: "athena", team_name: ${TEAM},
         subagent_type: "olympus:athena",
+        run_in_background: true,
         prompt: "You are Athena, semantic validator in ${TEAM}.
-          You may query 'hephaestus' for additional mechanical evidence.
           Artifact directory: ${ARTIFACT_DIR}/
-          Wait for messages — do not act until prompted.")
+          IMMEDIATE TASK: Wait for audit-mechanical.json to appear in ${ARTIFACT_DIR}/.
+          Once available, read it to understand hephaestus mechanical findings,
+          then perform semantic validation (agents/*.md, skills/*.md, docs/shared/*).
+          You may SendMessage(to: 'hephaestus') to query additional mechanical evidence.
+          Report audit-semantic.json to leader via SendMessage.
+          STAY AVAILABLE.")
   olympus_register_agent_spawn(pipeline_id, "athena")
 
 SendMessage(to: "athena", summary: "의미적 검증",
   "DO NOT write files — you are read-only.
-   Read ${ARTIFACT_DIR}/audit-mechanical.json, then agents/*.md, skills/*.md, docs/shared/*.
-   Validate:
+   SEQUENTIAL DEPENDENCY: hephaestus has completed mechanical validation.
+   Step 1 — Read ${ARTIFACT_DIR}/audit-mechanical.json (hephaestus results).
+             Note all mechanical findings — use them as context for semantic checks.
+             If you need clarification on any mechanical finding, SendMessage(to: 'hephaestus').
+   Step 2 — Read agents/*.md, skills/*.md, docs/shared/*.
+   Step 3 — Validate (referencing audit-mechanical.json findings where relevant):
    2-1. Permission-Role Consistency: disallowedTools vs prompt content
    2-2. Artifact Contract Completeness: skill files vs contracts
    2-3. Gate Consistency: gate-thresholds.json vs SKILL.md values
    2-4. Clarity Scan: banned phrases from clarity-enforcement.md
    2-5. Delegation Pattern: Write/Edit disabled agents have SendMessage + handoff
    2-6. Pipeline State Schema: state structures match pipeline-states.json
+   Include reference to hephaestus findings in your report where applicable.
    Report audit-semantic.json to leader.")
 
 WAIT → leader writes audit-semantic.json
