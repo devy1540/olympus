@@ -13,7 +13,7 @@ type Store struct {
 	db *sql.DB
 }
 
-const schemaVersion = 1
+const schemaVersion = 2
 
 const schema = `
 CREATE TABLE IF NOT EXISTS schema_version (
@@ -61,6 +61,28 @@ CREATE TABLE IF NOT EXISTS execution_history (
 	success       INTEGER NOT NULL DEFAULT 1,
 	recorded_at   TEXT NOT NULL,
 	metrics_json  TEXT
+);
+
+CREATE TABLE IF NOT EXISTS collaboration_logs (
+	id          INTEGER PRIMARY KEY AUTOINCREMENT,
+	pipeline_id TEXT NOT NULL REFERENCES pipelines(id),
+	from_agent  TEXT NOT NULL,
+	to_agent    TEXT NOT NULL,
+	phase       TEXT NOT NULL,
+	summary     TEXT NOT NULL,
+	logged_at   TEXT NOT NULL
+);
+`
+
+const migrationV2 = `
+CREATE TABLE IF NOT EXISTS collaboration_logs (
+	id          INTEGER PRIMARY KEY AUTOINCREMENT,
+	pipeline_id TEXT NOT NULL REFERENCES pipelines(id),
+	from_agent  TEXT NOT NULL,
+	to_agent    TEXT NOT NULL,
+	phase       TEXT NOT NULL,
+	summary     TEXT NOT NULL,
+	logged_at   TEXT NOT NULL
 );
 `
 
@@ -130,8 +152,13 @@ func migrate(db *sql.DB) error {
 		return nil
 	}
 
+	if currentVersion < 2 {
+		if _, err := db.Exec(migrationV2); err != nil {
+			return fmt.Errorf("migration v2: %w", err)
+		}
+	}
+
 	if currentVersion < schemaVersion {
-		// Future migrations go here
 		if _, err := db.Exec("UPDATE schema_version SET version = ?", schemaVersion); err != nil {
 			return fmt.Errorf("update schema version: %w", err)
 		}

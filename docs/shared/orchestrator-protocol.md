@@ -218,47 +218,167 @@ The `checkpoint.sh` hook automatically backs up state files to `.checkpoints/` w
 
 ---
 
-## 6. Hybrid Spawn Mode (Subagent vs Teammate)
+## 6. Full Teammate Mode
 
-Olympus uses two agent execution modes. The default is subagent (Agent tool). Teammates (TeamCreate + SendMessage) are used only where their benefits justify the added complexity.
+Olympus uses **Full Teammate Mode** — all agents are spawned as teammates in a single team per skill execution. This provides cross-phase context retention, inter-agent direct communication, and reduced leader context pressure.
 
-### 6.1 Selection Criteria
-
-| Condition | Mode | Reason |
-|:----------|:-----|:-------|
-| One-shot analysis (no follow-up) | **Subagent** | Clean context, no lifecycle management |
-| Parallel independent work | **Subagent** (parallel Agent calls) | No cross-reference needed |
-| Iterative loop (same agents, multiple cycles) | **Teammate** | Retains memory across cycles, reduces orchestrator context pressure |
-| Sequential debate (agent B must see agent A's output) | **Teammate** | Direct cross-reference within session |
-
-### 6.2 Current Teammate Usage
-
-| Skill | Phase | Teammates | Reason |
-|:------|:------|:----------|:-------|
-| **Genesis** | Phase 1-2 (Wonder/Reflect loop) | metis-wonder, eris-reflect | Up to 30 generations — teammates remember previous insights |
-| **Tribunal** | Stage 3 (Consensus debate) | ares-proposer, eris-da, hera-synth | Sequential debate — Eris must see Ares's position |
-
-All other phases use subagents.
-
-### 6.3 Teammate Lifecycle Rules
-
-1. **Create at phase start**: TeamCreate before the first SendMessage
-2. **Gate enforcement stays with orchestrator**: Teammates report results, orchestrator checks gates by reading artifact files
-3. **Shutdown on phase end**: Send `shutdown_request` → await `shutdown_response` → TeamDelete
-4. **No cross-phase persistence**: Teammates do NOT survive across skill boundaries (e.g., Genesis teammates die before Pantheon starts)
-5. **Write permissions**: Teammates created with `subagent_type: "olympus:metis"` inherit Metis's permissions. Read-only agents remain read-only as teammates — they SendMessage results to the orchestrator who writes files
-
-### 6.4 Context Pressure Comparison
+### 6.1 Core Architecture
 
 ```
-Genesis (10 generations):
-
-  Subagent mode:
-    Orchestrator context: +10 Metis results + 10 Eris results = 20 full results
-    Metis context: fresh each time (no cross-gen memory)
-
-  Teammate mode:
-    Orchestrator context: +10 SendMessage exchanges (summary-level only)
-    Metis context: accumulates across 10 generations (own memory)
-    Net effect: orchestrator ~60% lighter, Metis has cross-gen memory
+┌─────────────────────────────────────────────────────────────┐
+│  Team: "{skill}-${CLAUDE_SESSION_ID}"                       │
+│                                                             │
+│  Leader (Orchestrator / SKILL.md executor)                  │
+│    ├── Phase transitions, gate checks, MCP state            │
+│    ├── Teammate spawn/teardown                              │
+│    └── Does NOT perform agent work directly (§0 applies)    │
+│                                                             │
+│  Teammates (lazy-spawned, persist across phases):           │
+│    ├── hermes ←→ prometheus, apollo (codebase queries)      │
+│    ├── apollo ←→ hermes, metis (interview + gap analysis)   │
+│    ├── metis ←→ eris (wonder/reflect loop)                  │
+│    ├── prometheus ←→ hermes, artemis, hephaestus (impl)     │
+│    ├── artemis ←→ prometheus (debugging)                    │
+│    ├── hephaestus ←→ prometheus (build verification)        │
+│    ├── ares ←→ eris (debate)                                │
+│    └── ... (all 15 agents available)                        │
+│                                                             │
+│  Communication: SendMessage (async, file-based mailbox)     │
+│  State: MCP server (olympus_next_action per agent)          │
+└─────────────────────────────────────────────────────────────┘
 ```
+
+**Why full teammate over subagent:**
+
+| Dimension | Subagent | Full Teammate |
+|:----------|:---------|:-------------|
+| Context retention | Fresh each call | Accumulates across turns |
+| Inter-agent communication | Via leader only | Direct SendMessage |
+| Implementation retry | Re-read everything | Remembers what was done |
+| Leader context pressure | All results flow through | Summary-level only |
+| Token efficiency | Re-initialize each time | Cache reuse |
+| Agent collaboration | Not possible | Prometheus ↔ Hermes directly |
+
+### 6.2 Team Structure per Skill
+
+Each skill creates one team. Odyssey creates a single team that spans all sub-skills.
+
+| Skill | Team Name | Lazy-Spawned Agents |
+|:------|:----------|:-------------------|
+| **Odyssey** | `odyssey-{session_id}` | All agents (up to 14, spawn on demand) |
+| **Oracle** | `oracle-{session_id}` | hermes, apollo, metis, eris |
+| **Genesis** | `genesis-{session_id}` | metis, eris |
+| **Pantheon** | `pantheon-{session_id}` | hermes, helios, ares, poseidon, zeus, eris |
+| **Tribunal** | `tribunal-{session_id}` | hephaestus, athena, ares, eris, hera |
+| **Review-PR** | `review-pr-{session_id}` | hermes, helios, ares, poseidon, eris, nemesis |
+
+When Odyssey invokes a sub-skill (e.g., Oracle phase), agents are spawned into the **Odyssey team** — not a separate Oracle team. This enables cross-phase reuse (e.g., Hermes spawned in Oracle is reused in Execution).
+
+### 6.3 Lazy Spawn Strategy
+
+Agents are spawned **on first need**, not all at once:
+
+```
+Phase 1 (Oracle):    spawn hermes, apollo, metis, eris     → 4 active
+Phase 2 (Genesis):   reuse metis, eris                     → 4 active (2 idle)
+Phase 3 (Pantheon):  spawn helios, ares, poseidon, zeus    → 8 active (reuse hermes, eris)
+Phase 4 (Planning):  reuse zeus                             → 8 active (others idle)
+Phase 5 (Execution): spawn prometheus, artemis, hephaestus → 11 active
+Phase 6 (Tribunal):  spawn athena, hera                    → 13 active (reuse ares, eris)
+```
+
+**Spawn check pattern** (used in SKILL.md):
+```
+IF "{agent}" not in team:
+  Agent(name: "{agent}", team_name: "${TEAM}", subagent_type: "olympus:{agent}", prompt: "...")
+  olympus_register_agent_spawn(pipeline_id, "{agent}")
+ELSE:
+  SendMessage(to: "{agent}", "{new task}")   ← reuse existing teammate
+```
+
+Memory impact: ~125MB per concurrent in-process teammate. With lazy spawn + idle state, peak is manageable (~750MB at 6 concurrent active).
+
+### 6.4 Inter-Agent Communication
+
+Teammates communicate via SendMessage. The leader does NOT need to relay every message.
+
+**Permitted direct communication paths:**
+
+| From | To | Purpose |
+|:-----|:---|:--------|
+| prometheus | hermes | Codebase structure queries during implementation |
+| prometheus | artemis | Debugging assistance during implementation |
+| prometheus | hephaestus | Quick build checks during implementation |
+| apollo | hermes | Codebase context during interview |
+| apollo | metis | Gap analysis feedback during interview |
+| metis | eris | Wonder/Reflect loop (Genesis) |
+| ares | eris | Debate exchange (Tribunal Stage 3) |
+| hera | hephaestus | Evidence collection for verdict |
+| Any agent | leader | Task completion, results, escalation |
+
+**Communication rules:**
+1. All messages use `SendMessage(to: "{name}", summary: "{5-10 words}", "{content}")`
+2. Agents MUST report task completion to the leader
+3. Agents MUST NOT bypass the leader for phase transitions or gate checks
+4. Agents MUST NOT spawn other teammates (only the leader can spawn)
+5. Message order is NOT strictly guaranteed — do not rely on ordering for correctness
+
+### 6.5 Teammate Lifecycle Rules
+
+1. **Team creation at skill start**: `TeamCreate(team_name: "{skill}-{session_id}")` before any agent spawn
+2. **Lazy spawn on first use**: `Agent(name, team_name, subagent_type, prompt)` when the phase first needs the agent
+3. **Reuse across phases**: If an agent is already in the team, use `SendMessage` instead of re-spawning
+4. **Gate enforcement stays with leader**: Teammates report results, leader checks gates via MCP + artifact files
+5. **Permission inheritance**: Teammates inherit their agent definition's permissions. Read-only agents (Write/Edit in disallowedTools) remain read-only as teammates — they SendMessage results to the leader who writes files
+6. **Cross-phase persistence**: Teammates survive across phase boundaries within the same skill execution. This is a key advantage — Prometheus remembers what it implemented when asked to fix tests
+7. **Teardown at skill end**: `SendMessage(to: each, shutdown_request)` → await responses → `TeamDelete`
+8. **No cross-skill persistence**: When Odyssey's sub-skills complete, the team persists. But standalone skill teams are torn down when the skill ends
+
+### 6.6 Leader Responsibilities
+
+The leader (orchestrator) focuses on coordination, not content:
+
+| Responsibility | Leader | Teammates |
+|:--------------|:-------|:----------|
+| Phase transitions | ✅ | ❌ |
+| Gate checks (MCP) | ✅ | ❌ |
+| Agent spawn/teardown | ✅ | ❌ |
+| Artifact writing (for read-only agents) | ✅ | ❌ |
+| Codebase exploration | ❌ (→ hermes) | ✅ |
+| Code implementation | ❌ (→ prometheus) | ✅ |
+| Interview | ❌ (→ apollo) | ✅ |
+| Analysis/review | ❌ (→ specialist) | ✅ |
+| Inter-agent collaboration | Monitor only | ✅ Direct |
+
+### 6.7 MCP Integration with Teammates
+
+MCP tools support both leader and teammate queries:
+
+```
+Leader calls:
+  olympus_start_pipeline(skill, pipeline_id)        → Initialize pipeline
+  olympus_next_phase(pipeline_id)                    → Phase transition
+  olympus_gate_check(pipeline_id, gate, score)       → Gate evaluation
+  olympus_register_agent_spawn(pipeline_id, agent)   → Record teammate spawn
+
+Teammate calls (new):
+  olympus_next_action(pipeline_id, agent: "{name}")  → "What should I do next?"
+  olympus_log_collaboration(pipeline_id, from, to, summary) → Record inter-agent exchange
+
+Both:
+  olympus_record_execution(pipeline_id, phase, agent, duration_ms, token_count)
+```
+
+### 6.8 Fallback & Graceful Degradation
+
+When teammate features are unavailable or fail:
+
+| Failure | Fallback |
+|:--------|:---------|
+| Teammate spawn fails | Retry once → fall back to subagent (Agent tool without team_name) |
+| SendMessage delivery fails | Leader relays the message content manually |
+| MCP server unavailable | Proceed without MCP — hooks provide validation |
+| Teammate crashes mid-task | Re-spawn into same team (new context, but team persists) |
+| Memory pressure (too many active) | Send idle agents `shutdown_request`, re-spawn if needed later |
+
+**Important**: Fallback to subagent mode loses cross-phase context and inter-agent communication. Log a warning when this occurs: `"FALLBACK: {agent} teammate spawn failed, using subagent mode. Cross-phase context will be lost."`

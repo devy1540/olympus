@@ -3,161 +3,231 @@ name: agora
 description: "The Forum — committee debate for technical decision-making"
 ---
 
-# /olympus:agora — The Forum
+<Purpose>
+Reach technical decisions through structured committee debate with consensus-driven discourse.
+Committee members operate as teammates for multi-round debate with context retention.
+</Purpose>
 
-Structured committee debate for reaching technical decisions through consensus-driven discourse.
+<Execution_Policy>
+- This skill uses FULL TEAMMATE mode. All committee members are teammates.
+- Each Step MUST call the specified MCP tool. Do NOT skip MCP calls.
+- Do NOT simulate debate internally. Spawn agents and delegate via SendMessage.
+- Debate rounds require separate agent outputs — each round builds on previous.
+- Eris DA challenge is MANDATORY — do NOT skip even if committee agrees.
+- Leader handles ONLY: framing, round management, consensus measurement, report.
+- IMPORTANT: Do NOT skip ToolSearch at Step 0.
+</Execution_Policy>
 
-## Agents (subagent_type bindings)
-- **Zeus**: Planner role (tie-breaker) → `subagent_type: "olympus:zeus"`
-- **Ares**: Engineering critic → `subagent_type: "olympus:ares"`
-- **Eris**: Devil's Advocate (challenges all positions) → `subagent_type: "olympus:eris"`
-- **UX Critic**: UX critic → `subagent_type: "general-purpose"` (UX prompt injection)
+<Team_Structure>
+  team_name: "agora-${CLAUDE_SESSION_ID}"
+  (When called from Odyssey Phase 4 deadlock, use the Odyssey team instead)
 
-**⚠ MANDATORY**: All committee members and Eris MUST be spawned via Agent tool. Committee debate rounds require separate agent outputs — do NOT simulate debate internally. See orchestrator-protocol.md §0.
+  Teammates:
+  | Agent | Role | Comm Targets |
+  |-------|------|-------------|
+  | zeus | Planner / tie-breaker | ares, eris (debate), leader |
+  | ares | Engineering critic | zeus, eris (debate), leader |
+  | eris | Devil's Advocate | zeus, ares (challenges), leader |
+  | (UX critic) | UX perspective | leader |
 
-## Gate
-- Normal: Working consensus (≥67%)
-- Hell mode (--hell): Unanimous
+  Direct communication: zeus ↔ ares ↔ eris (cross-questioning)
+</Team_Structure>
+
+<Steps>
+
+## Step 0: Load MCP Tools (REQUIRED FIRST)
+
+```
+Call ToolSearch("+olympus pipeline") to load MCP tools.
+```
 
 ---
 
-## Execution Flow
+## Step 1: Initialize
 
 ```
-Phase 1 → Phase 2 → Phase 3 (max 3 rounds) → Phase 4 → Phase 5 → Phase 6
-                          ↑                                  ↓
-                          └────── Disagreement ──────────────┘
+1. IF standalone:
+     TeamCreate(team_name: "agora-${CLAUDE_SESSION_ID}")
+   ELSE:
+     Use existing Odyssey team (${TEAM})
+
+2. olympus_start_pipeline(skill: "agora", pipeline_id: ...)
+3. Create artifact directory: .olympus/agora-{YYYYMMDD}-{short-uuid}/
 ```
 
-### Phase 1: Question Framing
+---
+
+## Step 2: Question Framing
 
 ```
-Structure the user's decision:
-
-1. Extract the decision from user input
+1. Extract decision from user input
 2. Convert to 2-4 concrete options
-3. Confirm via AskUserQuestion:
-   question: "The debate will be structured as follows. Any modifications?"
-   options:
-     - "Proceed": continue with current framing
-     - "Modify options": edit options
-     - "Add context": provide additional context
-     - "Cancel": abort
+3. AskUserQuestion:
+   "The debate will be structured as follows. Any modifications?"
+   ["Proceed", "Modify options", "Add context", "Cancel"]
 
-Generate debate frame document:
-{
-  "question": "Which authentication method should we use?",
-  "options": [
-    { "id": "A", "title": "JWT", "description": "..." },
-    { "id": "B", "title": "Session", "description": "..." },
-    { "id": "C", "title": "OAuth2", "description": "..." }
-  ],
-  "context": "..."
-}
+4. Generate debate-frame.json:
+   { question, options: [{ id, title, description }], context }
+   Save to ${ARTIFACT_DIR}/
 ```
 
-### Phase 2: Committee Assembly
+---
+
+## Step 3: Committee Assembly
 
 ```
-Based on the Prism committee pattern:
+Spawn committee teammates (lazy):
 
-1. UX Critic:
-   - general-purpose agent with UX perspective prompt
-   - "Evaluate each option from user experience, accessibility, and usability perspectives"
+IF "zeus" not in team:
+  Agent(name: "zeus", team_name: ${TEAM},
+        subagent_type: "olympus:zeus",
+        prompt: "You are Zeus, planner and tie-breaker in a committee debate.
+          You will debate across multiple rounds. Build on previous arguments.
+          You may communicate directly with 'ares' and 'eris'.
+          Artifact directory: ${ARTIFACT_DIR}/
+          Wait for messages — do not act until prompted.")
+  olympus_register_agent_spawn(pipeline_id, "zeus")
 
-2. Engineering Critic:
-   - Ares (olympus:ares)
-   - "Evaluate from technical feasibility, maintainability, and scalability perspectives"
+IF "ares" not in team:
+  Agent(name: "ares", team_name: ${TEAM},
+        subagent_type: "olympus:ares",
+        prompt: "You are Ares, engineering critic in a committee debate.
+          Evaluate from technical feasibility, maintainability, scalability.
+          You may communicate directly with 'zeus' and 'eris'.
+          Wait for messages — do not act until prompted.")
+  olympus_register_agent_spawn(pipeline_id, "ares")
 
-3. Planner (tie-breaker):
-   - Zeus (olympus:zeus)
-   - "Evaluate from strategic perspective. Make the final call when UX/Engineering disagree"
+IF "eris" not in team:
+  Agent(name: "eris", team_name: ${TEAM},
+        subagent_type: "olympus:eris",
+        prompt: "You are Eris, devil's advocate in a committee debate.
+          Challenge ALL positions. Apply fallacy-catalog.md.
+          Wait for messages — do not act until prompted.")
+  olympus_register_agent_spawn(pipeline_id, "eris")
+
+Spawn UX critic (general-purpose, always fresh):
+  Agent(name: "ux-critic", team_name: ${TEAM},
+        prompt: "You are a UX critic in a committee debate.
+          Evaluate from user experience, accessibility, usability.
+          Wait for messages — do not act until prompted.")
+  olympus_register_agent_spawn(pipeline_id, "ux-critic")
 ```
 
-### Phase 3: Debate Rounds (max 3)
+---
+
+## Step 4: Debate Rounds (max 3)
 
 ```
-Each round:
+FOR each round (max 3):
 
-1. Each committee member presents their position independently (Tasks in parallel):
-   - Preferred option + rationale
-   - Pros/cons of other options
-   - Must comply with clarity-enforcement
+  1. Each committee member presents position (send in parallel):
+     SendMessage(to: "zeus", summary: "Round {n} 입장 제시",
+       "Read ${ARTIFACT_DIR}/debate-frame.json.
+        {If round > 1: 'Previous positions: {summary of last round}'}
+        Present: preferred option + rationale + pros/cons of others.
+        Include evidence (file:line if applicable). Report to leader.")
+     SendMessage(to: "ares", summary: "Round {n} 입장 제시", ...)
+     SendMessage(to: "ux-critic", summary: "Round {n} 입장 제시", ...)
 
-2. Orchestrator identifies disagreements:
-   - Compare each member's preference
-   - Clearly articulate points of disagreement
+     WAIT for all → leader collects positions
 
-3. Cross-questioning (when disagreements exist):
-   - Request each member to rebut other members' arguments
-   - Opportunity to present new evidence or perspectives
+  2. Identify disagreements:
+     Compare each member's preference. Articulate points of disagreement.
 
-4. Measure consensus level (per consensus-levels.md):
-   - Strong (3/3): unanimous → exit immediately
-   - Working (2/3): majority agrees → record dissent and exit
-   - Partial: additional round needed
-   - No: additional round or escalation
+  3. Cross-questioning (if disagreements):
+     SendMessage(to: "ares", summary: "반박",
+       "Zeus argues: {zeus_position}. Counter-argue with evidence.")
+     SendMessage(to: "zeus", summary: "반박",
+       "Ares argues: {ares_position}. Respond with evidence.")
+     WAIT for rebuttals
 
-5. Proceed to Phase 4 when consensus reached or 3 rounds complete
+  4. Measure consensus (per consensus-levels.md):
+     - Strong (3/3): unanimous → exit
+     - Working (2/3): majority → record dissent, exit
+     - Partial: next round needed
+     - No: next round or escalation
+
+  5. IF consensus reached OR round == 3: proceed to Step 5
 ```
 
-### Phase 4: Eris Challenge
+---
+
+## Step 5: Eris Challenge
 
 ```
-1. Spawn Eris as a Task:
-   - Prompt: artifact directory path
-   - Instruction: "Use Read to load committee positions and consensus state directly"
-   - Mission: challenge all positions (both accepted and rejected)
+SendMessage(to: "eris", summary: "DA 챌린지",
+  "Read all committee positions from previous rounds.
+   Challenge:
+     - Weaknesses of the consensus option
+     - Overlooked strengths of rejected options
+     - Logical fallacies per fallacy-catalog.md
+   Report challenges to leader.")
 
-2. Eris challenges:
-   - Weaknesses of the consensus option
-   - Overlooked strengths of rejected options
-   - Logical fallacy detection per fallacy-catalog
+WAIT → receive eris challenges
+olympus_record_execution(pipeline_id, "agora", "eris", ...)
 
-3. Committee response (if needed):
-   - Eris's challenges may change the consensus
-   - Re-measure consensus if changed
+Committee response (if needed):
+  Forward challenges to committee members via SendMessage
+  Re-measure consensus if changed
 ```
 
-### Phase 5: Consensus → Recommendation
+---
+
+## Step 6: Consensus → Recommendation
 
 ```
 Normal mode:
-  - Working or above → proceed
-  - Partial → Zeus makes tie-breaker decision
-  - No → escalate to user
+  Working or above → proceed
+  Partial → Zeus tie-breaker decision
+  No → escalate to user
 
 Hell mode (--hell):
-  - Strong required (unanimous)
-  - Additional rounds if not met (no limit)
+  Strong required (unanimous)
+  Additional rounds if not met
 
-Generate recommendation:
+Gate check:
+  olympus_gate_check(pipeline_id, "consensus", consensus_percentage)
+
+Generate recommendation.md:
   ## Decision: {selected option}
-
   ### Rationale
-  - {key reason 1}
-  - {key reason 2}
-
-  ### Committee Positions
-  | Member | Position | Key Argument |
-  |---|---|---|
-  | UX Critic | {option} | {argument} |
-  | Engineering (Ares) | {option} | {argument} |
-  | Planner (Zeus) | {option} | {argument} |
-
+  ### Committee Positions (table)
   ### Dissent
-  - {minority opinion + rationale}
-
   ### DA Challenges (Eris)
-  - {resolved challenges}
-  - {unresolved challenges + risks}
-
-  ### Consensus Level: {Strong/Working/Partial}
-
+  ### Consensus Level
   ### Implementation Notes
-  - {notes for implementing the chosen option}
 ```
 
-### Phase 6: Team Teardown
+---
 
-Shut down all committee members per the team-teardown.md protocol.
+## Step 7: Teardown
+
+```
+IF standalone:
+  Shutdown all teammates → TeamDelete
+ELSE:
+  Teammates persist for Odyssey
+```
+
+</Steps>
+
+<Tool_Usage>
+  MCP Tools:
+  - olympus_start_pipeline: Step 1 (MUST)
+  - olympus_register_agent_spawn: after each spawn (MUST)
+  - olympus_gate_check: Step 6 consensus (MUST)
+  - olympus_record_execution: after each round (SHOULD)
+
+  Team Tools:
+  - TeamCreate: Step 1 (standalone only)
+  - Agent (name + team_name): spawn committee + eris
+  - SendMessage: PARALLEL for round positions, SEQUENTIAL for cross-questioning
+  - TeamDelete: Step 7 (standalone only)
+</Tool_Usage>
+
+<Artifact_Contracts>
+  | File | Step | Writer | Readers |
+  |------|------|--------|---------|
+  | debate-frame.json | 2 | Leader | All members |
+  | recommendation.md | 6 | Leader | User |
+</Artifact_Contracts>

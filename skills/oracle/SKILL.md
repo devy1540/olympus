@@ -3,169 +3,238 @@ name: oracle
 description: "The Oracle of Delphi — requirements refinement pipeline"
 ---
 
-# /olympus:oracle — The Oracle of Delphi
+<Purpose>
+Turn vague ideas into validated specifications through Socratic interview.
+All agents operate as teammates for cross-phase context retention.
+</Purpose>
 
-A pipeline that systematically refines requirements into a structured spec.md.
+<Execution_Policy>
+- This skill uses FULL TEAMMATE mode. ALL agents are teammates in one team.
+- Each Step MUST call the specified MCP tool. Do NOT skip MCP calls.
+- Do NOT perform agent work directly (no Grep/Read instead of Hermes, no inline interview instead of Apollo).
+- Teammates persist — Apollo remembers previous interview rounds, Hermes remembers codebase exploration.
+- Leader handles ONLY: team management, gate checks, artifact writing for read-only agents.
+- If MCP tools are unavailable, proceed without MCP — hooks provide fallback.
+- IMPORTANT: Do NOT skip ToolSearch at Step 0.
+</Execution_Policy>
 
-## Agents (subagent_type bindings)
-- **Hermes**: Codebase exploration (Phase 1) → `subagent_type: "olympus:hermes"`
-- **Apollo**: Interview loop (Phase 2) → `subagent_type: "olympus:apollo"`
-- **Metis**: Gap analysis (Phase 4) → `subagent_type: "olympus:metis"`
+<Team_Structure>
+  team_name: "oracle-${CLAUDE_SESSION_ID}"
+  (When called from Odyssey, use the Odyssey team instead — do NOT create a separate team)
 
-**⚠ MANDATORY**: Each agent listed above MUST be spawned via the Agent tool with the specified subagent_type. The orchestrator MUST NOT perform Hermes's exploration, Apollo's interview, or Metis's gap analysis directly. See orchestrator-protocol.md §0.
+  Teammates:
+  | Agent | Role | Comm Targets |
+  |-------|------|-------------|
+  | hermes | Codebase exploration | leader, apollo (responds to queries) |
+  | apollo | Socratic interview | hermes (codebase questions), metis (gap feedback), leader |
+  | metis | Gap analysis | hermes (codebase questions), leader |
+  | eris | DA challenge (optional) | leader |
+</Team_Structure>
 
-## MCP Integration
+<Steps>
 
-If MCP tool `olympus_register_agent_spawn` is available, call it after EACH agent spawn:
+## Step 0: Load MCP Tools (REQUIRED FIRST)
 
 ```
-After spawning Hermes:  olympus_register_agent_spawn(pipeline_id, "hermes")
-After spawning Apollo:  olympus_register_agent_spawn(pipeline_id, "apollo")
-After spawning Metis:   olympus_register_agent_spawn(pipeline_id, "metis")
-Gate check:             olympus_gate_check(pipeline_id, "ambiguity", score)
-After each completes:   olympus_record_execution(pipeline_id, "oracle", agent_name, duration_ms, token_count)
+Call ToolSearch("+olympus pipeline") to load MCP tools.
 ```
 
-The MCP server independently verifies that all required agents were spawned before allowing the gate to pass.
-
-## Gate
-- Ambiguity score ≤ 0.2
-
-## Artifact Contracts
-| File | Phase | Writer | Readers |
-|---|---|---|---|
-| `.olympus/{id}/codebase-context.md` | 1 | Hermes | Apollo, Metis |
-| `.olympus/{id}/interview-log.md` | 2 | Apollo | Metis |
-| `.olympus/{id}/ambiguity-scores.json` | 2 | Apollo | Gate check |
-| `.olympus/{id}/gap-analysis.md` | 4 | Metis | Zeus, Helios |
-| `.olympus/{id}/spec.md` | 5 | Orchestrator | All downstream skills |
+**IMPORTANT**: Do NOT skip this step.
 
 ---
 
-## Execution Flow
+## Step 1: Initialize
 
 ```
-Phase 0 → Phase 1 → Phase 2 → Phase 3 (Gate) → Phase 4 → Phase 5
+1. IF standalone (not called from Odyssey):
+     TeamCreate(team_name: "oracle-${CLAUDE_SESSION_ID}")
+   ELSE:
+     Use existing Odyssey team (${TEAM})
+
+2. IF olympus_start_pipeline is available:
+     olympus_start_pipeline(skill: "oracle", pipeline_id: "oracle-${CLAUDE_SESSION_ID}")
+
+3. Create artifact directory: .olympus/oracle-{YYYYMMDD}-{short-uuid}/
 ```
 
-### Phase 0: Input Classification
+---
 
-Classify user input and determine interview depth.
+## Step 2: Input Classification
 
 ```
-Input Classification:
-- file: file path → read contents
-- URL: web URL → fetch via WebFetch
+Classify user input:
+- file: file path → Read contents
+- URL: web URL → WebFetch
 - text: raw text → use directly
-- conversation: conversation context → extract from prior conversation
+- conversation: extract from prior context
 
-Complexity Assessment:
-- Trivial: clear and simple → skip Phase 1-2, jump to Phase 5
-- Clear: mostly clear, minor clarification needed → light interview (3 rounds max)
+Complexity assessment:
+- Trivial: clear and simple → skip to Step 7 (spec generation)
+- Clear: mostly clear, minor clarification → light interview (3 rounds max)
 - Vague: significant ambiguity → full interview (10 rounds max)
-- Contradictory: contains contradictions → deep interview (resolve contradictions first)
+- Contradictory: contradictions detected → deep interview (resolve first)
 ```
 
-### Phase 1: Hermes Codebase Exploration
+---
+
+## Step 3: Hermes Codebase Exploration
 
 ```
-1. Spawn Hermes as a Task:
-   - Prompt: "Gather codebase context related to the user requirement '{input}'"
-   - Inject worker-preamble
-   - Artifact directory: .olympus/{id}/
-2. Hermes saves exploration results to .olympus/{id}/codebase-context.md
+IF "hermes" not in team:
+  Agent(name: "hermes", team_name: ${TEAM},
+        subagent_type: "olympus:hermes",
+        prompt: "You are Hermes, a teammate in ${TEAM}.
+          Respond to codebase queries from apollo and leader.
+          Artifact directory: ${ARTIFACT_DIR}/
+          Wait for messages — do not act until prompted.")
+  olympus_register_agent_spawn(pipeline_id, "hermes")
+
+SendMessage(to: "hermes", summary: "코드베이스 탐색",
+  "Explore codebase related to: {user_input}.
+   Gather: project structure, relevant modules, existing patterns, dependencies.
+   Report findings to leader.")
+
+WAIT for hermes → leader writes codebase-context.md
+olympus_record_execution(pipeline_id, "oracle", "hermes", ...)
 ```
 
-### Phase 2: Apollo Interview Loop
+---
+
+## Step 4: Apollo Interview Loop
 
 ```
-1. Spawn Apollo as a Task:
-   - Prompt: artifact directory path + user input + complexity level
-   - Instruction: "Use Read to load .olympus/{id}/codebase-context.md directly" (do NOT inject full content)
-2. Apollo asks one question at a time via AskUserQuestion
-3. After each answer:
-   a. Update ambiguity scores (per ambiguity-scoring.md)
-   b. Update interview-log.md
-   c. Update ambiguity-scores.json
-4. Stagnation detection:
-   - Spinning: same topic asked 3 times → move to next dimension
-   - Oscillation: A↔B repetition → ask user to decide
-   - Diminishing: delta < 0.02 → terminate current dimension
-5. Termination: ambiguity ≤ 0.2 or max rounds reached
+IF "apollo" not in team:
+  Agent(name: "apollo", team_name: ${TEAM},
+        subagent_type: "olympus:apollo",
+        prompt: "You are Apollo, a teammate in ${TEAM}.
+          You retain memory across interview rounds — build on previous answers.
+          You may query 'hermes' for codebase context during interview.
+          Artifact directory: ${ARTIFACT_DIR}/
+          Wait for messages — do not act until prompted.")
+  olympus_register_agent_spawn(pipeline_id, "apollo")
+
+SendMessage(to: "apollo", summary: "인터뷰 시작",
+  "Read ${ARTIFACT_DIR}/codebase-context.md for project context.
+   User requirement: {user_input}. Complexity: {level}.
+   Conduct Socratic interview via AskUserQuestion. One question at a time.
+   After each answer:
+     a. Update ambiguity scores (per ambiguity-scoring.md)
+     b. Update interview-log.md
+     c. Update ambiguity-scores.json
+   Stagnation detection:
+     - Spinning: same topic 3 times → move on
+     - Oscillation: A↔B repetition → ask user to decide
+     - Diminishing: delta < 0.02 → terminate dimension
+   Terminate when: ambiguity ≤ 0.2 OR max rounds reached.
+   Report completion to leader.")
+
+WAIT for apollo → leader writes interview-log.md, ambiguity-scores.json
+olympus_record_execution(pipeline_id, "oracle", "apollo", ...)
 ```
 
-### Phase 3: Ambiguity Gate
+---
+
+## Step 5: Ambiguity Gate
 
 ```
-ambiguity = read ambiguity-scores.json
+ambiguityScore = read ${ARTIFACT_DIR}/ambiguity-scores.json
+olympus_gate_check(pipeline_id, "ambiguity", ambiguityScore)
 
-if ambiguity <= 0.2:
-    → Phase 4
-else if rounds >= 10:
-    → Present remaining gaps to the user
-    → AskUserQuestion: "The following gaps remain. Proceed anyway?"
-    → On override → Phase 4
-else:
-    → Return to Phase 2
+IF passed (ambiguity ≤ 0.2):
+  → proceed to Step 6
+
+ELSE IF rounds < 10:
+  → SendMessage(to: "apollo", summary: "추가 인터뷰",
+      "Ambiguity still at {score}. Continue interview, focus on: {gap areas}")
+  ← Apollo REMEMBERS previous rounds — no re-initialization!
+  → re-check gate after completion
+
+ELSE (rounds >= 10):
+  → AskUserQuestion: "다음 갭이 남아있습니다. 그대로 진행할까요?"
+  → On override: proceed to Step 6
 ```
 
-### Phase 4: Metis Gap Analysis
+---
+
+## Step 6: Metis Gap Analysis
 
 ```
-1. Spawn Metis as a Task:
-   - Prompt: artifact directory path
-   - Instruction: "Use Read to load .olympus/{id}/interview-log.md and .olympus/{id}/codebase-context.md directly" (do NOT inject full content)
-2. Metis performs analysis:
-   - Missing Questions
-   - Undefined Guardrails
-   - Scope Risks
-   - Unvalidated Assumptions
-   - Acceptance Criteria
-   - Edge Cases
-3. Results saved to gap-analysis.md
+IF "metis" not in team:
+  Agent(name: "metis", team_name: ${TEAM},
+        subagent_type: "olympus:metis",
+        prompt: "You are Metis, a teammate in ${TEAM}.
+          Artifact directory: ${ARTIFACT_DIR}/
+          Wait for messages — do not act until prompted.")
+  olympus_register_agent_spawn(pipeline_id, "metis")
+
+SendMessage(to: "metis", summary: "갭 분석",
+  "Read ${ARTIFACT_DIR}/interview-log.md and codebase-context.md.
+   Analyze: Missing Questions, Undefined Guardrails, Scope Risks,
+   Unvalidated Assumptions, Acceptance Criteria, Edge Cases.
+   Report results to leader.")
+
+WAIT for metis → leader writes gap-analysis.md
+olympus_record_execution(pipeline_id, "oracle", "metis", ...)
 ```
 
-### Phase 5: Seed Generation
+---
 
+## Step 7: Spec Generation
+
+```
 Synthesize interview-log.md + gap-analysis.md into spec.md:
 
-```markdown
 # Specification: {title}
 
 ## GOAL
-{objective — clear and measurable}
-
 ## CONSTRAINTS
-{list of constraints}
-
-## ACCEPTANCE_CRITERIA
-1. GIVEN {precondition} WHEN {action} THEN {result}
-2. ...
-
-## SCOPE
-### In Scope
-- {included items}
-### Out of Scope
-- {excluded items}
-
+## ACCEPTANCE_CRITERIA (GIVEN-WHEN-THEN format)
+## SCOPE (In/Out)
 ## ASSUMPTIONS
-- {validated assumption} — validation method: {method}
-
 ## EDGE_CASES
-1. {case} — expected behavior: {behavior}
-
 ## OPEN_QUESTIONS
-- {unresolved question} (if any)
-
 ## ONTOLOGY
-| Term | Definition |
-|---|---|
-| {term} | {definition} |
-
 ## AMBIGUITY_SCORE
-{final score}
+
+Write ${ARTIFACT_DIR}/spec.md
 ```
 
-### Team Teardown
+---
 
-Shut down Hermes, Apollo, and Metis per the team-teardown.md protocol.
+## Step 8: Teardown
+
+```
+IF standalone (not called from Odyssey):
+  FOR each active teammate:
+    SendMessage(to: "{name}", message: { type: "shutdown_request" })
+    WAIT for shutdown_response
+  TeamDelete(team_name: "oracle-${CLAUDE_SESSION_ID}")
+ELSE:
+  Teammates persist for Odyssey's next phase
+```
+
+</Steps>
+
+<Tool_Usage>
+  MCP Tools (loaded at Step 0):
+  - olympus_start_pipeline: Step 1 (MUST)
+  - olympus_register_agent_spawn: after each spawn (MUST)
+  - olympus_gate_check: Step 5 ambiguity gate (MUST)
+  - olympus_record_execution: after each agent completes (SHOULD)
+
+  Team Tools:
+  - TeamCreate: Step 1 (standalone only)
+  - Agent (name + team_name): spawn teammates
+  - SendMessage: all agent communication
+  - TeamDelete: Step 8 (standalone only)
+</Tool_Usage>
+
+<Artifact_Contracts>
+  | File | Step | Writer | Readers |
+  |------|------|--------|---------|
+  | codebase-context.md | 3 | Leader (from hermes) | apollo, metis |
+  | interview-log.md | 4 | Leader (from apollo) | metis |
+  | ambiguity-scores.json | 4 | Leader (from apollo) | Gate check |
+  | gap-analysis.md | 6 | Leader (from metis) | zeus, helios |
+  | spec.md | 7 | Leader | All downstream |
+</Artifact_Contracts>

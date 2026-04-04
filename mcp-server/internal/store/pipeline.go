@@ -138,3 +138,43 @@ func (s *Store) NextPhase(pipelineID string, transitions map[string][]string) (s
 
 	return allowed[0], allowed, nil
 }
+
+// LogCollaboration records inter-agent communication for teammate mode.
+func (s *Store) LogCollaboration(pipelineID, fromAgent, toAgent, phase, summary string) error {
+	now := time.Now().UTC().Format(time.RFC3339)
+	_, err := s.db.Exec(
+		"INSERT INTO collaboration_logs (pipeline_id, from_agent, to_agent, phase, summary, logged_at) VALUES (?, ?, ?, ?, ?, ?)",
+		pipelineID, fromAgent, toAgent, phase, summary, now,
+	)
+	return err
+}
+
+// ListCollaborations returns all collaboration logs for a pipeline.
+func (s *Store) ListCollaborations(pipelineID string) ([]CollaborationLog, error) {
+	rows, err := s.db.Query(
+		"SELECT from_agent, to_agent, phase, summary, logged_at FROM collaboration_logs WHERE pipeline_id = ? ORDER BY logged_at",
+		pipelineID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var logs []CollaborationLog
+	for rows.Next() {
+		var log CollaborationLog
+		if err := rows.Scan(&log.FromAgent, &log.ToAgent, &log.Phase, &log.Summary, &log.LoggedAt); err != nil {
+			return nil, err
+		}
+		logs = append(logs, log)
+	}
+	return logs, nil
+}
+
+type CollaborationLog struct {
+	FromAgent string `json:"from_agent"`
+	ToAgent   string `json:"to_agent"`
+	Phase     string `json:"phase"`
+	Summary   string `json:"summary"`
+	LoggedAt  string `json:"logged_at"`
+}

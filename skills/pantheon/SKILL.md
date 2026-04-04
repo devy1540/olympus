@@ -3,201 +3,194 @@ name: pantheon
 description: "Council of the Gods — multi-perspective analysis pipeline"
 ---
 
-# /olympus:pantheon — Council of the Gods
+<Purpose>
+Analyze problems from multiple perspectives and validate through adversarial challenge.
+All agents operate as teammates for inter-perspective communication and debate.
+</Purpose>
 
-A pipeline that analyzes problems from multiple perspectives and validates logical soundness through Devil's Advocate challenge.
+<Execution_Policy>
+- This skill uses FULL TEAMMATE mode. ALL agents are teammates in one team.
+- Each Step MUST call the specified MCP tool. Do NOT skip MCP calls.
+- Do NOT perform agent work directly. Helios MUST generate perspectives, Eris MUST challenge.
+- Analyst agents MUST run in parallel (send all SendMessages before waiting).
+- Eris DA challenge is MANDATORY — do NOT skip even if analysts agree.
+- Leader handles ONLY: team management, gate checks, artifact writing.
+- If MCP tools are unavailable, proceed without MCP — hooks provide fallback.
+- IMPORTANT: Do NOT skip ToolSearch at Step 0.
+</Execution_Policy>
 
-## Agents (subagent_type bindings)
-- **Hermes**: Codebase exploration → `subagent_type: "olympus:hermes"`
-- **Helios**: Complexity assessment + perspective generation → `subagent_type: "olympus:helios"`
-- **Ares**: Code quality perspective analysis → `subagent_type: "olympus:ares"`
-- **Poseidon**: Security perspective analysis → `subagent_type: "olympus:poseidon"`
-- **Zeus**: Architecture perspective analysis → `subagent_type: "olympus:zeus"`
-- **Eris**: Devil's Advocate challenge → `subagent_type: "olympus:eris"`
+<Team_Structure>
+  team_name: "pantheon-${CLAUDE_SESSION_ID}"
+  (When called from Odyssey, use the Odyssey team instead)
 
-**⚠ MANDATORY**: All agents above MUST be spawned via the Agent tool. In particular:
-- **Helios MUST be spawned** for perspective generation (Phase 1). Do NOT skip to direct analysis.
-- **Eris MUST be spawned** for DA challenge (Phase 4). Do NOT skip Eris even if analysts agree.
-- Analyst agents MUST run in parallel via separate Agent tool calls.
-See orchestrator-protocol.md §0.
+  Teammates:
+  | Agent | Role | Comm Targets |
+  |-------|------|-------------|
+  | hermes | Codebase exploration (if needed) | leader |
+  | helios | Complexity assessment + perspective generation | leader |
+  | ares | Code quality analysis | eris (responds to challenges), leader |
+  | poseidon | Security analysis | leader |
+  | zeus | Architecture analysis (Analysis_Mode) | leader |
+  | eris | DA challenge of all findings | analysts (challenges), leader |
+</Team_Structure>
 
-## MCP Integration
+<Steps>
 
-If MCP tool `olympus_register_agent_spawn` is available:
+## Step 0: Load MCP Tools (REQUIRED FIRST)
 
 ```
-After each agent spawn: olympus_register_agent_spawn(pipeline_id, agent_name)
-  → hermes, helios, ares, poseidon, zeus, eris (all 6 must be registered)
-Gate check:             olympus_gate_check(pipeline_id, "consensus", percentage)
-  → Server checks score AND verifies eris was spawned (DA mandatory)
-After each completes:   olympus_record_execution(pipeline_id, "pantheon", agent_name, duration_ms, token_count)
+Call ToolSearch("+olympus pipeline") to load MCP tools.
 ```
-
-## Gate
-- Normal: Consensus ≥ Working (67%)
-- Hell mode (--hell): Unanimous
-
-## Artifact Contracts
-| File | Phase | Writer | Readers |
-|---|---|---|---|
-| `.olympus/{id}/source-catalog.md` | 0 | Orchestrator | All agents |
-| `.olympus/{id}/source-scope-analyst.md` | 0 | Orchestrator | Analyst agents |
-| `.olympus/{id}/source-scope-da.md` | 0 | Orchestrator | Eris |
-| `.olympus/{id}/perspectives.md` | 2 | Helios | All agents |
-| `.olympus/{id}/context.md` | 2 | Orchestrator | All agents |
-| `.olympus/{id}/analyst-findings.md` | 3 | Analyst agents | Eris |
-| `.olympus/{id}/da-evaluation.md` | 4 | Eris | Consensus stage |
-| `.olympus/{id}/prior-iterations.md` | 5 | Orchestrator | Re-entry |
-| `.olympus/{id}/analysis.md` | 5 | Orchestrator | Downstream skills |
 
 ---
 
-## Execution Flow
+## Step 1: Initialize
 
 ```
-Phase 0 (OSM) → Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6
-                                       ↑                      ↓
-                                       └──── Feedback Loop ───┘
+1. IF standalone:
+     TeamCreate(team_name: "pantheon-${CLAUDE_SESSION_ID}")
+   ELSE:
+     Use existing Odyssey team (${TEAM})
+
+2. olympus_start_pipeline(skill: "pantheon", pipeline_id: ...)
+3. Create artifact directory: .olympus/pantheon-{YYYYMMDD}-{short-uuid}/
 ```
 
-### Phase 0: Source Scope Mapping (optional)
+---
 
-Activated when the `--scope` flag is used or MCP resources are detected.
-Default behavior: use local codebase + spec.md only and proceed directly to Phase 1.
-
-When activated, follow the source-scope-mapping.md protocol:
+## Step 2: Source Scope Mapping (optional)
 
 ```
-Step 1: MCP data source discovery
-  - Enumerate available MCP resources via ListMcpResourcesTool
-  - Search for additional data tools via ToolSearch
-  - Build an available source catalog
+Activated when: --scope flag is used OR MCP resources are detected.
+Default: skip (use local codebase + spec.md only).
 
-Step 2: Source selection
-  - AskUserQuestion (multiSelect=true):
-    "Select data sources for the analysis"
-    - Discovered MCP sources
-    - Local file system
-    - Web search
-
-Step 3: Add external sources (loop)
-  - AskUserQuestion: "Any external sources to add? (URL, file path, or 'done')"
-  - URL → collect content via WebFetch
-  - File → collect content via Read
-  - 'done' → exit loop
-
-Step 4: Confirm pool
-  - AskUserQuestion:
-    - Proceed: continue with current pool
-    - Reselect: go back to Step 2
-    - Add more: go back to Step 3
-    - Cancel: skip OSM entirely
-
-Step 5: Generate scope blocks
-  - Create source-catalog.md
-  - Create source-scope-analyst.md (for analysts)
-  - Create source-scope-da.md (for Eris)
-
-Note: If no MCP is available, skip Steps 1-2 and start from Step 3 (soft dependency)
-Note: If --scope flag is absent and no MCP is detected, skip Phase 0 entirely
+When activated:
+  1. Enumerate MCP resources via ListMcpResourcesTool
+  2. AskUserQuestion (multiSelect): select data sources
+  3. Collect external sources (URL → WebFetch, file → Read)
+  4. Generate source-catalog.md, source-scope-analyst.md, source-scope-da.md
 ```
 
-### Phase 1: Helios Complexity Assessment + Perspective Generation
+---
+
+## Step 3: Helios Perspective Generation
 
 ```
-1. Spawn Helios as a Task:
-   - Prompt: artifact directory path
-   - Instruction: "Use Read to load: spec.md, codebase-context.md (if present), source-catalog.md (if present)"
-2. Helios evaluates 6 complexity dimensions:
-   - Domain, Technical, Risk, Stakeholders, Timeline, Novelty
-3. Derives 3-6 orthogonal perspectives based on complexity profile
-4. Applies perspective-quality-gate:
-   - Orthogonality (overlap < 20%)
-   - Evidence-based
-   - Domain-specific
-   - Actionable
-5. Maps analyst agents to each perspective:
-   - Code quality → olympus:ares
-   - Security → olympus:poseidon
-   - Architecture → olympus:zeus (Analysis_Mode)
-   - Other → general-purpose with perspective prompt injection
+IF "helios" not in team:
+  Agent(name: "helios", team_name: ${TEAM},
+        subagent_type: "olympus:helios", prompt: "...")
+  olympus_register_agent_spawn(pipeline_id, "helios")
+
+SendMessage(to: "helios", summary: "관점 생성",
+  "Read ${ARTIFACT_DIR}/spec.md. Read codebase-context.md if present.
+   Read source-catalog.md if present.
+   Evaluate 6 complexity dimensions: Domain, Technical, Risk, Stakeholders, Timeline, Novelty.
+   Derive 3-6 orthogonal perspectives. Apply quality gate (overlap < 20%).
+   Map analyst agents: Code quality → ares, Security → poseidon, Architecture → zeus.
+   Report to leader.")
+
+WAIT → leader writes perspectives.md
+olympus_record_execution(pipeline_id, "pantheon", "helios", ...)
 ```
 
-### Phase 2: Perspective Approval
+---
+
+## Step 4: Perspective Approval
 
 ```
 AskUserQuestion:
-  question: "The following perspectives will be used for analysis:"
-  options:
-    - "Proceed": continue with confirmed perspectives
-    - "Add perspective": add a perspective
-    - "Remove perspective": remove a perspective
-    - "Modify perspective": modify a perspective
+  question: "다음 관점으로 분석합니다:"
+  options: ["진행", "관점 추가", "관점 제거", "관점 수정"]
 
-Confirmed perspectives → saved to perspectives.md (immutable after this point)
-Generate context.md: synthesize spec + perspectives + ontology
+Confirmed perspectives → perspectives.md (immutable)
+Generate context.md: spec + perspectives + ontology synthesis
 ```
 
-### Phase 3: Parallel Analysis
+---
+
+## Step 5: Parallel Analysis
 
 ```
-Spawn agents as Tasks in parallel, one per perspective:
+Spawn analyst teammates (lazy — skip if already in team):
 
-Each agent prompt must include:
-  - worker-preamble.md (includes Artifact Reference Protocol)
-  - Artifact directory path: .olympus/{id}/
-  - Assigned perspective's key questions
-  - Instruction: "Use Read to load the following artifacts directly:
-      1. .olympus/{id}/spec.md (ground truth — no summarization or modification)
-      2. .olympus/{id}/context.md
-      3. .olympus/{id}/source-scope-analyst.md (if present)"
+IF "ares" not in team:
+  Agent(name: "ares", team_name: ${TEAM}, subagent_type: "olympus:ares", prompt: "...")
+  olympus_register_agent_spawn(pipeline_id, "ares")
 
-⚠ Token efficiency: Do NOT inject full content of spec.md or context.md into prompts.
-  Having agents Read via tool prevents N× duplication.
+IF "poseidon" not in team:
+  Agent(name: "poseidon", team_name: ${TEAM}, subagent_type: "olympus:poseidon", prompt: "...")
+  olympus_register_agent_spawn(pipeline_id, "poseidon")
 
-Agent mapping:
-  - Code quality perspective → olympus:ares (subagent_type: "olympus:ares")
-  - Security perspective → olympus:poseidon (subagent_type: "olympus:poseidon")
-  - Architecture perspective → olympus:zeus (subagent_type: "olympus:zeus", Analysis_Mode)
-  - Other perspectives → general-purpose (subagent_type: "general-purpose") + perspective prompt
+IF architecture perspective AND "zeus" not in team:
+  Agent(name: "zeus", team_name: ${TEAM}, subagent_type: "olympus:zeus", prompt: "...")
+  olympus_register_agent_spawn(pipeline_id, "zeus")
 
-Aggregate all analysis results into analyst-findings.md
+Send ALL analysis tasks in parallel (do not wait between sends):
+
+SendMessage(to: "ares", summary: "코드 품질 분석",
+  "Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
+   Read source-scope-analyst.md if present.
+   Analyze from Code Quality perspective. Include file:line evidence.
+   Report findings to leader.")
+
+SendMessage(to: "poseidon", summary: "보안 분석",
+  "Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
+   Analyze from Security perspective (OWASP, CWE).
+   Report findings to leader.")
+
+SendMessage(to: "zeus", summary: "아키텍처 분석",
+  "Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
+   Analyze from Architecture perspective (Analysis_Mode, not Planning).
+   Report findings to leader.")
+
+For dynamic perspectives from Helios:
+  SendMessage(to: appropriate analyst, ...)
+
+WAIT for ALL analysts → leader aggregates into analyst-findings.md
+olympus_record_execution for each analyst
 ```
 
-### Phase 4: Eris Challenge
+---
+
+## Step 6: Eris DA Challenge
 
 ```
-1. Spawn Eris as a Task:
-   - Prompt: artifact directory path
-   - Instruction: "Use Read to load: .olympus/{id}/analyst-findings.md, docs/shared/fallacy-catalog.md, .olympus/{id}/source-scope-da.md (if present)"
-2. Eris scans all analysis results:
-   - Detect logical fallacies per fallacy-catalog
-   - Identify claims lacking evidence
-3. Challenge-Response (max 2 rounds):
-   - Round 1: core challenges → forwarded to analysts
-   - Round 2: residual challenges (if needed)
-4. BLOCKING_QUESTION resolution priority:
-   - Solvable via tools → execute tool
-   - Analyst can answer → forward to analyst
-   - Only user can answer → AskUserQuestion
-5. Verdict: SUFFICIENT / NOT_SUFFICIENT / NEEDS_TRIBUNAL
+IF "eris" not in team:
+  Agent(name: "eris", team_name: ${TEAM}, subagent_type: "olympus:eris", prompt: "...")
+  olympus_register_agent_spawn(pipeline_id, "eris")
+
+SendMessage(to: "eris", summary: "DA 챌린지",
+  "Read ${ARTIFACT_DIR}/analyst-findings.md.
+   Read docs/shared/fallacy-catalog.md.
+   Read source-scope-da.md if present.
+   Challenge all findings: detect fallacies, false positives, missing evidence.
+   Max 2 challenge-response rounds.
+   BLOCKING_QUESTIONs: tool-solvable → resolve, user-only → flag.
+   Verdict: SUFFICIENT / NOT_SUFFICIENT / NEEDS_TRIBUNAL.
+   Report to leader.")
+
+WAIT → leader writes da-evaluation.md
+olympus_record_execution(pipeline_id, "pantheon", "eris", ...)
 ```
 
-### Phase 5: Consensus & Synthesis
+---
+
+## Step 7: Consensus & Synthesis
 
 ```
 Apply consensus-levels.md criteria:
+  olympus_gate_check(pipeline_id, "consensus", consensus_percentage)
 
-if consensus >= threshold:  # Normal: Working, Hell: Strong
-    → Generate analysis.md (synthesis of all perspectives)
-    → Proceed to Phase 6
-else:
-    → Feedback loop:
-      - Preserve existing analysis results (save to prior-iterations.md)
-      - Add new perspectives only
-      - Re-run Phase 3-4
-      - Max 2 iterations (normal) / unlimited (--hell)
-      - After 2 failures → escalate to user
+IF consensus >= threshold (Normal: 67%, Hell: unanimous):
+  → Generate analysis.md (synthesis of all perspectives)
+  → Proceed to Step 8
+
+ELSE:
+  → Feedback loop (max 2 iterations):
+    - Save current to prior-iterations.md
+    - Add new perspectives only
+    - Re-run Step 5-6
+    - After 2 failures → AskUserQuestion
 
 analysis.md structure:
   ## Per-Perspective Summary
@@ -207,6 +200,43 @@ analysis.md structure:
   ## Recommendations
 ```
 
-### Phase 6: Team Teardown
+---
 
-Shut down all analyst agents per the team-teardown.md protocol.
+## Step 8: Teardown
+
+```
+IF standalone:
+  Shutdown all teammates → TeamDelete
+ELSE:
+  Teammates persist for Odyssey's next phase
+```
+
+</Steps>
+
+<Tool_Usage>
+  MCP Tools:
+  - olympus_start_pipeline: Step 1 (MUST)
+  - olympus_register_agent_spawn: after each spawn (MUST)
+  - olympus_gate_check: Step 7 consensus gate (MUST)
+  - olympus_record_execution: after each analyst (SHOULD)
+
+  Team Tools:
+  - TeamCreate: Step 1 (standalone only)
+  - Agent (name + team_name): spawn teammates
+  - SendMessage: all communication (parallel for analysts!)
+  - TeamDelete: Step 8 (standalone only)
+</Tool_Usage>
+
+<Artifact_Contracts>
+  | File | Step | Writer | Readers |
+  |------|------|--------|---------|
+  | source-catalog.md | 2 | Leader | All agents |
+  | source-scope-analyst.md | 2 | Leader | Analyst agents |
+  | source-scope-da.md | 2 | Leader | Eris |
+  | perspectives.md | 3 | Leader (from helios) | All agents |
+  | context.md | 4 | Leader | All agents |
+  | analyst-findings.md | 5 | Leader (from analysts) | Eris |
+  | da-evaluation.md | 6 | Leader (from eris) | Consensus |
+  | prior-iterations.md | 7 | Leader | Re-entry |
+  | analysis.md | 7 | Leader | Downstream skills |
+</Artifact_Contracts>

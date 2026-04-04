@@ -3,162 +3,111 @@ name: audit
 description: "Olympus Audit — automated plugin internal consistency validation"
 ---
 
-# /olympus:audit — Olympus Audit
+<Purpose>
+Validate the internal consistency of the Olympus plugin: agent permissions, cross-references,
+artifact contracts, gate thresholds, and clarity rules.
+Hephaestus and Athena operate as teammates for cross-phase context sharing.
+</Purpose>
 
-Automatically validates the internal consistency of the Olympus plugin: agent permissions, cross-references, artifact contracts, gate thresholds, and clarity rules.
+<Execution_Policy>
+- This skill uses FULL TEAMMATE mode. Hephaestus and Athena are teammates.
+- Each Step MUST call the specified MCP tool. Do NOT skip MCP calls.
+- Do NOT perform validation directly. Hephaestus handles mechanical, Athena handles semantic.
+- Leader handles ONLY: team management, report synthesis.
+- IMPORTANT: Do NOT skip ToolSearch at Step 0.
+</Execution_Policy>
 
-**Enhanced with runtime schemas:** This skill now leverages `agent-schema.json` (ported from Claude Code's `buildTool()` pattern) and `pipeline-states.json` (ported from Claude Code's `Terminal`/`Continue` types) for programmatic validation alongside semantic checks.
+<Team_Structure>
+  team_name: "audit-${CLAUDE_SESSION_ID}"
 
-## Agents (subagent_type bindings)
-- **Hephaestus**: Mechanical validation (YAML, file existence, structure) → `subagent_type: "olympus:hephaestus"`
-- **Athena**: Semantic validation (permission-role consistency, contract completeness) → `subagent_type: "olympus:athena"`
+  Teammates:
+  | Agent | Role | Comm Targets |
+  |-------|------|-------------|
+  | hephaestus | Mechanical validation (YAML, files, structure) | leader |
+  | athena | Semantic validation (permissions, contracts, gates) | hephaestus (evidence), leader |
+</Team_Structure>
 
-**⚠ MANDATORY**: Hephaestus and Athena MUST be spawned via Agent tool. The orchestrator only synthesizes the final report (Phase 3). See orchestrator-protocol.md §0.
+<Steps>
 
-## Verdict
-- CLEAN: all validations pass
-- WARNING: non-critical inconsistencies found (manual review recommended)
-- VIOLATION: critical consistency breach (fix required)
+## Step 0: Load MCP Tools (REQUIRED FIRST)
 
-## Artifact Contracts
-| File | Phase | Writer | Readers |
-|---|---|---|---|
-| `.olympus/{id}/audit-mechanical.json` | 1 | Hephaestus | Athena |
-| `.olympus/{id}/audit-semantic.json` | 2 | Athena | Orchestrator |
-| `.olympus/{id}/audit-report.md` | 3 | Orchestrator | User |
+```
+Call ToolSearch("+olympus pipeline") to load MCP tools.
+```
 
 ---
 
-## Execution Flow
+## Step 1: Initialize
 
 ```
-Phase 1 (Mechanical) → Phase 2 (Semantic) → Phase 3 (Report)
+1. TeamCreate(team_name: "audit-${CLAUDE_SESSION_ID}")
+2. olympus_start_pipeline(skill: "audit", pipeline_id: ...)
+3. Create artifact directory: .olympus/audit-{YYYYMMDD}-{short-uuid}/
 ```
 
-### Phase 1: Hephaestus Mechanical Validation
+---
 
-Spawn Hephaestus as a Task to check structural integrity.
-
-```
-Input: plugin root path
-Checks:
-
-1-1. YAML Frontmatter validity
-  - Validate against agent-schema.json required fields: name, description, model, disallowedTools
-  - Validate model enum: opus | sonnet | haiku
-  - Validate name pattern: ^[a-z]+$
-  - Validate disallowedTools items: Write | Edit | Bash | NotebookEdit
-  - Validate skills/*/SKILL.md frontmatter: name, description
-  Note: validate-agents.sh hook performs this check at write time;
-        audit performs it as a batch sweep.
-
-1-2. File existence verification
-  - Extract "Hand off to:" or "→ {AgentName}" patterns from agents/*.md
-  - Verify referenced agent names exist in agents/ directory
-  - Extract agent names from skills/*/SKILL.md "## Agents" sections
-  - Verify referenced agents exist in agents/ directory
-
-1-3. Shared document references
-  - Extract docs/shared/ file references from agents/*.md and skills/*.md
-  - Verify referenced documents exist in docs/shared/
-
-1-4. artifact-contracts.json cross-check
-  - Verify all writer agents in artifact-contracts.json exist
-  - Verify all reader agents in artifact-contracts.json exist
-  - Cross-check with agent-schema.json agentRegistry
-
-1-5. Hook script validation
-  - Verify all scripts referenced in hooks.json exist and are executable
-  - Syntax check: bash -n on each script
-
-Output: audit-mechanical.json
-{
-  "yaml_validity": { "pass": [], "fail": [] },
-  "cross_references": { "valid": [], "broken": [] },
-  "doc_references": { "valid": [], "broken": [] },
-  "contract_agents": { "valid": [], "missing": [] },
-  "hook_scripts": { "valid": [], "broken": [] },
-  "overall": "PASS | FAIL"
-}
-```
-
-### Phase 2: Athena Semantic Validation
-
-Spawn Athena as a Task to check logical consistency.
+## Step 2: Hephaestus Mechanical Validation
 
 ```
-Input: artifact directory path (contains audit-mechanical.json)
-Instruction: "Use Read to load audit-mechanical.json, then read agents/*.md, skills/*.md, docs/shared/* for semantic checks"
+IF "hephaestus" not in team:
+  Agent(name: "hephaestus", team_name: ${TEAM},
+        subagent_type: "olympus:hephaestus",
+        prompt: "You are Hephaestus, mechanical validator in ${TEAM}.
+          Artifact directory: ${ARTIFACT_DIR}/
+          Wait for messages — do not act until prompted.")
+  olympus_register_agent_spawn(pipeline_id, "hephaestus")
 
-Checks:
+SendMessage(to: "hephaestus", summary: "기계적 검증",
+  "Validate Olympus plugin structural integrity:
+   1-1. YAML Frontmatter: validate agents/*.md against agent-schema.json
+   1-2. File existence: verify cross-references between agents and skills
+   1-3. Shared doc references: verify docs/shared/ references exist
+   1-4. artifact-contracts.json: verify writer/reader agents exist
+   1-5. Hook scripts: verify hooks.json scripts exist, are executable, pass bash -n
+   Report audit-mechanical.json to leader.")
 
-2-1. Permission-Role Consistency
-  For each agent:
-  a. Parse disallowedTools
-  b. Scan prompt body for file-saving expressions:
-     - Write/Edit disabled agents: "save", "create", "write file", etc.
-     - Exception: "send via SendMessage" context is allowed
-  c. Verify Tool_Usage section tools don't conflict with disallowedTools
-  d. Cross-check against agent-schema.json agentRegistry.permissionLevel
-  On violation: VIOLATION + agent name + conflict location
-
-2-2. Artifact Contract Completeness
-  For each skill:
-  a. Extract filename patterns from SKILL.md (*.md, *.json)
-  b. Cross-reference with artifact-contracts.md (or .json)
-  c. Files mentioned in skill but absent from contracts → WARNING
-  d. Files in contracts but not mentioned in any skill → INFO (orphan)
-
-2-3. Gate Consistency
-  Extract gate thresholds from:
-  a. gate-thresholds.json (single source of truth)
-  b. oracle/SKILL.md ambiguity gate value
-  c. consensus-levels.md Normal/Hell thresholds
-  d. pantheon/SKILL.md consensus threshold
-  e. tribunal/SKILL.md semantic score threshold
-  f. genesis/SKILL.md convergence threshold
-  Verify all references to the same gate match gate-thresholds.json values
-  On inconsistency: VIOLATION + locations + value differences
-
-2-4. Clarity Scan
-  Extract banned phrases from clarity-enforcement.md
-  Scan all agent Output_Format and Examples sections for banned phrases
-  (Exclude template placeholders {}, intentional bad examples)
-  On violation: WARNING + agent name + location + phrase
-
-2-5. Delegation Pattern Consistency
-  Extract list of agents with Write/Edit disabled
-  For each:
-  a. Verify Tool_Usage includes SendMessage
-  b. Verify Final_Checklist mentions orchestrator handoff
-  On missing: WARNING + agent name
-
-2-6. Pipeline State Schema Compliance
-  Verify odyssey/SKILL.md state structure matches pipeline-states.json PipelineState schema
-  Verify evolve/SKILL.md state structure matches pipeline-states.json definitions
-  On mismatch: WARNING + location + expected vs actual
-
-Output: audit-semantic.json
-{
-  "permission_role": { "violations": [], "clean": [] },
-  "contract_completeness": { "missing": [], "orphans": [] },
-  "gate_consistency": { "consistent": [], "inconsistent": [] },
-  "clarity_scan": { "violations": [], "clean": [] },
-  "delegation_pattern": { "compliant": [], "non_compliant": [] },
-  "pipeline_schema": { "compliant": [], "non_compliant": [] },
-  "overall": "CLEAN | WARNING | VIOLATION"
-}
+WAIT → leader writes audit-mechanical.json
+olympus_record_execution(pipeline_id, "audit", "hephaestus", ...)
 ```
 
-### Phase 3: Audit Report Generation
+---
 
-Orchestrator synthesizes both validation results into the report.
+## Step 3: Athena Semantic Validation
 
-```markdown
+```
+IF "athena" not in team:
+  Agent(name: "athena", team_name: ${TEAM},
+        subagent_type: "olympus:athena",
+        prompt: "You are Athena, semantic validator in ${TEAM}.
+          You may query 'hephaestus' for additional mechanical evidence.
+          Artifact directory: ${ARTIFACT_DIR}/
+          Wait for messages — do not act until prompted.")
+  olympus_register_agent_spawn(pipeline_id, "athena")
+
+SendMessage(to: "athena", summary: "의미적 검증",
+  "Read ${ARTIFACT_DIR}/audit-mechanical.json, then agents/*.md, skills/*.md, docs/shared/*.
+   Validate:
+   2-1. Permission-Role Consistency: disallowedTools vs prompt content
+   2-2. Artifact Contract Completeness: skill files vs contracts
+   2-3. Gate Consistency: gate-thresholds.json vs SKILL.md values
+   2-4. Clarity Scan: banned phrases from clarity-enforcement.md
+   2-5. Delegation Pattern: Write/Edit disabled agents have SendMessage + handoff
+   2-6. Pipeline State Schema: state structures match pipeline-states.json
+   Report audit-semantic.json to leader.")
+
+WAIT → leader writes audit-semantic.json
+olympus_record_execution(pipeline_id, "audit", "athena", ...)
+```
+
+---
+
+## Step 4: Audit Report
+
+```
+Leader synthesizes both results:
+
 # Olympus Audit Report
-
-## Timestamp
-{ISO 8601}
 
 ## Summary
 - Mechanical: {PASS/FAIL}
@@ -167,42 +116,46 @@ Orchestrator synthesizes both validation results into the report.
 
 ## Violations (immediate fix required)
 | # | Category | Target | Issue | Location |
-|---|---|---|---|---|
-| 1 | {category} | {target} | {issue} | {location} |
 
 ## Warnings (manual review recommended)
 | # | Category | Target | Issue | Location |
-|---|---|---|---|---|
-| 1 | {category} | {target} | {issue} | {location} |
-
-## Info
-- {notes}
 
 ## Coverage
-- Agents scanned: {n}/{total}
-- Skills scanned: {n}/{total}
-- Docs referenced: {n}/{total}
-- Contracts verified: {n}/{total}
-- Hooks verified: {n}/{total}
+- Agents: {n}/{total}, Skills: {n}/{total}
 - Schemas validated: agent-schema.json, pipeline-states.json, gate-thresholds.json
+
+Save to ${ARTIFACT_DIR}/audit-report.md
+
+Verdict: CLEAN / WARNING / VIOLATION
 ```
-
-### Team Teardown
-
-Shut down Hephaestus and Athena per the team-teardown.md protocol.
 
 ---
 
-## Usage Scenarios
+## Step 5: Teardown
 
-### 1. Post-modification validation
-Run `/olympus:audit` after modifying agents or skills to verify consistency.
+```
+Shutdown all teammates → TeamDelete
+```
 
-### 2. Periodic validation
-Run after adding new agents or skills to check overall integrity.
+</Steps>
 
-### 3. Category-specific validation
-Specify a category in the prompt for partial validation:
-- "permission check only" → Phase 2-1 only
-- "contract check only" → Phase 2-2 only
-- "gate check only" → Phase 2-3 only
+<Tool_Usage>
+  MCP Tools:
+  - olympus_start_pipeline: Step 1 (MUST)
+  - olympus_register_agent_spawn: after each spawn (MUST)
+  - olympus_record_execution: after each agent (SHOULD)
+
+  Team Tools:
+  - TeamCreate: Step 1
+  - Agent (name + team_name): spawn hephaestus, athena
+  - SendMessage: sequential (athena reads hephaestus results)
+  - TeamDelete: Step 5
+</Tool_Usage>
+
+<Artifact_Contracts>
+  | File | Step | Writer | Readers |
+  |------|------|--------|---------|
+  | audit-mechanical.json | 2 | Leader (from hephaestus) | athena |
+  | audit-semantic.json | 3 | Leader (from athena) | Leader |
+  | audit-report.md | 4 | Leader | User |
+</Artifact_Contracts>

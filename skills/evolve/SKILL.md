@@ -3,367 +3,257 @@ name: evolve
 description: "Self-Evolution — improve Olympus itself through real-world testing and behavioral evaluation"
 ---
 
-# /olympus:evolve — Self-Evolution
+<Purpose>
+Run Olympus against real tasks, evaluate results, and improve agent prompts in a self-improvement loop.
+While /olympus:audit guards structure (skeleton), /olympus:evolve builds capability (muscle).
+All agents operate as teammates for iterative evaluation and refinement with context retention.
+</Purpose>
 
-Runs Olympus against real tasks, evaluates the results, and improves agent prompts in a self-improvement loop.
-While `/olympus:audit` guards structure (skeleton), `/olympus:evolve` builds capability (muscle).
+<Execution_Policy>
+- This skill uses FULL TEAMMATE mode. All agents are teammates.
+- Each Step MUST call the specified MCP tool. Do NOT skip MCP calls.
+- Do NOT perform evaluation or diagnosis directly. Spawn agents and delegate.
+- Metis and Eris MUST run in parallel for diagnosis (Step 5).
+- Prometheus MUST implement improvements (Step 6) — do NOT edit agent files directly.
+- Leader handles ONLY: team management, benchmark selection, convergence check, user approval.
+- IMPORTANT: Do NOT skip ToolSearch at Step 0.
+</Execution_Policy>
 
-## Agents (subagent_type bindings)
-- **Athena**: Output quality evaluation (Semantic Evaluator) → `subagent_type: "olympus:athena"`
-- **Eris**: Evaluation challenge + root cause diagnosis (Devil's Advocate) → `subagent_type: "olympus:eris"`
-- **Metis**: Expected-actual gap analysis (Analyst) → `subagent_type: "olympus:metis"`
-- **Prometheus**: Prompt improvement implementation (Executor) → `subagent_type: "olympus:prometheus"`
+<Team_Structure>
+  team_name: "evolve-${CLAUDE_SESSION_ID}"
 
-**⚠ MANDATORY**: All 4 agents MUST be spawned via Agent tool. Metis and Eris in Phase 4 MUST run in parallel. See orchestrator-protocol.md §0.
+  Teammates:
+  | Agent | Role | Comm Targets |
+  |-------|------|-------------|
+  | athena | Quality evaluation (5 dimensions) | leader |
+  | eris | Evaluation challenge + root cause | metis (cross-reference), leader |
+  | metis | Expected-actual gap analysis | eris (cross-reference), leader |
+  | prometheus | Prompt improvement implementation | leader |
 
-## Gates
-- Quality score ≥ 0.8 (improvement target met)
-- `/olympus:audit` CLEAN (structural consistency maintained)
+  Direct communication: metis ↔ eris (cross-reference during diagnosis)
+</Team_Structure>
 
-## Artifact Contracts
-| File | Phase | Writer | Readers |
-|---|---|---|---|
-| `.olympus/{id}/benchmark.md` | 1 | Orchestrator | All phases |
-| `.olympus/{id}/dogfood-result.md` | 2 | Orchestrator | Athena, Metis |
-| `.olympus/{id}/eval-matrix.md` | 3 | Orchestrator (from Athena) | Eris, Metis |
-| `.olympus/{id}/diagnosis.md` | 4 | Orchestrator (from Metis+Eris) | Prometheus |
-| `.olympus/{id}/refinement-log.md` | 5 | Orchestrator | Tracking |
-| `.olympus/{id}/evolve-state.json` | all | Orchestrator | State recovery |
+<Steps>
+
+## Step 0: Load MCP Tools (REQUIRED FIRST)
+
+```
+Call ToolSearch("+olympus pipeline") to load MCP tools.
+```
 
 ---
 
-## Execution Flow
+## Step 1: Initialize
 
 ```
-Phase 1 (Benchmark) → Phase 2 (Dogfood) → Phase 3 (Evaluate) → Phase 4 (Diagnose)
-                                                                       ↓
-Phase 7 (Lineage) ← Phase 6 (Audit) ← Phase 5 (Refine) ←─────────────┘
-      ↓ target not met
-      └──→ Phase 2 retry (max 5)
+1. TeamCreate(team_name: "evolve-${CLAUDE_SESSION_ID}")
+2. olympus_start_pipeline(skill: "evolve", pipeline_id: ...)
+3. Create artifact directory: .olympus/evolve-{YYYYMMDD}-{short-uuid}/
 ```
 
-### Phase 1: Benchmark Selection
+---
 
-Select or generate the benchmark task to run.
+## Step 2: Benchmark Selection
 
 ```
 Input classification:
-  - User-provided: user specifies the benchmark task directly
-  - Auto-generated: Olympus generates its own benchmark
-  - History: reuse benchmark from a previous evolve run
+  - User-provided: user specifies benchmark directly
+  - Auto-generated: AskUserQuestion to select target skill
+  - History: reuse from previous evolve run
 
-Auto-generation:
-  AskUserQuestion:
-    question: "Which skill should be tested?"
-    options:
-      - "Oracle": requirements refinement quality test
-      - "Pantheon": multi-perspective analysis quality test
-      - "Tribunal": evaluation accuracy test
-      - "Full pipeline": full Odyssey test
-
-Benchmark definition:
+Generate benchmark.md:
   ## Benchmark
+  ### Target Skill: {skill}
+  ### Scenario: {description}
+  ### Expected Quality (5 dimensions: Specificity, Evidence Density, Role Adherence, Efficiency, Actionability)
+  ### Test Input: {data}
 
-  ### Target Skill
-  {skill to test}
-
-  ### Scenario
-  {test scenario description}
-
-  ### Expected Quality
-  | Dimension | Minimum | Ideal |
-  |---|---|---|
-  | Specificity | 0.7 | 0.9 |
-  | Evidence Density | 0.6 | 0.8 |
-  | Role Adherence | 0.8 | 1.0 |
-  | Efficiency | 0.6 | 0.8 |
-  | Actionability | 0.7 | 0.9 |
-
-  ### Test Input
-  {test input data}
-
-Save as benchmark.md
+Save to ${ARTIFACT_DIR}/benchmark.md
 ```
-
-### Phase 2: Dogfood (Real Execution)
-
-Execute the target skill against the benchmark task.
-
-```
-1. Identify the Target Skill from benchmark
-2. Execute the skill with Test Input:
-   - Oracle → produces spec.md
-   - Pantheon → produces analysis.md
-   - Tribunal → produces verdict.md
-   - Odyssey → full pipeline execution
-
-3. Collect observation data during execution:
-   - Each agent's output (SendMessage content)
-   - Round counts (efficiency measurement)
-   - Gate pass/fail history
-   - Agent handoff records
-
-4. Save all outputs and observation data to dogfood-result.md
-
-Note: execution may require real user interaction (e.g., Apollo interview).
-      User should provide benchmark answers in advance or respond during execution.
-```
-
-### Phase 3: Evaluate (Behavioral Assessment)
-
-Spawn Athena as a Task to evaluate output quality across 5 dimensions.
-
-```
-Athena prompt: artifact directory path
-Instruction: "Use Read to load benchmark.md and dogfood-result.md directly"
-
-Evaluation dimensions:
-
-3-1. Specificity — 0.0~1.0
-  How concrete are the claims in the output?
-  - 1.0: all claims include file:line, numbers, specific examples
-  - 0.5: some claims are concrete, others are generic
-  - 0.0: mostly "it appears to be" level
-
-3-2. Evidence Density — 0.0~1.0
-  Ratio of evidence-backed claims to total claims
-  - claims_with_evidence / total_claims
-  - Factor in clarity-enforcement violation count
-
-3-3. Role Adherence — 0.0~1.0
-  Did each agent stay within their role boundaries?
-  - 1.0: all agents operated strictly within their role
-  - 0.5: some role drift (e.g., Ares flagging security issues)
-  - 0.0: role boundaries were meaningless
-
-3-4. Efficiency — 0.0~1.0
-  Did the pipeline reach the goal without unnecessary rounds?
-  - Gate retry count
-  - Stagnation occurrences
-  - Effective rounds / total rounds ratio
-
-3-5. Actionability — 0.0~1.0
-  Is the output immediately actionable?
-  - 1.0: can start the next step right away
-  - 0.5: some parts need further clarification
-  - 0.0: cannot proceed based on output alone
-
-Output: eval-matrix.md
-  ## Evaluation Matrix
-
-  | Dimension | Score | Evidence | Benchmark Target |
-  |---|---|---|---|
-  | Specificity | {n} | {evidence} | {target} |
-  | Evidence Density | {n} | {evidence} | {target} |
-  | Role Adherence | {n} | {evidence} | {target} |
-  | Efficiency | {n} | {evidence} | {target} |
-  | Actionability | {n} | {evidence} | {target} |
-
-  ### Overall Score: {weighted average}
-  ### Weakest Dimension: {lowest scoring dimension}
-  ### Strongest Dimension: {highest scoring dimension}
-```
-
-### Phase 4: Diagnose (Root Cause Analysis)
-
-Spawn Metis and Eris as parallel Tasks to trace quality issues back to agent prompts.
-
-```
-Metis (gap analysis):
-  Prompt: artifact directory path
-  Instruction: "Use Read to load eval-matrix.md, dogfood-result.md, and agents/*.md directly"
-  Mission: trace quality degradation causes to specific agent prompts
-
-  Analysis protocol:
-  1. Select the lowest-scoring dimension
-  2. Identify the specific output that was problematic
-  3. Identify the agent that produced it
-  4. Trace the cause in the agent's prompt:
-     - Is Investigation_Protocol insufficient?
-     - Does Output_Format fail to enforce specificity?
-     - Do Constraints allow role drift?
-     - Are Examples showing the wrong behavior?
-     - Does Failure_Modes_To_Avoid miss actual failures?
-  5. Derive specific improvement proposals
-
-Eris (challenge):
-  Prompt: artifact directory path
-  Instruction: "Use Read to load eval-matrix.md and dogfood-result.md directly"
-  Mission: verify Athena's evaluation accuracy + identify additional problems
-
-  Verification items:
-  - Is the scoring too generous? (Generous Scoring)
-  - Are there missed problems?
-  - Did the analysis find root causes or just symptoms?
-
-Synthesize both results into diagnosis.md:
-
-  ## Diagnosis
-
-  ### Root Causes
-  | # | Symptom | Agent | Prompt Location | Root Cause | Severity |
-  |---|---|---|---|---|---|
-  | 1 | {symptom} | {agent} | {section:line} | {cause} | CRITICAL/HIGH/MEDIUM |
-
-  ### Improvement Proposals
-  | # | Target | Current | Proposed | Expected Impact |
-  |---|---|---|---|---|
-  | 1 | {agent.md:section} | {current content} | {proposed content} | {expected effect} |
-
-  ### Eris Challenges
-  - {challenge content + resolution status}
-```
-
-### Phase 5: Refine (Prompt Improvement)
-
-```
-1. Present diagnosis.md to the user:
-   AskUserQuestion:
-     question: "Apply these improvements?"
-     options:
-       - "Apply all": apply all improvements
-       - "Select": choose which to apply
-       - "Modify": edit improvements before applying
-       - "Skip": skip this cycle
-
-2. Spawn Prometheus as a Task for approved improvements:
-   - Prompt: artifact directory path
-   - Instruction: "Use Read to load diagnosis.md Improvement Proposals directly"
-   - Mission: edit agent prompts per diagnosis specifications
-   - Constraint: only perform changes specified in diagnosis.md (no scope creep)
-
-3. Record changes in refinement-log.md:
-
-   ## Refinement Log — Iteration {n}
-
-   ### Changes Applied
-   | # | File | Section | Change | Rationale |
-   |---|---|---|---|---|
-   | 1 | {file} | {section} | {change} | {rationale} |
-
-   ### Changes Rejected
-   | # | Proposal | Reason |
-   |---|---|---|
-   | 1 | {proposal} | {rejection reason} |
-```
-
-### Phase 6: Audit (Consistency Verification)
-
-```
-Run /olympus:audit on modified agent prompts:
-
-1. Verify structural consistency:
-   - Permission-role consistency maintained?
-   - Cross-references intact?
-   - Artifact contract consistency maintained?
-
-2. Verdict:
-   - CLEAN → Phase 7
-   - VIOLATION → return to Phase 5 (modification broke structure)
-   - WARNING → notify user, then Phase 7
-```
-
-### Phase 7: Lineage & Convergence
-
-```
-Update evolve-state.json:
-{
-  "id": "evolve-{YYYYMMDD}-{short-uuid}",
-  "iteration": n,
-  "maxIterations": 5,
-  "benchmark": "benchmark.md",
-  "history": [
-    {
-      "iteration": 1,
-      "scores": {
-        "specificity": 0.6,
-        "evidence_density": 0.5,
-        "role_adherence": 0.9,
-        "efficiency": 0.7,
-        "actionability": 0.6
-      },
-      "overall": 0.66,
-      "changes": ["apollo.md: Investigation_Protocol strengthened", ...],
-      "audit": "CLEAN"
-    }
-  ],
-  "target": 0.8,
-  "converged": false
-}
-
-Convergence check:
-  if overall >= 0.8:
-    → Converged. Generate final report.
-    transition: { status: "terminal", reason: "completed" }
-  elif iteration >= maxIterations:
-    → Notify user:
-      AskUserQuestion:
-        - "Continue": extend maxIterations (+3)
-        - "Accept": accept current state
-        - "Reset benchmark": change benchmark and retry
-  elif score_delta < 0.02 for 2 iterations:
-    → Stagnation detected. Notify user:
-      "Improvement has been minimal for 2 consecutive iterations.
-       Change benchmark or focus on a different dimension?"
-    transition: { status: "continue", reason: "persona_switch" }
-  else:
-    → Return to Phase 2 (same benchmark)
-    transition: { status: "continue", reason: "generation_next", retryCount: n, maxRetries: 5 }
-
-Final report:
-  ## Evolution Report
-
-  ### Iterations: {total iterations}
-  ### Score Progression
-  | Iteration | Specificity | Evidence | Role | Efficiency | Action | Overall |
-  |---|---|---|---|---|---|---|
-  | 1 | ... | ... | ... | ... | ... | 0.66 |
-  | 2 | ... | ... | ... | ... | ... | 0.74 |
-  | 3 | ... | ... | ... | ... | ... | 0.82 |
-
-  ### Key Improvements
-  - {key improvement 1}
-  - {key improvement 2}
-
-  ### Files Modified
-  | File | Total Changes | Most Impactful Change |
-  |---|---|---|
-  | {file} | {count} | {most impactful change} |
-
-  ### Remaining Weaknesses
-  - {areas still needing improvement}
-```
-
-### Team Teardown
-
-Shut down Athena, Eris, Metis, and Prometheus per the team-teardown.md protocol.
 
 ---
 
-## Benchmark Library
+## Step 3: Dogfood (Real Execution)
 
-Reusable benchmarks for common scenarios:
+```
+Execute target skill against benchmark:
+  - Oracle → spec.md
+  - Pantheon → analysis.md
+  - Tribunal → verdict.md
+  - Odyssey → full pipeline
 
-### Oracle Benchmark: "User Authentication System"
-```
-Target: Oracle
-Input: "Build a login feature"
-Expected: concrete spec.md from vague input
-Focus: Apollo interview quality, Metis gap analysis depth
-```
+Collect observation data:
+  - Each agent output
+  - Round counts, gate history, handoff records
 
-### Pantheon Benchmark: "Payment Module Analysis"
-```
-Target: Pantheon
-Input: sample payment code + spec.md
-Expected: domain-specific perspectives (not generic)
-Focus: Helios perspective quality, Ares/Poseidon analysis depth
+Save to ${ARTIFACT_DIR}/dogfood-result.md
 ```
 
-### Tribunal Benchmark: "Intentionally Flawed Code"
+---
+
+## Step 4: Evaluate (Athena)
+
 ```
-Target: Tribunal
-Input: code with intentionally unmet ACs
-Expected: accurate detection of unmet ACs
-Focus: Athena accuracy, Hephaestus mechanical verification completeness
+IF "athena" not in team:
+  Agent(name: "athena", team_name: ${TEAM},
+        subagent_type: "olympus:athena",
+        prompt: "You are Athena, quality evaluator in ${TEAM}.
+          Artifact directory: ${ARTIFACT_DIR}/
+          Wait for messages — do not act until prompted.")
+  olympus_register_agent_spawn(pipeline_id, "athena")
+
+SendMessage(to: "athena", summary: "품질 평가",
+  "Read ${ARTIFACT_DIR}/benchmark.md and dogfood-result.md.
+   Evaluate across 5 dimensions (0.0~1.0):
+     1. Specificity: concrete claims with file:line?
+     2. Evidence Density: evidence-backed claims ratio
+     3. Role Adherence: agents stayed within boundaries?
+     4. Efficiency: goal reached without unnecessary rounds?
+     5. Actionability: output immediately actionable?
+   Report eval-matrix.md to leader.")
+
+WAIT → leader writes eval-matrix.md
+olympus_record_execution(pipeline_id, "evolve", "athena", ...)
 ```
+
+---
+
+## Step 5: Diagnose (Metis + Eris in PARALLEL)
+
+```
+IF "metis" not in team:
+  Agent(name: "metis", team_name: ${TEAM},
+        subagent_type: "olympus:metis",
+        prompt: "You are Metis, gap analyst in ${TEAM}.
+          You may cross-reference with 'eris' during diagnosis.
+          Artifact directory: ${ARTIFACT_DIR}/
+          Wait for messages — do not act until prompted.")
+  olympus_register_agent_spawn(pipeline_id, "metis")
+
+IF "eris" not in team:
+  Agent(name: "eris", team_name: ${TEAM},
+        subagent_type: "olympus:eris",
+        prompt: "You are Eris, evaluation challenger in ${TEAM}.
+          You may cross-reference with 'metis' during diagnosis.
+          Artifact directory: ${ARTIFACT_DIR}/
+          Wait for messages — do not act until prompted.")
+  olympus_register_agent_spawn(pipeline_id, "eris")
+
+Send BOTH in parallel:
+
+SendMessage(to: "metis", summary: "갭 분석",
+  "Read ${ARTIFACT_DIR}/eval-matrix.md, dogfood-result.md, and agents/*.md.
+   Trace quality issues to specific agent prompts:
+     - Investigation_Protocol insufficient?
+     - Output_Format fails to enforce specificity?
+     - Constraints allow role drift?
+   Derive improvement proposals. Report to leader.")
+
+SendMessage(to: "eris", summary: "평가 챌린지",
+  "Read ${ARTIFACT_DIR}/eval-matrix.md and dogfood-result.md.
+   Verify Athena's evaluation accuracy:
+     - Scoring too generous?
+     - Missed problems?
+     - Root causes or just symptoms?
+   Report to leader.")
+
+WAIT for both → leader synthesizes into diagnosis.md
+olympus_record_execution for each
+```
+
+---
+
+## Step 6: Refine (Prometheus)
+
+```
+Present diagnosis.md to user:
+  AskUserQuestion: "Apply these improvements?"
+  ["Apply all", "Select", "Modify", "Skip"]
+
+IF user approves:
+  IF "prometheus" not in team:
+    Agent(name: "prometheus", team_name: ${TEAM},
+          subagent_type: "olympus:prometheus",
+          prompt: "You are Prometheus, prompt improver in ${TEAM}.
+            ONLY perform changes specified in diagnosis.md. No scope creep.
+            Artifact directory: ${ARTIFACT_DIR}/
+            Wait for messages — do not act until prompted.")
+    olympus_register_agent_spawn(pipeline_id, "prometheus")
+
+  SendMessage(to: "prometheus", summary: "프롬프트 개선",
+    "Read ${ARTIFACT_DIR}/diagnosis.md Improvement Proposals.
+     Edit agent prompts per specifications. No scope creep.
+     Report changes to leader.")
+
+  WAIT → leader writes refinement-log.md
+  olympus_record_execution(pipeline_id, "evolve", "prometheus", ...)
+```
+
+---
+
+## Step 7: Audit (Consistency Check)
+
+```
+Run /olympus:audit on modified prompts:
+  CLEAN → Step 8
+  VIOLATION → return to Step 6 (modification broke structure)
+  WARNING → notify user, then Step 8
+```
+
+---
+
+## Step 8: Convergence Check
+
+```
+Update evolve-state.json:
+  { iteration, scores, changes, audit result }
+
+Convergence:
+  IF overall >= 0.8: converged → generate final report
+  ELIF iteration >= maxIterations (5): AskUserQuestion [Continue, Accept, Reset]
+  ELIF score_delta < 0.02 for 2 iterations: stagnation → notify user
+  ELSE: return to Step 3 (same benchmark)
+    ← Teammates REMEMBER previous iterations — evaluation improves
+
+Generate final report: score progression, key improvements, remaining weaknesses
+```
+
+---
+
+## Step 9: Teardown
+
+```
+Shutdown all teammates → TeamDelete
+```
+
+</Steps>
+
+<Tool_Usage>
+  MCP Tools:
+  - olympus_start_pipeline: Step 1 (MUST)
+  - olympus_register_agent_spawn: after each spawn (MUST)
+  - olympus_record_execution: after each agent (SHOULD)
+
+  Team Tools:
+  - TeamCreate: Step 1
+  - Agent (name + team_name): spawn athena, eris, metis, prometheus
+  - SendMessage: PARALLEL for metis+eris, sequential for others
+  - TeamDelete: Step 9
+</Tool_Usage>
+
+<Artifact_Contracts>
+  | File | Step | Writer | Readers |
+  |------|------|--------|---------|
+  | benchmark.md | 2 | Leader | All |
+  | dogfood-result.md | 3 | Leader | athena, metis |
+  | eval-matrix.md | 4 | Leader (from athena) | eris, metis |
+  | diagnosis.md | 5 | Leader (from metis+eris) | prometheus |
+  | refinement-log.md | 6 | Leader | Tracking |
+  | evolve-state.json | All | Leader | Convergence |
+</Artifact_Contracts>
+
+<Benchmark_Library>
+  Oracle: "Build a login feature" → spec.md from vague input
+  Pantheon: sample payment code → domain-specific perspectives
+  Tribunal: intentionally flawed code → accurate detection of unmet ACs
+</Benchmark_Library>

@@ -39,3 +39,18 @@ func (s *Store) GetLatestGateScore(pipelineID, gateType string) (*GateScore, err
 	gs.Passed = passedInt == 1
 	return gs, nil
 }
+
+// GetLatestGateScoreAny returns the most recent gate score for a pipeline regardless of type.
+func (s *Store) GetLatestGateScoreAny(pipelineID string) (*GateScore, error) {
+	gs := &GateScore{}
+	var passedInt int
+	err := s.db.QueryRow(
+		"SELECT pipeline_id, gate_type, score, passed, COALESCE(detail_json, ''), scored_at FROM gate_scores WHERE pipeline_id = ? ORDER BY scored_at DESC LIMIT 1",
+		pipelineID,
+	).Scan(&gs.PipelineID, &gs.GateType, &gs.Score, &passedInt, &gs.DetailJSON, &gs.ScoredAt)
+	if err != nil {
+		return nil, err
+	}
+	gs.Passed = passedInt == 1
+	return gs, nil
+}

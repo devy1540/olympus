@@ -105,6 +105,28 @@ func NewServer(st *store.Store, cfg *config.Config) *mcpserver.MCPServer {
 		validatePlanHandler(st),
 	)
 
+	// --- Teammate support ---
+
+	s.AddTool(
+		mcpgo.NewTool("olympus_next_action",
+			mcpgo.WithDescription("현재 파이프라인 상태 기반으로 다음 행동을 반환합니다. 리더 또는 팀메이트가 호출."),
+			mcpgo.WithString("pipeline_id", mcpgo.Required(), mcpgo.Description("파이프라인 ID")),
+			mcpgo.WithString("agent", mcpgo.Description("호출하는 에이전트 이름 (생략 시 리더 관점)")),
+		),
+		nextActionHandler(st, cfg),
+	)
+
+	s.AddTool(
+		mcpgo.NewTool("olympus_log_collaboration",
+			mcpgo.WithDescription("팀메이트 간 소통을 기록합니다"),
+			mcpgo.WithString("pipeline_id", mcpgo.Required(), mcpgo.Description("파이프라인 ID")),
+			mcpgo.WithString("from", mcpgo.Required(), mcpgo.Description("발신 에이전트")),
+			mcpgo.WithString("to", mcpgo.Required(), mcpgo.Description("수신 에이전트")),
+			mcpgo.WithString("summary", mcpgo.Required(), mcpgo.Description("소통 요약")),
+		),
+		logCollaborationHandler(st),
+	)
+
 	return s
 }
 
@@ -294,6 +316,124 @@ func validatePlanHandler(st *store.Store) mcpserver.ToolHandlerFunc {
 		}
 
 		return toResult(result)
+	}
+}
+
+func nextActionHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHandlerFunc {
+	return func(ctx context.Context, req mcpgo.CallToolRequest) (*mcpgo.CallToolResult, error) {
+		pipelineID := req.GetArguments()["pipeline_id"].(string)
+
+		p, err := st.GetPipeline(pipelineID)
+		if err != nil {
+			return mcpgo.NewToolResultError(fmt.Sprintf("파이프라인 미발견: %v", err)), nil
+		}
+
+		spawns, _ := st.ListSpawns(pipelineID)
+		spawnSet := make(map[string]bool)
+		for _, s := range spawns {
+			spawnSet[s.AgentName] = true
+		}
+
+		required := cfg.RequiredAgents(p.Skill, p.Phase)
+
+		// Check for missing spawns
+		var missing []string
+		for _, r := range required {
+			if !spawnSet[r] {
+				missing = append(missing, r)
+			}
+		}
+
+		// Determine agent-specific or leader action
+		agentName, _ := req.GetArguments()["agent"].(string)
+
+		if agentName != "" {
+			// Agent-specific: what should this agent do?
+			collabs, _ := st.ListCollaborations(pipelineID)
+			var collaborators []string
+			for _, c := range collabs {
+				if c.FromAgent == agentName || c.ToAgent == agentName {
+					peer := c.ToAgent
+					if peer == agentName {
+						peer = c.FromAgent
+					}
+					collaborators = append(collaborators, peer)
+				}
+			}
+
+			return toResult(map[string]interface{}{
+				"agent":         agentName,
+				"pipeline_id":   pipelineID,
+				"current_phase": p.Phase,
+				"status":        p.Status,
+				"action":        "check_with_leader",
+				"hint":          fmt.Sprintf("Agent %s is in phase %s. Report status to leader via SendMessage.", agentName, p.Phase),
+				"collaborators": collaborators,
+			})
+		}
+
+		// Leader perspective: overall next action
+		if len(missing) > 0 {
+			return toResult(map[string]interface{}{
+				"action":         "spawn_agent",
+				"agent":          missing[0],
+				"all_missing":    missing,
+				"reason":         "필수 에이전트 미스폰",
+				"current_phase":  p.Phase,
+				"spawned_agents": spawnSet,
+			})
+		}
+
+		// Check latest gate
+		latestGate, _ := st.GetLatestGateScoreAny(pipelineID)
+		if latestGate != nil && !latestGate.Passed {
+			return toResult(map[string]interface{}{
+				"action":        "retry_phase",
+				"reason":        fmt.Sprintf("게이트 실패: %s (%.2f)", latestGate.GateType, latestGate.Score),
+				"current_phase": p.Phase,
+				"gate":          latestGate.GateType,
+				"score":         latestGate.Score,
+			})
+		}
+
+		// All good — advance
+		nextPhases := cfg.ValidTransitions(p.Phase)
+		action := "advance_phase"
+		if len(nextPhases) == 0 {
+			action = "pipeline_complete"
+		}
+
+		return toResult(map[string]interface{}{
+			"action":        action,
+			"current_phase": p.Phase,
+			"next_phases":   nextPhases,
+			"all_spawned":   true,
+		})
+	}
+}
+
+func logCollaborationHandler(st *store.Store) mcpserver.ToolHandlerFunc {
+	return func(ctx context.Context, req mcpgo.CallToolRequest) (*mcpgo.CallToolResult, error) {
+		pipelineID := req.GetArguments()["pipeline_id"].(string)
+		from := req.GetArguments()["from"].(string)
+		to := req.GetArguments()["to"].(string)
+		summary := req.GetArguments()["summary"].(string)
+
+		p, err := st.GetPipeline(pipelineID)
+		if err != nil {
+			return mcpgo.NewToolResultError(fmt.Sprintf("파이프라인 미발견: %v", err)), nil
+		}
+
+		if err := st.LogCollaboration(pipelineID, from, to, p.Phase, summary); err != nil {
+			return mcpgo.NewToolResultError(fmt.Sprintf("기록 실패: %v", err)), nil
+		}
+
+		return toResult(map[string]interface{}{
+			"logged": true,
+			"from":   from,
+			"to":     to,
+			"phase":  p.Phase,
+		})
 	}
 }
 

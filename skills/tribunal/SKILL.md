@@ -3,193 +3,199 @@ name: tribunal
 description: "Trial of the Gods — 3-stage evaluation pipeline"
 ---
 
-# /olympus:tribunal — Trial of the Gods
+<Purpose>
+Evaluate implementations through three stages: mechanical → semantic → adversarial consensus.
+All agents operate as teammates. Stage 3 debate uses direct inter-agent SendMessage.
+</Purpose>
 
-A pipeline that evaluates implementations through three stages: mechanical verification → semantic evaluation → consensus evaluation.
+<Execution_Policy>
+- This skill uses FULL TEAMMATE mode. ALL agents are teammates in one team.
+- Each Step MUST call the specified MCP tool. Do NOT skip MCP calls.
+- Stage 3 is NOT optional when trigger conditions apply. Do NOT skip to APPROVED after Athena alone.
+- Stage 3 debate is SEQUENTIAL: Ares → Eris (sees Ares) → Hera (sees both).
+- Do NOT perform agent work directly.
+- Leader handles ONLY: team management, gate checks, artifact writing, verdict compilation.
+- IMPORTANT: Do NOT skip ToolSearch at Step 0.
+</Execution_Policy>
 
-## Agents
+<Team_Structure>
+  team_name: "tribunal-${CLAUDE_SESSION_ID}"
+  (When called from Odyssey, use the Odyssey team instead)
 
-**Subagent pattern** (Stages 1-2, one-shot):
-- **Hephaestus**: Mechanical verification (Stage 1) → `subagent_type: "olympus:hephaestus"`
-- **Athena**: Semantic evaluation (Stage 2) → `subagent_type: "olympus:athena"`
+  Teammates:
+  | Agent | Stage | Role | Comm Targets |
+  |-------|-------|------|-------------|
+  | hephaestus | 1 | Mechanical verification | leader |
+  | athena | 2 | Semantic evaluation | hephaestus (evidence), leader |
+  | ares | 3 | Consensus proposer | eris (debate partner), leader |
+  | eris | 3 | Consensus DA | ares (counter-argue), leader |
+  | hera | 3 | Consensus synthesizer | hephaestus (evidence), leader |
+</Team_Structure>
 
-**Teammate pattern** (Stage 3, debate requires cross-reference):
-- **Ares**: Consensus Proposer → `TeamCreate` name: `ares-proposer`
-- **Eris**: Consensus DA → `TeamCreate` name: `eris-da`
-- **Hera**: Consensus Synthesizer → `TeamCreate` name: `hera-synth`
+<Steps>
 
-**⚠ MANDATORY**:
-- Stages 1-2: Spawn via Agent tool (one-shot analysis, no cross-reference needed).
-- **Stage 3 is NOT optional** when trigger conditions apply. Do NOT skip to APPROVED after Athena alone.
-- Stage 3 uses **sequential debate via teammates**: Ares proposes → Eris counter-argues (seeing Ares's position) → Hera synthesizes (seeing both). This is not possible with independent parallel subagents.
-See orchestrator-protocol.md §0 and §5.
-
-## MCP Integration
-
-If MCP tool `olympus_register_agent_spawn` is available:
+## Step 0: Load MCP Tools (REQUIRED FIRST)
 
 ```
-After each agent spawn: olympus_register_agent_spawn(pipeline_id, agent_name)
-  → hephaestus, athena, ares, eris, hera (all must be registered)
-After each completes:   olympus_record_execution(pipeline_id, "tribunal", agent_name, duration_ms, token_count)
+Call ToolSearch("+olympus pipeline") to load MCP tools.
 ```
-
-## Final Verdict
-APPROVED / BLOCKED / INCOMPLETE / REJECTED
-
-## Artifact Contracts
-| File | Stage | Writer | Readers |
-|---|---|---|---|
-| `.olympus/{id}/mechanical-result.json` | 1 | Hephaestus | Athena |
-| `.olympus/{id}/semantic-matrix.md` | 2 | Athena | Stage 3 |
-| `.olympus/{id}/consensus-record.json` | 3 | Orchestrator | Final verdict |
-| `.olympus/{id}/verdict.md` | 3 | Orchestrator | User |
 
 ---
 
-## Execution Flow
+## Step 1: Initialize
 
 ```
-Stage 1 (Mechanical) → FAIL? → BLOCKED
-                     → PASS → Stage 2 (Semantic) → FAIL? → INCOMPLETE
-                                                  → PASS → Stage 3? → Verdict
+1. IF standalone:
+     TeamCreate(team_name: "tribunal-${CLAUDE_SESSION_ID}")
+   ELSE:
+     Use existing Odyssey team (${TEAM})
+
+2. olympus_start_pipeline(skill: "tribunal", pipeline_id: ...)
+3. Create artifact directory: .olympus/tribunal-{YYYYMMDD}-{short-uuid}/
 ```
 
-### Stage 1: Hephaestus Mechanical Verification
+---
+
+## Step 2: Stage 1 — Hephaestus Mechanical Verification
 
 ```
-1. Spawn Hephaestus as a Task:
-   - Prompt: "Run build, lint, test, and type-check for the project"
-2. Hephaestus executes in order:
-   a. Build: run build command
-   b. Lint: run lint check
-   c. Type check: run type checker
-   d. Test: run test suite
-3. Save results to mechanical-result.json
-4. Decision:
-   - All items PASS → proceed to Stage 2
-   - Any item FAIL → BLOCKED verdict + detailed error report
-     Record in verdict.md and exit
+IF "hephaestus" not in team:
+  Agent(name: "hephaestus", team_name: ${TEAM},
+        subagent_type: "olympus:hephaestus",
+        prompt: "You are Hephaestus, a teammate in ${TEAM}.
+          Run build/lint/test/type-check when requested.
+          Artifact directory: ${ARTIFACT_DIR}/
+          Wait for messages — do not act until prompted.")
+  olympus_register_agent_spawn(pipeline_id, "hephaestus")
+
+SendMessage(to: "hephaestus", summary: "기계적 검증",
+  "Run build, lint, type-check, and test suite in order.
+   Save results to ${ARTIFACT_DIR}/mechanical-result.json.
+   Report to leader.")
+
+WAIT → leader writes mechanical-result.json
+olympus_record_execution(pipeline_id, "tribunal", "hephaestus", ...)
+
+Decision:
+  All PASS → proceed to Step 3
+  Any FAIL → BLOCKED verdict
+    Write verdict.md with detailed error report → exit
 ```
 
-### Stage 2: Athena Semantic Evaluation
+---
+
+## Step 3: Stage 2 — Athena Semantic Evaluation
 
 ```
-1. Spawn Athena as a Task:
-   - Prompt: artifact directory path
-   - Instruction: "Use Read to load .olympus/{id}/spec.md and .olympus/{id}/mechanical-result.json directly" (do NOT inject full content)
-2. Athena evaluates:
-   a. Extract AC list from spec.md
-   b. For each AC, search for implementation evidence (file:line)
-   c. Determine AC status: MET (1.0) / PARTIALLY_MET (0.5) / NOT_MET (0.0)
-   d. Calculate overall score: sum / count
-3. Save results to semantic-matrix.md
-4. Decision:
-   - AC compliance = 100% AND overall score >= 0.8 → check Stage 3 trigger conditions
-   - Otherwise → INCOMPLETE verdict
-     Record unmet AC list in verdict.md
+IF "athena" not in team:
+  Agent(name: "athena", team_name: ${TEAM},
+        subagent_type: "olympus:athena",
+        prompt: "You are Athena, a teammate in ${TEAM}.
+          You may query 'hephaestus' for additional test evidence.
+          Artifact directory: ${ARTIFACT_DIR}/
+          Wait for messages — do not act until prompted.")
+  olympus_register_agent_spawn(pipeline_id, "athena")
+
+SendMessage(to: "athena", summary: "의미적 평가",
+  "Read ${ARTIFACT_DIR}/spec.md and mechanical-result.json.
+   Extract AC list from spec.md.
+   For each AC: search for implementation evidence (file:line).
+   Status: MET (1.0) / PARTIALLY_MET (0.5) / NOT_MET (0.0).
+   Calculate overall score: sum / count.
+   Report semantic-matrix.md to leader.")
+
+WAIT → leader writes semantic-matrix.md
+olympus_record_execution(pipeline_id, "tribunal", "athena", ...)
+
+Decision:
+  AC compliance = 100% AND score >= 0.8 → check Stage 3 trigger
+  Otherwise → INCOMPLETE verdict
+    Write verdict.md with unmet AC list → exit
 ```
 
-### Stage 3: Consensus Evaluation (conditional trigger)
+---
 
-**Trigger conditions** (execute if any apply):
-- Spec was modified
-- Overall score < 0.8
-- Scope deviation detected
-- User explicitly requested
-
-If no trigger conditions apply, Stage 2 result yields APPROVED directly.
+## Step 4: Stage 3 — Consensus Debate (conditional)
 
 ```
-When triggered:
+Trigger conditions (execute if ANY apply):
+  - Spec was modified during pipeline
+  - Overall semantic score < 0.8
+  - Scope deviation detected
+  - User explicitly requested
 
-1. Create debate team:
+IF no trigger conditions: Stage 2 result → APPROVED directly → Step 5
 
-   Step 1 — Create team:
-     TeamCreate:
-       team_name: "tribunal-debate-{id}"
-       description: "Consensus debate for tribunal evaluation"
+WHEN triggered:
 
-   Step 2 — Spawn debate members (parallel):
-     Agent:
-       description: "Ares proposer"
-       name: "ares-proposer"
-       team_name: "tribunal-debate-{id}"
-       subagent_type: "olympus:ares"
-       prompt: "You are Ares, proposer in a consensus debate.
-         Artifact directory: .olympus/{id}/
-         You will receive a debate prompt and must argue your position.
-         Read semantic-matrix.md and relevant code to form your argument.
-         Wait for messages — do not act until prompted."
+1. Spawn debate teammates (lazy):
 
-     Agent:
-       description: "Eris devil's advocate"
-       name: "eris-da"
-       team_name: "tribunal-debate-{id}"
-       subagent_type: "olympus:eris"
-       prompt: "You are Eris, devil's advocate in a consensus debate.
-         Artifact directory: .olympus/{id}/
-         You will receive Ares's position and must counter-argue.
-         Read semantic-matrix.md and challenge Ares's reasoning with evidence.
-         Wait for messages — do not act until prompted."
+   IF "ares" not in team:
+     Agent(name: "ares", team_name: ${TEAM},
+           subagent_type: "olympus:ares",
+           prompt: "You are Ares, consensus proposer in ${TEAM}.
+             You will debate with 'eris'. Read semantic-matrix.md and code.
+             Wait for messages — do not act until prompted.")
+     olympus_register_agent_spawn(pipeline_id, "ares")
 
-     Agent:
-       description: "Hera synthesizer"
-       name: "hera-synth"
-       team_name: "tribunal-debate-{id}"
-       subagent_type: "olympus:hera"
-       prompt: "You are Hera, synthesizer in a consensus debate.
-         Artifact directory: .olympus/{id}/
-         You will receive both Ares's position and Eris's counter-argument.
-         Synthesize both, then run tests via Bash to collect evidence.
-         Produce a final synthesized verdict.
-         Wait for messages — do not act until prompted."
+   IF "eris" not in team:
+     Agent(name: "eris", team_name: ${TEAM},
+           subagent_type: "olympus:eris",
+           prompt: "You are Eris, devil's advocate in ${TEAM}.
+             You will counter-argue against 'ares' with evidence.
+             Wait for messages — do not act until prompted.")
+     olympus_register_agent_spawn(pipeline_id, "eris")
 
-2. Sequential debate (each sees the previous):
+   IF "hera" not in team:
+     Agent(name: "hera", team_name: ${TEAM},
+           subagent_type: "olympus:hera",
+           prompt: "You are Hera, synthesizer in ${TEAM}.
+             You will see both Ares and Eris positions.
+             Run tests for evidence. Produce final verdict.
+             Wait for messages — do not act until prompted.")
+     olympus_register_agent_spawn(pipeline_id, "hera")
 
-   Round 1 — Ares proposes:
-     SendMessage(to: "ares-proposer"):
-       summary: "Propose verdict"
-       message: "Read .olympus/{id}/semantic-matrix.md and explore the relevant code.
-         Argue for APPROVE or REJECT from a quality perspective.
-         Include file:line evidence for every claim."
-     → Ares responds with position + rationale
+2. Sequential debate (EACH SEES THE PREVIOUS):
 
-   Round 2 — Eris counter-argues (sees Ares's position):
-     SendMessage(to: "eris-da"):
-       summary: "Counter-argue"
-       message: "Ares's position: {Ares response summary}.
-         Read .olympus/{id}/semantic-matrix.md.
-         Counter-argue against Ares's position with evidence.
-         Challenge logical fallacies per fallacy-catalog.md."
-     → Eris responds with counter-argument + evidence
+   a. Ares proposes:
+      SendMessage(to: "ares", summary: "토론 제안",
+        "Read ${ARTIFACT_DIR}/semantic-matrix.md and explore relevant code.
+         Argue for APPROVE or REJECT from quality perspective.
+         Include file:line evidence for every claim.
+         Report position to leader.")
+      WAIT → receive ares_position
 
-   Round 3 — Hera synthesizes (sees both):
-     SendMessage(to: "hera-synth"):
-       summary: "Synthesize verdict"
-       message: "Ares argues: {Ares summary}. Eris counters: {Eris summary}.
-         Read .olympus/{id}/semantic-matrix.md.
-         Synthesize both arguments, run tests for evidence, produce final verdict."
-     → Hera responds with synthesized verdict
+   b. Eris counter-argues (sees Ares):
+      SendMessage(to: "eris", summary: "반박",
+        "Ares's position: {ares_position_summary}.
+         Read ${ARTIFACT_DIR}/semantic-matrix.md.
+         Counter-argue with evidence. Challenge fallacies per fallacy-catalog.md.
+         Report counter-argument to leader.")
+      WAIT → receive eris_counter
+
+   c. Hera synthesizes (sees both):
+      SendMessage(to: "hera", summary: "종합 판정",
+        "Ares argues: {ares_summary}. Eris counters: {eris_summary}.
+         Read ${ARTIFACT_DIR}/semantic-matrix.md.
+         Synthesize both arguments. Run tests via Bash for evidence.
+         Produce final synthesized verdict: APPROVE or REJECT.
+         Report to leader.")
+      WAIT → receive hera_verdict
 
 3. Tally votes:
-   - Extract APPROVE/REJECT from each response
-   - Supermajority >= 66%:
-     - 2 of 3 approve → APPROVED
-     - Only 1 approves → REJECTED + dissent recorded
-     - All reject → REJECTED
+   Extract APPROVE/REJECT from each response.
+   Supermajority >= 66%:
+     - 2+ approve → APPROVED
+     - 1 approve → REJECTED + dissent recorded
+     - 0 approve → REJECTED
 
-4. Teardown debate team:
-   SendMessage(to: "ares-proposer", message: { type: "shutdown_request" })
-   SendMessage(to: "eris-da", message: { type: "shutdown_request" })
-   SendMessage(to: "hera-synth", message: { type: "shutdown_request" })
-   → Await shutdown_response from each
-   TeamDelete: team_name: "tribunal-debate-{id}"
-
-5. Save voting results to consensus-record.json
+4. Save consensus-record.json:
+   { votes: { ares, eris, hera }, result, dissent }
 ```
 
-### Final Verdict
+---
+
+## Step 5: Final Verdict
 
 ```
 Generate verdict.md:
@@ -199,27 +205,58 @@ Generate verdict.md:
 ## Stage Results
 - Stage 1 (Mechanical): {PASS/FAIL}
 - Stage 2 (Semantic): {score} — {PASS/FAIL}
-- Stage 3 (Consensus): {executed or not} — {result}
+- Stage 3 (Consensus): {executed/skipped} — {result}
 
 ## Final Verdict: {APPROVED / BLOCKED / INCOMPLETE / REJECTED_*}
 
-REJECTED subtypes (auto-classified based on Stage 2/3 analysis):
-- REJECTED_IMPLEMENTATION: implementation quality issue → recommend returning to Odyssey Phase 5 (execution)
-- REJECTED_SPEC: requirement defect (contradictory ACs, incomplete spec) → recommend returning to Oracle
-- REJECTED_ARCHITECTURE: design/architecture issue (structural redesign needed) → recommend returning to Pantheon
+REJECTED subtypes (auto-classified):
+- REJECTED_IMPLEMENTATION: implementation quality issue → Phase 5 retry
+- REJECTED_SPEC: requirement defect → Oracle rewind
+- REJECTED_ARCHITECTURE: structural issue → Pantheon rewind
 
-Classification criteria:
-- NOT_MET AC due to implementation omission → REJECTED_IMPLEMENTATION
-- NOT_MET AC due to AC contradiction/incompleteness → REJECTED_SPEC
-- NOT_MET AC due to architecture constraints making it infeasible → REJECTED_ARCHITECTURE
+Classification:
+- NOT_MET due to implementation omission → REJECTED_IMPLEMENTATION
+- NOT_MET due to AC contradiction → REJECTED_SPEC
+- NOT_MET due to architecture constraints → REJECTED_ARCHITECTURE
 
 ## Details
-{per-verdict detailed content}
+{per-verdict content}
 
 ## Recommendations
-{follow-up action recommendations + target Phase for return}
+{action + target phase for return}
 ```
 
-### Team Teardown
+---
 
-Shut down all evaluation agents per the team-teardown.md protocol.
+## Step 6: Teardown
+
+```
+IF standalone:
+  Shutdown all teammates → TeamDelete
+ELSE:
+  Teammates persist for Odyssey verdict processing
+```
+
+</Steps>
+
+<Tool_Usage>
+  MCP Tools:
+  - olympus_start_pipeline: Step 1 (MUST)
+  - olympus_register_agent_spawn: after each spawn (MUST)
+  - olympus_record_execution: after each agent (SHOULD)
+
+  Team Tools:
+  - TeamCreate: Step 1 (standalone only)
+  - Agent (name + team_name): spawn teammates
+  - SendMessage: SEQUENTIAL for debate (Ares → Eris → Hera, each sees previous)
+  - TeamDelete: Step 6 (standalone only)
+</Tool_Usage>
+
+<Artifact_Contracts>
+  | File | Stage | Writer | Readers |
+  |------|-------|--------|---------|
+  | mechanical-result.json | 1 | hephaestus (direct) | athena |
+  | semantic-matrix.md | 2 | Leader (from athena) | ares, eris, hera |
+  | consensus-record.json | 3 | Leader | Final verdict |
+  | verdict.md | 5 | Leader | User |
+</Artifact_Contracts>
