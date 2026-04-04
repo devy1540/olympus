@@ -10,7 +10,7 @@
   "mcpServers": {
     "olympus-pipeline": {
       "type": "stdio",
-      "command": "${CLAUDE_PLUGIN_ROOT}/bin/olympus-mcp",
+      "command": "${CLAUDE_PLUGIN_ROOT}/scripts/ensure-mcp.sh",
       "args": [
         "serve"
       ],
