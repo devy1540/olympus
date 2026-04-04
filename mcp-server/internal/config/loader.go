@@ -70,10 +70,10 @@ func Load(pluginRoot, dataDir string) (*Config, error) {
 		}
 		if regData, ok := raw["agentRegistry"]; ok {
 			var reg struct {
-				Registry map[string]AgentConfig `json:"registry"`
+				Agents map[string]AgentConfig `json:"agents"`
 			}
 			if err := json.Unmarshal(regData, &reg); err == nil {
-				cfg.Agents = AgentRegistry{Registry: reg.Registry}
+				cfg.Agents = AgentRegistry{Registry: reg.Agents}
 			}
 		}
 	}

@@ -35,6 +35,12 @@ func isSpawnedCmd(dataDir string) *cobra.Command {
 			}
 			defer st.Close()
 
+			// Verify pipeline exists first — if not, return error so
+			// hooks don't misinterpret "pipeline unknown" as "agent not spawned"
+			if _, err := st.GetPipeline(args[0]); err != nil {
+				return outputJSON(map[string]interface{}{"spawned": false, "error": "pipeline not found"})
+			}
+
 			spawned, phase, err := st.IsSpawned(args[0], args[1])
 			if err != nil {
 				return outputJSON(map[string]interface{}{"spawned": false})
@@ -45,10 +51,13 @@ func isSpawnedCmd(dataDir string) *cobra.Command {
 				result["phase"] = phase
 			}
 
+			if err := outputJSON(result); err != nil {
+				return err
+			}
 			if !spawned {
 				os.Exit(1)
 			}
-			return outputJSON(result)
+			return nil
 		},
 	}
 }
@@ -77,10 +86,13 @@ func gateStatusCmd(dataDir string) *cobra.Command {
 				"score":  gs.Score,
 			}
 
+			if err := outputJSON(result); err != nil {
+				return err
+			}
 			if !gs.Passed {
 				os.Exit(1)
 			}
-			return outputJSON(result)
+			return nil
 		},
 	}
 }

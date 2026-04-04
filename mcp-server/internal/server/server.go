@@ -143,7 +143,9 @@ func startPipelineHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHan
 
 		// Advance from "init" to first phase immediately
 		firstPhase := "oracle"
-		_ = st.UpdatePhase(pipelineID, firstPhase, cfg.Transitions.Transitions)
+		if err := st.UpdatePhase(pipelineID, firstPhase, cfg.Transitions.Transitions); err != nil {
+			return mcpgo.NewToolResultError(fmt.Sprintf("초기 페이즈 전환 실패: %v", err)), nil
+		}
 
 		required := cfg.RequiredAgents(skill, "")
 		return toResult(map[string]interface{}{
@@ -239,7 +241,9 @@ func calculateAmbiguityHandler(st *store.Store, calc *gate.Calculator) mcpserver
 		}
 
 		gateResult := calc.Check("ambiguity", result.MechanicalScore)
-		st.RecordGateScore(pipelineID, "ambiguity", result.MechanicalScore, gateResult.Passed, "")
+		if err := st.RecordGateScore(pipelineID, "ambiguity", result.MechanicalScore, gateResult.Passed, ""); err != nil {
+			return mcpgo.NewToolResultError(fmt.Sprintf("게이트 점수 기록 실패: %v", err)), nil
+		}
 
 		return toResult(map[string]interface{}{
 			"mechanical_score": result.MechanicalScore,
@@ -258,7 +262,9 @@ func gateCheckHandler(st *store.Store, cfg *config.Config, calc *gate.Calculator
 		score := req.GetArguments()["score"].(float64)
 
 		gateResult := calc.Check(gateType, score)
-		st.RecordGateScore(pipelineID, gateType, score, gateResult.Passed, "")
+		if err := st.RecordGateScore(pipelineID, gateType, score, gateResult.Passed, ""); err != nil {
+			return mcpgo.NewToolResultError(fmt.Sprintf("게이트 점수 기록 실패: %v", err)), nil
+		}
 
 		p, _ := st.GetPipeline(pipelineID)
 		spawnReport, _ := gate.CheckRequiredSpawns(st, cfg, pipelineID, p.Skill)

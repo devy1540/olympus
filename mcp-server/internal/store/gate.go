@@ -30,7 +30,7 @@ func (s *Store) GetLatestGateScore(pipelineID, gateType string) (*GateScore, err
 	gs := &GateScore{}
 	var passedInt int
 	err := s.db.QueryRow(
-		"SELECT pipeline_id, gate_type, score, passed, COALESCE(detail_json, ''), scored_at FROM gate_scores WHERE pipeline_id = ? AND gate_type = ? ORDER BY scored_at DESC LIMIT 1",
+		"SELECT pipeline_id, gate_type, score, passed, COALESCE(detail_json, ''), scored_at FROM gate_scores WHERE pipeline_id = ? AND gate_type = ? ORDER BY id DESC LIMIT 1",
 		pipelineID, gateType,
 	).Scan(&gs.PipelineID, &gs.GateType, &gs.Score, &passedInt, &gs.DetailJSON, &gs.ScoredAt)
 	if err != nil {
@@ -45,7 +45,7 @@ func (s *Store) GetLatestGateScoreAny(pipelineID string) (*GateScore, error) {
 	gs := &GateScore{}
 	var passedInt int
 	err := s.db.QueryRow(
-		"SELECT pipeline_id, gate_type, score, passed, COALESCE(detail_json, ''), scored_at FROM gate_scores WHERE pipeline_id = ? ORDER BY scored_at DESC LIMIT 1",
+		"SELECT pipeline_id, gate_type, score, passed, COALESCE(detail_json, ''), scored_at FROM gate_scores WHERE pipeline_id = ? ORDER BY id DESC LIMIT 1",
 		pipelineID,
 	).Scan(&gs.PipelineID, &gs.GateType, &gs.Score, &passedInt, &gs.DetailJSON, &gs.ScoredAt)
 	if err != nil {
