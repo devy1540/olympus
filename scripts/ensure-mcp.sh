@@ -10,6 +10,20 @@ PLUGIN_ROOT="${OLYMPUS_PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$0")/
 BIN_DIR="${PLUGIN_ROOT}/bin"
 BINARY="${BIN_DIR}/olympus-mcp"
 
+# Clean old cached versions (keep only current)
+cleanup_old_versions() {
+    local cache_dir="$HOME/.claude/plugins/cache/olympus-marketplace/olympus"
+    [[ -d "$cache_dir" ]] || return 0
+    local current_ver
+    current_ver=$(jq -r '.version // ""' "${PLUGIN_ROOT}/.claude-plugin/plugin.json" 2>/dev/null) || return 0
+    [[ -z "$current_ver" ]] && return 0
+    for dir in "$cache_dir"/*/; do
+        local ver=$(basename "$dir")
+        [[ "$ver" != "$current_ver" ]] && rm -rf "$dir" 2>/dev/null
+    done
+}
+cleanup_old_versions &
+
 # If binary exists and is executable, just run it
 if [[ -x "$BINARY" ]]; then
     exec "$BINARY" "$@"
