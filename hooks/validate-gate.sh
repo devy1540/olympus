@@ -85,8 +85,30 @@ case "$FILENAME" in
       exit 0
     fi
 
-    # --- Evidence cross-validation: verify interview-log.md exists ---
+    # --- MCP mechanical score cross-validation ---
     DIR=$(dirname "$FILE_PATH")
+    MCP_BINARY="${PLUGIN_ROOT}/bin/olympus-mcp"
+    if [[ -x "$MCP_BINARY" && -f "${DIR}/interview-log.md" ]]; then
+      PIPELINE_ID=$(echo "$DIR" | sed -n 's|.*\.olympus/\([^/]*\).*|\1|p' || true)
+      if [[ -n "$PIPELINE_ID" && -n "$SCORE" ]]; then
+        MCP_RESULT=$("$MCP_BINARY" query gate-status "$PIPELINE_ID" "ambiguity" 2>/dev/null || true)
+        if [[ -n "$MCP_RESULT" ]]; then
+          MCP_SCORE=$(echo "$MCP_RESULT" | jq -r '.score // empty' 2>/dev/null || true)
+          if [[ -n "$MCP_SCORE" ]]; then
+            DIVERGENCE=$(echo "$SCORE $MCP_SCORE" | awk '{ d = $1 - $2; if (d < 0) d = -d; print d }')
+            HIGH_DIVERGENCE=$(echo "$DIVERGENCE" | awk '{ print ($1 > 0.15) ? "true" : "false" }')
+            if [[ "$HIGH_DIVERGENCE" == "true" ]]; then
+              emit_allow_with_context \
+                "AMBIGUITY DIVERGENCE WARNING: LLM self-score (${SCORE}) diverges from MCP mechanical score (${MCP_SCORE}) by ${DIVERGENCE}. Divergence > 0.15 suggests the LLM may be underestimating ambiguity. Consider re-interviewing." \
+                "calibration"
+              exit 0
+            fi
+          fi
+        fi
+      fi
+    fi
+
+    # --- Evidence cross-validation: verify interview-log.md exists ---
     if [[ ! -f "${DIR}/interview-log.md" ]]; then
       emit_allow_with_context \
         "EVIDENCE WARNING: ambiguity-scores.json saved but interview-log.md does not exist yet. Ambiguity scores must be grounded in interview evidence." \

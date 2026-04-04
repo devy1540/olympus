@@ -182,6 +182,35 @@ jobs:
             exit 1
           fi
 
+      # ── Build MCP server binaries ──
+
+      - name: Setup Go
+        if: inputs.dry_run == false || github.event_name == 'push'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: mcp-server/go.sum
+
+      - name: Build MCP server (cross-compile)
+        if: inputs.dry_run == false || github.event_name == 'push'
+        working-directory: mcp-server
+        run: |
+          VERSION="${{ steps.version.outputs.new }}"
+          LDFLAGS="-s -w -X main.Version=${VERSION}"
+          mkdir -p ../bin
+
+          GOOS=darwin GOARCH=arm64 go build -ldflags "$LDFLAGS" -o ../bin/olympus-mcp-darwin-arm64 ./cmd/olympus-mcp/
+          GOOS=darwin GOARCH=amd64 go build -ldflags "$LDFLAGS" -o ../bin/olympus-mcp-darwin-amd64 ./cmd/olympus-mcp/
+          GOOS=linux  GOARCH=amd64 go build -ldflags "$LDFLAGS" -o ../bin/olympus-mcp-linux-amd64  ./cmd/olympus-mcp/
+
+          echo "Built 3 binaries:"
+          ls -lh ../bin/olympus-mcp-*
+
+      - name: Run Go tests
+        if: inputs.dry_run == false || github.event_name == 'push'
+        working-directory: mcp-server
+        run: go test ./...
+
       - name: Create GitHub Release
         if: inputs.dry_run == false || github.event_name == 'push'
         uses: softprops/action-gh-release@v2
@@ -191,6 +220,10 @@ jobs:
           body: ${{ steps.changelog.outputs.notes }}
           draft: false
           prerelease: ${{ contains(steps.version.outputs.tag, '-rc') || contains(steps.version.outputs.tag, '-beta') }}
+          files: |
+            bin/olympus-mcp-darwin-arm64
+            bin/olympus-mcp-darwin-amd64
+            bin/olympus-mcp-linux-amd64
 
       # ── Dry run summary ──
 

@@ -110,10 +110,8 @@ fi
 # Check that artifacts with a "source" agent were actually produced by that agent,
 # not by the orchestrator directly. This prevents the orchestrator from doing agent work.
 #
-# How it works:
-# - artifact-contracts.json has "source" field indicating which agent should produce the content
-# - odyssey-state.json has "agentTurns" recording which agents were actually spawned per phase
-# - If an artifact's source agent is not in agentTurns for the current phase, warn
+# Priority: MCP server (authoritative) > odyssey-state.json (fallback)
+# If MCP binary exists, query it first. Otherwise fall back to agentTurns check.
 
 ARTIFACT_SOURCE=$(jq -r --arg skill "$SKILL_NAME" --arg file "$FILENAME" \
   '.[$skill][$file].source // empty' "$CONTRACTS_FILE" 2>/dev/null || true)
@@ -127,16 +125,41 @@ fi
 
 # Skip if no source agent defined (orchestrator-owned artifact) or source is an array
 if [[ -n "$ARTIFACT_SOURCE" && "$ARTIFACT_SOURCE" != "null" && "$ARTIFACT_SOURCE" != "["* ]]; then
-  # Find odyssey-state.json or {skill}-state.json in the artifact directory
-  STATE_FILE=""
-  for candidate in "${ARTIFACT_DIR}/odyssey-state.json" "${ARTIFACT_DIR}/../odyssey-state.json"; do
-    if [[ -f "$candidate" ]]; then
-      STATE_FILE="$candidate"
-      break
-    fi
-  done
+  MCP_BINARY="${PLUGIN_ROOT}/bin/olympus-mcp"
+  MCP_CHECKED=false
 
-  if [[ -n "$STATE_FILE" ]]; then
+  # Try MCP server first (authoritative source)
+  if [[ -x "$MCP_BINARY" ]]; then
+    # Extract pipeline ID from artifact directory name
+    PIPELINE_ID=$(echo "$OLYMPUS_SUBDIR" | head -1)
+    if [[ -n "$PIPELINE_ID" ]]; then
+      MCP_RESULT=$("$MCP_BINARY" query is-spawned "$PIPELINE_ID" "$ARTIFACT_SOURCE" 2>/dev/null || true)
+      if [[ -n "$MCP_RESULT" ]]; then
+        MCP_CHECKED=true
+        MCP_SPAWNED=$(echo "$MCP_RESULT" | jq -r '.spawned // false' 2>/dev/null || echo "false")
+        if [[ "$MCP_SPAWNED" == "false" ]]; then
+          emit_allow_with_context \
+            "AGENT SPAWN WARNING (MCP): '${FILENAME}' should be produced by agent '${ARTIFACT_SOURCE}', but MCP server confirms '${ARTIFACT_SOURCE}' has NOT been spawned for pipeline '${PIPELINE_ID}'. The orchestrator MUST NOT perform agent work directly. See orchestrator-protocol.md §0." \
+            "spawn"
+          exit 0
+        fi
+      fi
+    fi
+  fi
+
+  # Fallback: check odyssey-state.json if MCP was not available
+  if [[ "$MCP_CHECKED" == "false" ]]; then
+    # Find odyssey-state.json or {skill}-state.json in the artifact directory
+    STATE_FILE=""
+    for candidate in "${ARTIFACT_DIR}/odyssey-state.json" "${ARTIFACT_DIR}/../odyssey-state.json"; do
+      if [[ -f "$candidate" ]]; then
+        STATE_FILE="$candidate"
+        break
+      fi
+    done
+  fi
+
+  if [[ "$MCP_CHECKED" == "false" && -n "$STATE_FILE" ]]; then
     # Map skill to odyssey phase name
     PHASE_KEY="$SKILL_NAME"
 
