@@ -43,6 +43,34 @@ Check required dependencies:
    - Used for plugin updates via marketplace
 ```
 
+### Phase 1.5: MCP Server Binary Setup
+
+Check and install the MCP server binary:
+
+```
+1. Check binary existence:
+   - Path: ${CLAUDE_PLUGIN_ROOT}/bin/olympus-mcp
+   - If exists: run --version, report version
+   - If missing: proceed to download
+
+2. If missing — auto-download:
+   - Detect platform: uname -s → darwin/linux
+   - Detect arch: uname -m → arm64/amd64
+   - Get version from plugin.json
+   - Download from GitHub Release:
+     URL: https://github.com/devy1540/olympus/releases/download/v{version}/olympus-mcp-{platform}-{arch}
+   - Save to: ${CLAUDE_PLUGIN_ROOT}/bin/olympus-mcp
+   - chmod +x
+   - Verify: run --version
+
+3. If download fails:
+   - Report: "MCP 서버 바이너리 다운로드 실패. MCP 기능은 비활성 상태이지만 스킬/에이전트/훅은 정상 작동합니다."
+   - Continue to Phase 2 (non-blocking)
+
+4. Report:
+   | MCP Server | OK/MISSING | {version or "다운로드 실패"} |
+```
+
 ### Phase 2: Hook Validation
 
 Verify all hook scripts are functional:
@@ -103,6 +131,7 @@ Display the results and available skills:
 | bash      | OK/WARN | {version} |
 | jq        | OK/MISSING | {version} |
 | git       | OK/MISSING | {version} |
+| MCP Server | OK/MISSING | {version or "N/A"} |
 
 ## Components
 | Component | Status | Count |
