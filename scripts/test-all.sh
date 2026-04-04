@@ -52,7 +52,7 @@ run_suite() {
 run_check() {
   local name="$1" cmd="$2"
   TOTAL_TESTS=$((TOTAL_TESTS + 1))
-  if eval "$cmd" >/dev/null 2>&1; then
+  if (eval "$cmd") >/dev/null 2>&1; then
     echo -e "  ${GREEN}✓${NC} $name"
     TOTAL_PASS=$((TOTAL_PASS + 1))
     SUITE_PASS=$((SUITE_PASS + 1))
