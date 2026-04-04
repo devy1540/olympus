@@ -1,7 +1,7 @@
 {
   "name": "olympus",
   "version": "2.0.3",
-  "description": "Olympus — Harness engineering plugin. 14 agents perform requirement refinement, multi-perspective analysis, evolution loops, and evaluation.",
+  "description": "Olympus — Harness engineering plugin. 15 agents perform requirement refinement, multi-perspective analysis, evolution loops, and evaluation.",
   "license": "MIT",
   "author": {
     "name": "hjyoon"

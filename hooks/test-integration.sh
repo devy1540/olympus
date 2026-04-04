@@ -241,8 +241,8 @@ RESULT=$(jq -n --arg fp "${CLAUDE_PLUGIN_ROOT}/agents/apollo.md" --arg ct "$APOL
   bash "$SCRIPT_DIR/validate-agents.sh" 2>/dev/null || true)
 check_result "Audit: apollo.md passes schema validation" "$RESULT" "silent"
 
-# Validate ALL 14 agents in a batch
-echo "  [audit] Batch validate all 14 agents"
+# Validate ALL 15 agents in a batch
+echo "  [audit] Batch validate all 15 agents"
 AGENT_FAILURES=""
 for agent_file in "${CLAUDE_PLUGIN_ROOT}"/agents/*.md; do
   agent_name=$(basename "$agent_file")
@@ -260,7 +260,7 @@ done
 
 TOTAL=$((TOTAL + 1))
 if [[ -z "$AGENT_FAILURES" ]]; then
-  echo "  PASS  Audit: All 14 agents pass schema validation"
+  echo "  PASS  Audit: All 15 agents pass schema validation"
   PASS=$((PASS + 1))
 else
   echo "  FAIL  Audit: Some agents failed schema validation:"
