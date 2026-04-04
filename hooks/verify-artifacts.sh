@@ -134,7 +134,9 @@ if [[ -n "$ARTIFACT_SOURCE" && "$ARTIFACT_SOURCE" != "null" && "$ARTIFACT_SOURCE
     PIPELINE_ID=$(echo "$OLYMPUS_SUBDIR" | head -1)
     if [[ -n "$PIPELINE_ID" ]]; then
       MCP_RESULT=$("$MCP_BINARY" query is-spawned "$PIPELINE_ID" "$ARTIFACT_SOURCE" 2>/dev/null || true)
-      if [[ -n "$MCP_RESULT" ]]; then
+      # Only trust MCP result if no error (DB exists and pipeline found)
+      MCP_HAS_ERROR=$(echo "$MCP_RESULT" | jq -r '.error // empty' 2>/dev/null || true)
+      if [[ -n "$MCP_RESULT" && -z "$MCP_HAS_ERROR" ]]; then
         MCP_CHECKED=true
         MCP_SPAWNED=$(echo "$MCP_RESULT" | jq -r '.spawned // false' 2>/dev/null || echo "false")
         if [[ "$MCP_SPAWNED" == "false" ]]; then

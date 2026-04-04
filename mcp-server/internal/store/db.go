@@ -70,9 +70,20 @@ func OpenRW(dataDir string) (*Store, error) {
 	}
 
 	dbPath := filepath.Join(dataDir, "olympus.db")
-	db, err := sql.Open("sqlite", dbPath+"?_journal=WAL&_busy_timeout=5000")
+	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("open db: %w", err)
+	}
+
+	// Configure SQLite for concurrent access
+	db.SetMaxOpenConns(1) // SQLite handles one writer at a time
+	if _, err := db.Exec("PRAGMA journal_mode=WAL"); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("set WAL mode: %w", err)
+	}
+	if _, err := db.Exec("PRAGMA busy_timeout=5000"); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("set busy timeout: %w", err)
 	}
 
 	if err := migrate(db); err != nil {
