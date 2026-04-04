@@ -73,6 +73,8 @@ echo ""
 run_suite "Integration" "bash hooks/test-integration.sh"
 echo ""
 run_suite "MCP E2E" "bash mcp-server/test-e2e.sh"
+echo ""
+run_suite "Deploy" "bash mcp-server/test-deploy.sh"
 
 # --- Go Unit Tests ---
 echo ""
