@@ -89,23 +89,31 @@ cat << 'S1' | "$BIN" serve >/dev/null 2>&1
 {"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_start_pipeline","arguments":{"skill":"odyssey","pipeline_id":"e2e-001"}}}
 S1
 
-# Session 2: Register spawns + gate checks + record executions + status
+# Session 2: Register spawns + record executions + status (no gates — separate session)
 MCP_OUTPUT=$(cat << 'S2' | "$BIN" serve 2>/dev/null
 {"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
 {"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"olympus_register_agent_spawn","arguments":{"pipeline_id":"e2e-001","agent_name":"hermes"}}}
 {"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"olympus_register_agent_spawn","arguments":{"pipeline_id":"e2e-001","agent_name":"apollo"}}}
 {"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"olympus_register_agent_spawn","arguments":{"pipeline_id":"e2e-001","agent_name":"metis"}}}
-{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"ambiguity","score":0.12}}}
-{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"ambiguity","score":0.25}}}
-{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"convergence","score":0.96}}}
-{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"convergence","score":0.90}}}
-{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"consensus","score":0.75}}}
-{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"consensus","score":0.50}}}
 {"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"olympus_record_execution","arguments":{"pipeline_id":"e2e-001","phase":"oracle","agent_name":"hermes","duration_ms":3500,"token_count":8000}}}
 {"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"olympus_record_execution","arguments":{"pipeline_id":"e2e-001","phase":"oracle","agent_name":"apollo","duration_ms":12000,"token_count":25000}}}
 {"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"olympus_pipeline_status","arguments":{"pipeline_id":"e2e-001"}}}
 S2
 )
+
+# Session 3: Gate checks (sequential sessions to avoid concurrent DB writes)
+GATE_OUTPUT=""
+for gate_req in \
+  '{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"ambiguity","score":0.12}}}' \
+  '{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"ambiguity","score":0.25}}}' \
+  '{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"convergence","score":0.96}}}' \
+  '{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"convergence","score":0.90}}}' \
+  '{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"consensus","score":0.75}}}' \
+  '{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"consensus","score":0.50}}}'; do
+  INIT_LINE='{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
+  RESP=$(printf '%s\n%s\n' "$INIT_LINE" "$gate_req" | "$BIN" serve 2>/dev/null)
+  GATE_OUTPUT="${GATE_OUTPUT}${RESP}"$'\n'
+done
 
 # Parse MCP responses
 get_mcp_result() {
@@ -142,13 +150,31 @@ assert_eq "register hermes" "true" "$(jq_field "$R2" "registered")"
 assert_eq "register apollo" "true" "$(jq_field "$R3" "registered")"
 assert_eq "register metis" "true" "$(jq_field "$R4" "registered")"
 
-# 5-10. Gate checks
-R5=$(get_mcp_result 5)
-R6=$(get_mcp_result 6)
-R7=$(get_mcp_result 7)
-R8=$(get_mcp_result 8)
-R9=$(get_mcp_result 9)
-R10=$(get_mcp_result 10)
+# 5-10. Gate checks (from GATE_OUTPUT, separate sessions)
+get_gate_result() {
+  local id=$1
+  echo "$GATE_OUTPUT" | python3 -c "
+import sys, json
+for line in sys.stdin:
+    try:
+        m = json.loads(line.strip())
+        if m.get('id') == $id:
+            c = m.get('result', {}).get('content', [])
+            for x in c:
+                if x.get('type') == 'text':
+                    print(x['text'])
+                    break
+            break
+    except: pass
+" 2>/dev/null
+}
+
+R5=$(get_gate_result 5)
+R6=$(get_gate_result 6)
+R7=$(get_gate_result 7)
+R8=$(get_gate_result 8)
+R9=$(get_gate_result 9)
+R10=$(get_gate_result 10)
 assert_eq "ambiguity 0.12 ≤ 0.2 → pass" "true" "$(jq_field "$R5" "passed")"
 assert_eq "ambiguity 0.25 > 0.2 → fail" "false" "$(jq_field "$R6" "passed")"
 assert_eq "convergence 0.96 ≥ 0.95 → pass" "true" "$(jq_field "$R7" "passed")"
@@ -197,11 +223,7 @@ ZEUS_EXIT=0
 "$BIN" query is-spawned e2e-001 zeus >/dev/null 2>&1 || ZEUS_EXIT=$?
 assert_eq "CLI: zeus not spawned → exit 1" "1" "$ZEUS_EXIT"
 
-# Gate status — store in separate session to avoid race condition
-cat << 'GS' | "$BIN" serve >/dev/null 2>&1
-{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
-{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"ambiguity","score":0.15}}}
-GS
+# Gate status — Session 3 already scored, just query
 GATE=$("$BIN" query gate-status e2e-001 ambiguity 2>/dev/null || true)
 assert_contains "CLI: ambiguity gate has score" "score" "$GATE"
 
