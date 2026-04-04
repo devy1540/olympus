@@ -141,12 +141,16 @@ func startPipelineHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHan
 			return mcpgo.NewToolResultError(fmt.Sprintf("파이프라인 생성 실패: %v", err)), nil
 		}
 
+		// Advance from "init" to first phase immediately
+		firstPhase := "oracle"
+		_ = st.UpdatePhase(pipelineID, firstPhase, cfg.Transitions.Transitions)
+
 		required := cfg.RequiredAgents(skill, "")
 		return toResult(map[string]interface{}{
 			"pipeline_id":     pipelineID,
 			"skill":           skill,
 			"required_agents": required,
-			"first_phase":     "oracle",
+			"first_phase":     firstPhase,
 		})
 	}
 }

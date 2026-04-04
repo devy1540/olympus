@@ -131,9 +131,15 @@ func (s *Store) NextPhase(pipelineID string, transitions map[string][]string) (s
 		return "", nil, err
 	}
 
-	allowed := transitions[p.Phase]
+	// "init" is the internal start state — transition to the first defined phase
+	phase := p.Phase
+	if phase == "init" {
+		phase = "oracle"
+	}
+
+	allowed := transitions[phase]
 	if len(allowed) == 0 {
-		return "", nil, fmt.Errorf("no transitions from phase: %s", p.Phase)
+		return "", nil, fmt.Errorf("no transitions from phase: %s", phase)
 	}
 
 	return allowed[0], allowed, nil
