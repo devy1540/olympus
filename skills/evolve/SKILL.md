@@ -106,7 +106,8 @@ IF "athena" not in team:
   olympus_register_agent_spawn(pipeline_id, "athena")
 
 SendMessage(to: "athena", summary: "품질 평가",
-  "Read ${ARTIFACT_DIR}/benchmark.md and dogfood-result.md.
+  "DO NOT write files — you are read-only.
+   Read ${ARTIFACT_DIR}/benchmark.md and dogfood-result.md.
    Evaluate across 5 dimensions (0.0~1.0):
      1. Specificity: concrete claims with file:line?
      2. Evidence Density: evidence-backed claims ratio
@@ -145,7 +146,8 @@ IF "eris" not in team:
 Send BOTH in parallel:
 
 SendMessage(to: "metis", summary: "갭 분석",
-  "Read ${ARTIFACT_DIR}/eval-matrix.md, dogfood-result.md, and agents/*.md.
+  "DO NOT write files — you are read-only.
+   Read ${ARTIFACT_DIR}/eval-matrix.md, dogfood-result.md, and agents/*.md.
    Trace quality issues to specific agent prompts:
      - Investigation_Protocol insufficient?
      - Output_Format fails to enforce specificity?
@@ -153,7 +155,8 @@ SendMessage(to: "metis", summary: "갭 분석",
    Derive improvement proposals. Report to leader.")
 
 SendMessage(to: "eris", summary: "평가 챌린지",
-  "Read ${ARTIFACT_DIR}/eval-matrix.md and dogfood-result.md.
+  "DO NOT write files — you are read-only.
+   Read ${ARTIFACT_DIR}/eval-matrix.md and dogfood-result.md.
    Verify Athena's evaluation accuracy:
      - Scoring too generous?
      - Missed problems?

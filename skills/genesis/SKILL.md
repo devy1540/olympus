@@ -97,7 +97,8 @@ FOR each generation n:
 
   b. Wonder (Metis):
      SendMessage(to: "metis", summary: "Gen {n} wonder",
-       "Generation {n}.
+       "DO NOT write files — you are read-only.
+        Generation {n}.
         Read ${ARTIFACT_DIR}/gen-{n}/spec.md and ontology.json.
         {If n > 1: 'Previous reflection: Read gen-{n-1}/reflect.md.'}
         Answer 4 fundamental questions:
@@ -113,7 +114,8 @@ FOR each generation n:
      Leader compares gen-{n-1} vs gen-{n} ontologies, identifies mutations.
 
      SendMessage(to: "eris", summary: "Gen {n} reflect",
-       "Generation {n}.
+       "DO NOT write files — you are read-only.
+        Generation {n}.
         Read ${ARTIFACT_DIR}/gen-{n}/wonder.md.
         Compare gen-{n-1}/ontology.json vs gen-{n}/ontology.json.
         {If n > 1: 'Previous wonder: Read gen-{n-1}/wonder.md to track question evolution.'}
@@ -141,7 +143,7 @@ FOR each generation n:
        - Diminishing (delta < 0.01 for 3 rounds): → Researcher persona
 
        With --interactive: AskUserQuestion for persona selection
-       SendMessage(to: "metis", "Re-run wonder with {persona} perspective")
+       SendMessage(to: "metis", "DO NOT write files — you are read-only. Re-run wonder with {persona} perspective")
 
      Hard cap: 30 generations → forced stop with warning
 

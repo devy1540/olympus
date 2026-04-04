@@ -159,19 +159,19 @@ Refine requirements into spec.md through Socratic interview.
 
 3. Hermes exploration:
    SendMessage(to: "hermes", summary: "코드베이스 탐색",
-     "Explore codebase for: {user_input}.
-      DO NOT write files — you are read-only.
+     "DO NOT write files — you are read-only.
+      Explore codebase for: {user_input}.
       Send your findings to leader via SendMessage when done.")
    WAIT for hermes SendMessage → leader writes codebase-context.md from hermes findings
    olympus_record_execution(pipeline_id, "oracle", "hermes", ...)
 
 4. Apollo interview loop:
    SendMessage(to: "apollo", summary: "인터뷰 시작",
-     "Read ${ARTIFACT_DIR}/codebase-context.md for project context.
+     "DO NOT write files — you are read-only.
+      Read ${ARTIFACT_DIR}/codebase-context.md for project context.
       User requirement: {user_input}. Complexity: {level}.
       Conduct interview via AskUserQuestion. One question at a time.
       After each answer, track ambiguity scores internally.
-      DO NOT write files — you are read-only.
       Terminate when ambiguity ≤ 0.2 or max 10 rounds.
       Send interview log + ambiguity scores to leader via SendMessage when done.")
    WAIT for apollo SendMessage → leader writes interview-log.md + ambiguity-scores.json
@@ -181,12 +181,13 @@ Refine requirements into spec.md through Socratic interview.
    ambiguityScore = read ${ARTIFACT_DIR}/ambiguity-scores.json
    olympus_gate_check(pipeline_id, "ambiguity", ambiguityScore)
    → IF passed: proceed to Metis gap analysis
-   → IF failed AND rounds < 10: SendMessage(to: "apollo", "추가 인터뷰 라운드")
+   → IF failed AND rounds < 10: SendMessage(to: "apollo", "DO NOT write files — you are read-only. 추가 인터뷰 라운드")
    → IF failed AND rounds >= 10: AskUserQuestion with remaining gaps
 
 6. Metis gap analysis:
    SendMessage(to: "metis", summary: "갭 분석",
-     "Read ${ARTIFACT_DIR}/interview-log.md and ${ARTIFACT_DIR}/codebase-context.md.
+     "DO NOT write files — you are read-only.
+      Read ${ARTIFACT_DIR}/interview-log.md and ${ARTIFACT_DIR}/codebase-context.md.
       Perform gap analysis: Missing Questions, Undefined Guardrails, Scope Risks,
       Unvalidated Assumptions, Acceptance Criteria, Edge Cases.
       Report results to leader.")
@@ -222,12 +223,14 @@ When enabled:
 
 2. Reuse existing teammates (metis, eris already spawned in Oracle):
    SendMessage(to: "metis", summary: "Genesis 모드 전환",
-     "Switching to Genesis wonder mode. You will be called repeatedly across generations.
+     "DO NOT write files — you are read-only.
+      Switching to Genesis wonder mode. You will be called repeatedly across generations.
       Build on your earlier Oracle insights — do not repeat explored questions.
       Artifact directory: ${ARTIFACT_DIR}/")
 
    SendMessage(to: "eris", summary: "Genesis 모드 전환",
-     "Switching to Genesis reflect mode. You will validate ontology mutations.
+     "DO NOT write files — you are read-only.
+      Switching to Genesis reflect mode. You will validate ontology mutations.
       Track mutation patterns across generations — catch recurring fallacies.
       Artifact directory: ${ARTIFACT_DIR}/")
 
@@ -239,14 +242,16 @@ When enabled:
 
      b. Wonder (Metis):
         SendMessage(to: "metis", summary: "Gen {n} wonder",
-          "Generation {n}. Read ${ARTIFACT_DIR}/gen-{n}/spec.md and ontology.json.
+          "DO NOT write files — you are read-only.
+           Generation {n}. Read ${ARTIFACT_DIR}/gen-{n}/spec.md and ontology.json.
            Answer 4 fundamental questions: Essence, Root Cause, Preconditions, Hidden Assumptions.
            Report results to leader.")
         WAIT → leader writes gen-{n}/wonder.md
 
      c. Reflect (Eris):
         SendMessage(to: "eris", summary: "Gen {n} reflect",
-          "Generation {n}. Read gen-{n}/wonder.md.
+          "DO NOT write files — you are read-only.
+           Generation {n}. Read gen-{n}/wonder.md.
            Compare gen-{n-1}/ontology.json vs gen-{n}/ontology.json.
            Validate logical soundness using fallacy-catalog.md.
            Report results to leader.")
@@ -298,7 +303,8 @@ Multi-perspective analysis with adversarial challenge.
 
 3. Helios complexity assessment + perspective generation:
    SendMessage(to: "helios", summary: "관점 생성",
-     "Read ${ARTIFACT_DIR}/spec.md and codebase-context.md.
+     "DO NOT write files — you are read-only.
+      Read ${ARTIFACT_DIR}/spec.md and codebase-context.md.
       Evaluate 6 complexity dimensions. Derive 3-6 orthogonal perspectives.
       Map analyst agents to perspectives.
       Report results to leader.")
@@ -309,14 +315,17 @@ Multi-perspective analysis with adversarial challenge.
    → Confirmed perspectives saved to perspectives.md (immutable)
 
 5. Parallel analysis (SendMessage to each analyst):
-   SendMessage(to: "ares", summary: "코드 품질 분석", "...")
-   SendMessage(to: "poseidon", summary: "보안 분석", "...")
+   SendMessage(to: "ares", summary: "코드 품질 분석",
+     "DO NOT write files — you are read-only. ...")
+   SendMessage(to: "poseidon", summary: "보안 분석",
+     "DO NOT write files — you are read-only. ...")
    SendMessage(to: "zeus", summary: "아키텍처 분석", "...") ← zeus reused from later planning
    WAIT for all → leader aggregates into analyst-findings.md
 
 6. Eris DA challenge:
    SendMessage(to: "eris", summary: "DA 챌린지",
-     "Read ${ARTIFACT_DIR}/analyst-findings.md.
+     "DO NOT write files — you are read-only.
+      Read ${ARTIFACT_DIR}/analyst-findings.md.
       Challenge findings using fallacy-catalog.md. Max 2 rounds.
       Report evaluation to leader.")
    WAIT → leader writes da-evaluation.md
@@ -363,7 +372,8 @@ Create implementation plan with independent critique.
 
 5. Themis critiques plan:
    SendMessage(to: "themis", summary: "계획 비평",
-     "Read ${ARTIFACT_DIR}/plan.md and spec.md.
+     "DO NOT write files — you are read-only.
+      Read ${ARTIFACT_DIR}/plan.md and spec.md.
       Verify completeness, feasibility, and risk coverage.
       Verdict: APPROVE / REVISE / REJECT.
       Report to leader.")
@@ -494,7 +504,8 @@ Three-stage evaluation with adversarial consensus.
 
 4. Stage 2 — Athena semantic evaluation:
    SendMessage(to: "athena", summary: "의미적 평가",
-     "Read ${ARTIFACT_DIR}/spec.md and mechanical-result.json.
+     "DO NOT write files — you are read-only.
+      Read ${ARTIFACT_DIR}/spec.md and mechanical-result.json.
       Evaluate AC compliance with file:line evidence.
       Report semantic-matrix.md to leader.")
    WAIT → leader writes semantic-matrix.md
@@ -507,12 +518,14 @@ Three-stage evaluation with adversarial consensus.
    Sequential debate (each sees previous):
 
    a. SendMessage(to: "ares", summary: "토론 제안",
-        "Read semantic-matrix.md. Argue for APPROVE or REJECT from quality perspective.
+        "DO NOT write files — you are read-only.
+         Read semantic-matrix.md. Argue for APPROVE or REJECT from quality perspective.
          Include file:line evidence.")
       WAIT → receive ares position
 
    b. SendMessage(to: "eris", summary: "반박",
-        "Ares argues: {ares_summary}. Counter-argue with evidence.
+        "DO NOT write files — you are read-only.
+         Ares argues: {ares_summary}. Counter-argue with evidence.
          Challenge logical fallacies per fallacy-catalog.md.")
       WAIT → receive eris counter-argument
 

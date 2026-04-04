@@ -100,7 +100,8 @@ IF "athena" not in team:
   olympus_register_agent_spawn(pipeline_id, "athena")
 
 SendMessage(to: "athena", summary: "의미적 평가",
-  "Read ${ARTIFACT_DIR}/spec.md and mechanical-result.json.
+  "DO NOT write files — you are read-only.
+   Read ${ARTIFACT_DIR}/spec.md and mechanical-result.json.
    Extract AC list from spec.md.
    For each AC: search for implementation evidence (file:line).
    Status: MET (1.0) / PARTIALLY_MET (0.5) / NOT_MET (0.0).
@@ -162,7 +163,8 @@ WHEN triggered:
 
    a. Ares proposes:
       SendMessage(to: "ares", summary: "토론 제안",
-        "Read ${ARTIFACT_DIR}/semantic-matrix.md and explore relevant code.
+        "DO NOT write files — you are read-only.
+         Read ${ARTIFACT_DIR}/semantic-matrix.md and explore relevant code.
          Argue for APPROVE or REJECT from quality perspective.
          Include file:line evidence for every claim.
          Report position to leader.")
@@ -170,7 +172,8 @@ WHEN triggered:
 
    b. Eris counter-argues (sees Ares):
       SendMessage(to: "eris", summary: "반박",
-        "Ares's position: {ares_position_summary}.
+        "DO NOT write files — you are read-only.
+         Ares's position: {ares_position_summary}.
          Read ${ARTIFACT_DIR}/semantic-matrix.md.
          Counter-argue with evidence. Challenge fallacies per fallacy-catalog.md.
          Report counter-argument to leader.")

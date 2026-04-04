@@ -128,23 +128,31 @@ IF architecture perspective AND "zeus" not in team:
   Agent(name: "zeus", team_name: ${TEAM}, subagent_type: "olympus:zeus", prompt: "...")
   olympus_register_agent_spawn(pipeline_id, "zeus")
 
-Send ALL analysis tasks in parallel (do not wait between sends):
+Send ALL analysis tasks in parallel. Analysts MUST cross-reference with each other:
 
 SendMessage(to: "ares", summary: "코드 품질 분석",
-  "Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
+  "DO NOT write files — you are read-only.
+   Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
    Read source-scope-analyst.md if present.
    Analyze from Code Quality perspective. Include file:line evidence.
-   Report findings to leader.")
+   CROSS-REFERENCE: After initial analysis, share key findings with 'poseidon' via SendMessage.
+   Ask poseidon: 'Do any of my code quality issues have security implications?'
+   Incorporate feedback, then report FINAL findings to leader via SendMessage.")
 
 SendMessage(to: "poseidon", summary: "보안 분석",
-  "Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
-   Analyze from Security perspective (OWASP, CWE).
-   Report findings to leader.")
+  "DO NOT write files — you are read-only.
+   Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
+   Analyze from Security perspective (OWASP, CWE). Include file:line evidence.
+   CROSS-REFERENCE: After initial analysis, share key findings with 'ares' via SendMessage.
+   Ask ares: 'Are there code patterns enabling these security issues?'
+   Incorporate feedback, then report FINAL findings to leader via SendMessage.")
 
 SendMessage(to: "zeus", summary: "아키텍처 분석",
-  "Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
+  "DO NOT write files — you are read-only.
+   Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
    Analyze from Architecture perspective (Analysis_Mode, not Planning).
-   Report findings to leader.")
+   CROSS-REFERENCE: Share architectural concerns with 'ares' and 'poseidon' via SendMessage.
+   Incorporate their feedback, then report FINAL findings to leader via SendMessage.")
 
 For dynamic perspectives from Helios:
   SendMessage(to: appropriate analyst, ...)
@@ -163,7 +171,8 @@ IF "eris" not in team:
   olympus_register_agent_spawn(pipeline_id, "eris")
 
 SendMessage(to: "eris", summary: "DA 챌린지",
-  "Read ${ARTIFACT_DIR}/analyst-findings.md.
+  "DO NOT write files — you are read-only.
+   Read ${ARTIFACT_DIR}/analyst-findings.md.
    Read docs/shared/fallacy-catalog.md.
    Read source-scope-da.md if present.
    Challenge all findings: detect fallacies, false positives, missing evidence.

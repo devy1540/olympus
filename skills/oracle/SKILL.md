@@ -93,7 +93,8 @@ IF "hermes" not in team:
   olympus_register_agent_spawn(pipeline_id, "hermes")
 
 SendMessage(to: "hermes", summary: "코드베이스 탐색",
-  "Explore codebase related to: {user_input}.
+  "DO NOT write files — you are read-only.
+   Explore codebase related to: {user_input}.
    Gather: project structure, relevant modules, existing patterns, dependencies.
    Report findings to leader.")
 
@@ -117,14 +118,14 @@ IF "apollo" not in team:
   olympus_register_agent_spawn(pipeline_id, "apollo")
 
 SendMessage(to: "apollo", summary: "인터뷰 시작",
-  "Read ${ARTIFACT_DIR}/codebase-context.md for project context.
+  "DO NOT write files — you are read-only.
+   Read ${ARTIFACT_DIR}/codebase-context.md for project context.
    User requirement: {user_input}. Complexity: {level}.
    Conduct Socratic interview via AskUserQuestion. One question at a time.
    After each answer:
      a. Track ambiguity scores internally (per ambiguity-scoring.md)
      b. Track interview log internally
      c. Track ambiguity scores internally
-   DO NOT write files — you are read-only.
    Stagnation detection:
      - Spinning: same topic 3 times → move on
      - Oscillation: A↔B repetition → ask user to decide
@@ -149,7 +150,8 @@ IF passed (ambiguity ≤ 0.2):
 
 ELSE IF rounds < 10:
   → SendMessage(to: "apollo", summary: "추가 인터뷰",
-      "Ambiguity still at {score}. Continue interview, focus on: {gap areas}")
+      "DO NOT write files — you are read-only.
+       Ambiguity still at {score}. Continue interview, focus on: {gap areas}")
   ← Apollo REMEMBERS previous rounds — no re-initialization!
   → re-check gate after completion
 
@@ -172,7 +174,8 @@ IF "metis" not in team:
   olympus_register_agent_spawn(pipeline_id, "metis")
 
 SendMessage(to: "metis", summary: "갭 분석",
-  "Read ${ARTIFACT_DIR}/interview-log.md and codebase-context.md.
+  "DO NOT write files — you are read-only.
+   Read ${ARTIFACT_DIR}/interview-log.md and codebase-context.md.
    Analyze: Missing Questions, Undefined Guardrails, Scope Risks,
    Unvalidated Assumptions, Acceptance Criteria, Edge Cases.
    Report results to leader.")

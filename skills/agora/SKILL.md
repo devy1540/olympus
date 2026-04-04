@@ -129,7 +129,8 @@ FOR each round (max 3):
         {If round > 1: 'Previous positions: {summary of last round}'}
         Present: preferred option + rationale + pros/cons of others.
         Include evidence (file:line if applicable). Report to leader.")
-     SendMessage(to: "ares", summary: "Round {n} 입장 제시", ...)
+     SendMessage(to: "ares", summary: "Round {n} 입장 제시",
+       "DO NOT write files — you are read-only. ...")
      SendMessage(to: "ux-critic", summary: "Round {n} 입장 제시", ...)
 
      WAIT for all → leader collects positions
@@ -139,7 +140,8 @@ FOR each round (max 3):
 
   3. Cross-questioning (if disagreements):
      SendMessage(to: "ares", summary: "반박",
-       "Zeus argues: {zeus_position}. Counter-argue with evidence.")
+       "DO NOT write files — you are read-only.
+        Zeus argues: {zeus_position}. Counter-argue with evidence.")
      SendMessage(to: "zeus", summary: "반박",
        "Ares argues: {ares_position}. Respond with evidence.")
      WAIT for rebuttals
@@ -159,7 +161,8 @@ FOR each round (max 3):
 
 ```
 SendMessage(to: "eris", summary: "DA 챌린지",
-  "Read all committee positions from previous rounds.
+  "DO NOT write files — you are read-only.
+   Read all committee positions from previous rounds.
    Challenge:
      - Weaknesses of the consensus option
      - Overlooked strengths of rejected options

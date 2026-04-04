@@ -121,7 +121,8 @@ IF "hermes" not in team:
   olympus_register_agent_spawn(pipeline_id, "hermes")
 
 SendMessage(to: "hermes", summary: "PR 정찰",
-  "Read ${ARTIFACT_DIR}/pr-diff.patch and explore affected codebase areas.
+  "DO NOT write files — you are read-only.
+   Read ${ARTIFACT_DIR}/pr-diff.patch and explore affected codebase areas.
    For each changed file: module, dependencies, change type (add/modify/delete).
    Output: structured PR context with files, modules, dependency impact.
    Report to leader.")
@@ -141,7 +142,8 @@ IF "helios" not in team:
   olympus_register_agent_spawn(pipeline_id, "helios")
 
 SendMessage(to: "helios", summary: "리뷰 관��� 생성",
-  "Read ${ARTIFACT_DIR}/pr-context.md.
+  "DO NOT write files — you are read-only.
+   Read ${ARTIFACT_DIR}/pr-context.md.
    {If spec-context.md: 'Also read spec-context.md for domain context.'}
    Generate 3-5 perspectives. Mandatory: Code Quality (→ ares), Security (→ poseidon).
    Dynamic: Architecture, Performance, Test Coverage, Breaking Changes, Error Handling, Concurrency.
@@ -174,18 +176,22 @@ IF "poseidon" not in team:
 Send ALL review tasks in PARALLEL:
 
 SendMessage(to: "ares", summary: "코드 품질 리뷰",
-  "Read ${ARTIFACT_DIR}/pr-context.md, review-perspectives.md.
+  "DO NOT write files — you are read-only.
+   Read ${ARTIFACT_DIR}/pr-context.md, review-perspectives.md.
    {If spec-context.md: 'Read spec-context.md for domain invariants.'}
    Review ONLY changed files. Focus: defects, anti-patterns, SOLID.
    Each finding: Severity (CRITICAL/WARNING/INFO), file:line, confidence 0-1, evidence.
-   Report to leader.")
+   CROSS-REFERENCE: After initial analysis, share key findings with 'poseidon' via SendMessage.
+   Incorporate their feedback, then report FINAL findings to leader via SendMessage.")
 
 SendMessage(to: "poseidon", summary: "보안 리뷰",
-  "Read ${ARTIFACT_DIR}/pr-context.md.
+  "DO NOT write files — you are read-only.
+   Read ${ARTIFACT_DIR}/pr-context.md.
    {If spec-context.md: 'Read spec-context.md for security requirements.'}
    Review ONLY changed files. Focus: OWASP Top 10, vulnerabilities, secrets, input validation.
    Each finding: Severity, CWE, file:line, confidence 0-1, remediation.
-   Report to leader.")
+   CROSS-REFERENCE: After initial analysis, share key findings with 'ares' via SendMessage.
+   Incorporate their feedback, then report FINAL findings to leader via SendMessage.")
 
 For dynamic perspectives: spawn general-purpose agents or reuse existing teammates.
 
@@ -203,7 +209,8 @@ IF "eris" not in team:
   olympus_register_agent_spawn(pipeline_id, "eris")
 
 SendMessage(to: "eris", summary: "DA 챌린지",
-  "Read ${ARTIFACT_DIR}/review-findings.md.
+  "DO NOT write files — you are read-only.
+   Read ${ARTIFACT_DIR}/review-findings.md.
    Read docs/shared/fallacy-catalog.md.
    {If spec-context.md: 'Read spec-context.md — challenge spec alignment.'}
    Challenge findings:
@@ -234,7 +241,8 @@ IF "nemesis" not in team:
   olympus_register_agent_spawn(pipeline_id, "nemesis")
 
 SendMessage(to: "nemesis", summary: "종합 판정",
-  "Read all artifacts: pr-context.md, review-findings.md, da-evaluation.md.
+  "DO NOT write files — you are read-only.
+   Read all artifacts: pr-context.md, review-findings.md, da-evaluation.md.
    {If spec-context.md: 'Read spec-context.md.'}
    Synthesize:
      1. Incorporate DA results (downgrade false positives, boost confirmed)

@@ -89,7 +89,8 @@ IF "athena" not in team:
   olympus_register_agent_spawn(pipeline_id, "athena")
 
 SendMessage(to: "athena", summary: "의미적 검증",
-  "Read ${ARTIFACT_DIR}/audit-mechanical.json, then agents/*.md, skills/*.md, docs/shared/*.
+  "DO NOT write files — you are read-only.
+   Read ${ARTIFACT_DIR}/audit-mechanical.json, then agents/*.md, skills/*.md, docs/shared/*.
    Validate:
    2-1. Permission-Role Consistency: disallowedTools vs prompt content
    2-2. Artifact Contract Completeness: skill files vs contracts
