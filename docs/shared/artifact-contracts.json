@@ -184,6 +184,12 @@
       "writer": "zeus",
       "readers": ["themis", "prometheus"],
       "writerRequires": ["Write"]
+    },
+    "implementation-report.md": {
+      "phase": 5,
+      "writer": "prometheus",
+      "readers": ["hephaestus", "tribunal"],
+      "writerRequires": ["Write"]
     }
   },
   "audit": {
