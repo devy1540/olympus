@@ -17,6 +17,9 @@ All agents operate as teammates for iterative evaluation and refinement with con
 - Prometheus MUST implement improvements (Step 6) — do NOT edit agent files directly.
 - Leader handles ONLY: team management, benchmark selection, convergence check, user approval.
 - IMPORTANT: Do NOT skip ToolSearch at Step 0.
+- TEAMMATE RESPONSE RULE: When a teammate goes idle without sending results,
+  send a follow-up: SendMessage(to: "{agent}", "Report your findings now via SendMessage. Keep under 5000 chars.")
+  Retry up to 3 times. NEVER do the agent's work directly — this violates §0.
 </Execution_Policy>
 
 <Team_Structure>

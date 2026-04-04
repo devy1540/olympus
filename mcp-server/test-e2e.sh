@@ -89,7 +89,7 @@ cat << 'S1' | "$BIN" serve >/dev/null 2>&1
 {"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_start_pipeline","arguments":{"skill":"odyssey","pipeline_id":"e2e-001"}}}
 S1
 
-# Session 2: Register spawns + record executions + status (no gates — separate session)
+# Session 2: Register spawns + record executions (no status query — separate to avoid WAL race)
 MCP_OUTPUT=$(cat << 'S2' | "$BIN" serve 2>/dev/null
 {"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
 {"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"olympus_register_agent_spawn","arguments":{"pipeline_id":"e2e-001","agent_name":"hermes"}}}
@@ -97,8 +97,14 @@ MCP_OUTPUT=$(cat << 'S2' | "$BIN" serve 2>/dev/null
 {"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"olympus_register_agent_spawn","arguments":{"pipeline_id":"e2e-001","agent_name":"metis"}}}
 {"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"olympus_record_execution","arguments":{"pipeline_id":"e2e-001","phase":"oracle","agent_name":"hermes","duration_ms":3500,"token_count":8000}}}
 {"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"olympus_record_execution","arguments":{"pipeline_id":"e2e-001","phase":"oracle","agent_name":"apollo","duration_ms":12000,"token_count":25000}}}
-{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"olympus_pipeline_status","arguments":{"pipeline_id":"e2e-001"}}}
 S2
+)
+
+# Session 2.5: Pipeline status (separate session to ensure WAL flush after spawns)
+MCP_STATUS=$(cat << 'S25' | "$BIN" serve 2>/dev/null
+{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
+{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"olympus_pipeline_status","arguments":{"pipeline_id":"e2e-001"}}}
+S25
 )
 
 # Session 3: Gate checks (sequential sessions to avoid concurrent DB writes)
@@ -189,7 +195,20 @@ assert_eq "record hermes execution" "true" "$(jq_field "$R11" "recorded")"
 assert_eq "record apollo execution" "true" "$(jq_field "$R12" "recorded")"
 
 # 13. Pipeline status
-R13=$(get_mcp_result 13)
+# R13 from separate Session 2.5 (after WAL flush)
+R13=$(echo "$MCP_STATUS" | python3 -c "
+import sys, json
+for line in sys.stdin:
+    try:
+        m = json.loads(line.strip())
+        if m.get('id') == 13:
+            c = m.get('result', {}).get('content', [])
+            for x in c:
+                if x.get('type') == 'text':
+                    print(x['text']); break
+            break
+    except: pass
+" 2>/dev/null)
 assert_eq "status: skill" "odyssey" "$(jq_field "$R13" "skill")"
 assert_eq "status: status" "active" "$(jq_field "$R13" "status")"
 assert_contains "status: hermes spawned" "hermes" "$R13"

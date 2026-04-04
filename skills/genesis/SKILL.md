@@ -15,6 +15,9 @@ Metis and Eris operate as persistent teammates who remember previous generations
 - Do NOT perform Wonder (Metis's work) or Reflect (Eris's work) directly.
 - Leader handles: generation management, ontology comparison, convergence check, seed crystallization.
 - IMPORTANT: Do NOT skip ToolSearch at Step 0.
+- TEAMMATE RESPONSE RULE: When a teammate goes idle without sending results,
+  send a follow-up: SendMessage(to: "{agent}", "Report your findings now via SendMessage. Keep under 5000 chars.")
+  Retry up to 3 times. NEVER do the agent's work directly — this violates §0.
 </Execution_Policy>
 
 <Team_Structure>
