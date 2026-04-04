@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/devy1540/olympus/mcp-server/internal/cli"
 	"github.com/devy1540/olympus/mcp-server/internal/config"
@@ -56,26 +57,34 @@ func serveCmd() *cobra.Command {
 
 func getDataDir() string {
 	if dir := os.Getenv("OLYMPUS_DATA_DIR"); dir != "" {
-		return dir
+		return expandHome(dir)
 	}
 	if dir := os.Getenv("CLAUDE_PLUGIN_DATA"); dir != "" {
-		return dir
+		return expandHome(dir)
 	}
 	home, _ := os.UserHomeDir()
 	return home + "/.olympus-mcp"
 }
 
+func expandHome(path string) string {
+	if len(path) > 0 && path[0] == '~' {
+		home, _ := os.UserHomeDir()
+		return home + path[1:]
+	}
+	return path
+}
+
 func getPluginRoot() string {
 	if root := os.Getenv("OLYMPUS_PLUGIN_ROOT"); root != "" {
-		return root
+		return expandHome(root)
 	}
 	if root := os.Getenv("CLAUDE_PLUGIN_ROOT"); root != "" {
-		return root
+		return expandHome(root)
 	}
 	// Fallback: assume binary is in bin/ under plugin root
-	exe, _ := os.Executable()
-	if exe != "" {
-		return exe + "/../.."
+	exe, err := os.Executable()
+	if err == nil && exe != "" {
+		return filepath.Dir(filepath.Dir(exe))
 	}
 	return "."
 }
