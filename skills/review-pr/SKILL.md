@@ -37,6 +37,17 @@ A pipeline that reviews pull requests from multiple perspectives with adversaria
 - Reviewer agents (Phase 3) MUST run in parallel via separate Agent tool calls.
 See orchestrator-protocol.md §0.
 
+## MCP Integration
+
+If MCP tool `olympus_register_agent_spawn` is available:
+
+```
+After each agent spawn: olympus_register_agent_spawn(pipeline_id, agent_name)
+  → hermes, helios, ares, poseidon, eris, nemesis (all must be registered)
+Gate check:             olympus_gate_check(pipeline_id, "consensus", survival_rate)
+After each completes:   olympus_record_execution(pipeline_id, "review-pr", agent_name, duration_ms, token_count)
+```
+
 ## Gate
 - consensus ≥ 67% (from gate-thresholds.json) — applied to finding survival rate after DA challenge
 

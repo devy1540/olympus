@@ -88,7 +88,7 @@ Conforms to **pipeline-states.json** PipelineState schema (ported from Claude Co
 
 State file: `.olympus/{id}/odyssey-state.json`
 
-## MCP Pipeline Integration
+## MCP Integration
 
 **⚠ MANDATORY**: If the MCP tool `olympus_start_pipeline` is available, the orchestrator MUST call MCP tools at each lifecycle point. The MCP server tracks state independently and enforces gates that the orchestrator cannot bypass.
 
