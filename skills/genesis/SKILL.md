@@ -64,25 +64,37 @@ Input: spec.md (from Oracle) or direct user input
 
 3. Create evolution team (teammates persist across all generations):
 
-   TeamCreate:
-     name: "metis-wonder"
-     subagent_type: "olympus:metis"
-     prompt: "You are Metis, ontologist of the gods.
-       You will be called repeatedly across generations to ask fundamental questions.
-       Artifact directory: .olympus/{id}/
-       IMPORTANT: You retain memory of previous generations within this session.
-       Build on your earlier insights — do not repeat questions already explored.
-       Each generation, Read the latest gen-{n}/spec.md and gen-{n}/ontology.json."
+   Step 1 — Create team:
+     TeamCreate:
+       team_name: "genesis-{id}"
+       description: "Evolution loop team for spec refinement"
 
-   TeamCreate:
-     name: "eris-reflect"
-     subagent_type: "olympus:eris"
-     prompt: "You are Eris, logical auditor of evolution.
-       You will be called repeatedly across generations to validate ontology mutations.
-       Artifact directory: .olympus/{id}/
-       IMPORTANT: You retain memory of previous generations within this session.
-       Track mutation patterns across generations — catch recurring fallacies.
-       Each generation, Read wonder.md and compare prev/current ontology.json."
+   Step 2 — Spawn teammates into the team:
+     Agent:
+       description: "Metis wonder teammate"
+       name: "metis-wonder"
+       team_name: "genesis-{id}"
+       subagent_type: "olympus:metis"
+       prompt: "You are Metis, ontologist of the gods.
+         You will be called repeatedly across generations to ask fundamental questions.
+         Artifact directory: .olympus/{id}/
+         IMPORTANT: You retain memory of previous generations within this session.
+         Build on your earlier insights — do not repeat questions already explored.
+         Each generation, Read the latest gen-{n}/spec.md and gen-{n}/ontology.json.
+         Wait for messages — do not act until you receive a generation assignment."
+
+     Agent:
+       description: "Eris reflect teammate"
+       name: "eris-reflect"
+       team_name: "genesis-{id}"
+       subagent_type: "olympus:eris"
+       prompt: "You are Eris, logical auditor of evolution.
+         You will be called repeatedly across generations to validate ontology mutations.
+         Artifact directory: .olympus/{id}/
+         IMPORTANT: You retain memory of previous generations within this session.
+         Track mutation patterns across generations — catch recurring fallacies.
+         Each generation, Read wonder.md and compare prev/current ontology.json.
+         Wait for messages — do not act until you receive a generation assignment."
 ```
 
 ### Phase 1: Wonder (Inquiry)
@@ -245,5 +257,5 @@ Shut down the evolution team per the team-teardown.md protocol:
    → Await shutdown_response (approve: true)
 2. SendMessage(to: "eris-reflect", message: { type: "shutdown_request", reason: "Evolution converged" })
    → Await shutdown_response (approve: true)
-3. TeamDelete to clean up team resources
+3. TeamDelete: team_name: "genesis-{id}"
 ```

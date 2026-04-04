@@ -95,30 +95,45 @@ When triggered:
 
 1. Create debate team:
 
-   TeamCreate:
-     name: "ares-proposer"
-     subagent_type: "olympus:ares"
-     prompt: "You are Ares, proposer in a consensus debate.
-       Artifact directory: .olympus/{id}/
-       You will receive a debate prompt and must argue your position.
-       Read semantic-matrix.md and relevant code to form your argument."
+   Step 1 — Create team:
+     TeamCreate:
+       team_name: "tribunal-debate-{id}"
+       description: "Consensus debate for tribunal evaluation"
 
-   TeamCreate:
-     name: "eris-da"
-     subagent_type: "olympus:eris"
-     prompt: "You are Eris, devil's advocate in a consensus debate.
-       Artifact directory: .olympus/{id}/
-       You will receive Ares's position and must counter-argue.
-       Read semantic-matrix.md and challenge Ares's reasoning with evidence."
+   Step 2 — Spawn debate members (parallel):
+     Agent:
+       description: "Ares proposer"
+       name: "ares-proposer"
+       team_name: "tribunal-debate-{id}"
+       subagent_type: "olympus:ares"
+       prompt: "You are Ares, proposer in a consensus debate.
+         Artifact directory: .olympus/{id}/
+         You will receive a debate prompt and must argue your position.
+         Read semantic-matrix.md and relevant code to form your argument.
+         Wait for messages — do not act until prompted."
 
-   TeamCreate:
-     name: "hera-synth"
-     subagent_type: "olympus:hera"
-     prompt: "You are Hera, synthesizer in a consensus debate.
-       Artifact directory: .olympus/{id}/
-       You will receive both Ares's position and Eris's counter-argument.
-       Synthesize both, then run tests via Bash to collect evidence.
-       Produce a final synthesized verdict."
+     Agent:
+       description: "Eris devil's advocate"
+       name: "eris-da"
+       team_name: "tribunal-debate-{id}"
+       subagent_type: "olympus:eris"
+       prompt: "You are Eris, devil's advocate in a consensus debate.
+         Artifact directory: .olympus/{id}/
+         You will receive Ares's position and must counter-argue.
+         Read semantic-matrix.md and challenge Ares's reasoning with evidence.
+         Wait for messages — do not act until prompted."
+
+     Agent:
+       description: "Hera synthesizer"
+       name: "hera-synth"
+       team_name: "tribunal-debate-{id}"
+       subagent_type: "olympus:hera"
+       prompt: "You are Hera, synthesizer in a consensus debate.
+         Artifact directory: .olympus/{id}/
+         You will receive both Ares's position and Eris's counter-argument.
+         Synthesize both, then run tests via Bash to collect evidence.
+         Produce a final synthesized verdict.
+         Wait for messages — do not act until prompted."
 
 2. Sequential debate (each sees the previous):
 
@@ -155,7 +170,11 @@ When triggered:
      - All reject → REJECTED
 
 4. Teardown debate team:
-   SendMessage shutdown_request to each → await response → TeamDelete
+   SendMessage(to: "ares-proposer", message: { type: "shutdown_request" })
+   SendMessage(to: "eris-da", message: { type: "shutdown_request" })
+   SendMessage(to: "hera-synth", message: { type: "shutdown_request" })
+   → Await shutdown_response from each
+   TeamDelete: team_name: "tribunal-debate-{id}"
 
 5. Save voting results to consensus-record.json
 ```
