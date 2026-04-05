@@ -70,7 +70,11 @@ maxTurns: 20
     5. Blind Spot Analysis:
        - Map all changed files (from pr-context.md) against files mentioned in findings
        - Changed files/modules with zero findings = potential blind spots
-       - For each blind spot, assess risk: test coverage? error handling? public API?
+       - For each blind spot, assess risk:
+         - HIGH: core logic file (>50 LOC changed) with no findings → flag in verdict
+         - MEDIUM: utility/helper file with no findings → note in summary
+         - LOW: config/docs/test file with no findings → acceptable
+       - Coverage metric: (files with findings) / (total changed files). If <0.7: add blind spot warning to verdict
     6. Confidence Calibration per finding:
        - Base confidence from reviewer's own assessment
        - Boost: multi-reviewer agreement (+0.2), Eris confirmation (+0.1)

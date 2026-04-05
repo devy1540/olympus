@@ -49,9 +49,12 @@ maxTurns: 15
     3. Collect build/test pass evidence:
        a. Run npm test / pytest etc.
        b. Capture results
-    4. Scan for remaining TODO/FIXMEs:
-       a. Intentional: record with rationale
-       b. Incomplete: record as REJECTED reason
+    4. Scan for remaining TODO/FIXMEs (Grep for TODO|FIXME|HACK|XXX):
+       a. Intentional: has issue reference (e.g., TODO(#123)), "tech debt" annotation,
+          or explicit rationale in the comment → record but do not reject
+       b. Incomplete: no context, OR relates to an AC in spec.md → REJECTED reason
+       c. Pre-existing: use git blame to check if TODO existed before this change.
+          Pre-existing TODOs are not rejection criteria unless they relate to an unmet AC.
     5. Final verdict:
        - APPROVED: all ACs met + tests pass + no TODOs
        - APPROVED_WITH_CAVEATS: ACs met + minor remaining items
