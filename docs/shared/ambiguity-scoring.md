@@ -70,7 +70,9 @@ ambiguity_score  = 1 - weighted_clarity
 
 Gate passes when `ambiguity_score <= 0.2`, i.e., `weighted_clarity >= 0.8`.
 
-## Example
+## Examples
+
+### Example 1: Passes gate
 
 Given (clarity scores):
 - Goal: 0.75 — "mostly clear, success metric could be more precise"
@@ -84,4 +86,34 @@ weighted_clarity = 0.75 * 0.4 + 1.00 * 0.3 + 0.75 * 0.3
 ambiguity_score  = 1 - 0.825 = 0.175
 ```
 
-Result: **0.175** -- passes the gate (<= 0.2).
+Result: **0.175** — passes the gate (<= 0.2). ✓
+
+### Example 2: At exact boundary (passes)
+
+Given (clarity scores):
+- Goal: 0.80, Constraints: 0.80, AC: 0.80
+
+```
+weighted_clarity = 0.80 * 0.4 + 0.80 * 0.3 + 0.80 * 0.3
+                 = 0.320 + 0.240 + 0.240
+                 = 0.800
+ambiguity_score  = 1 - 0.800 = 0.200
+```
+
+Result: **0.200** — exactly at boundary, passes (<= 0.2). ✓
+
+### Example 3: Fails gate
+
+Given (clarity scores):
+- Goal: 0.30 — "vague, only general direction"
+- Constraints: 0.40 — "few constraints, mostly implicit"
+- AC: 0.30 — "vague, most cannot be objectively tested"
+
+```
+weighted_clarity = 0.30 * 0.4 + 0.40 * 0.3 + 0.30 * 0.3
+                 = 0.120 + 0.120 + 0.090
+                 = 0.330
+ambiguity_score  = 1 - 0.330 = 0.670
+```
+
+Result: **0.670** — fails the gate (> 0.2). Re-interview required. ✗
