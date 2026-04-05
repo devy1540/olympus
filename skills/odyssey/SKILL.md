@@ -259,6 +259,7 @@ When enabled:
                 Read ${ARTIFACT_DIR}/gen-{n}/spec.md and ontology.json.
                 Answer 4 questions: Essence, Root Cause, Preconditions, Hidden Assumptions.
                 Output your wonder analysis as your final response.")
+        olympus_register_agent_spawn(pipeline_id, "metis")
 
      c. Spawn eris for reflect (FOREGROUND, receives metis wonder):
         eris_reflect = Agent(name: "eris-gen{n}", team_name: ${TEAM},
@@ -269,6 +270,7 @@ When enabled:
                 === METIS WONDER ===
                 {metis_wonder}
                 Output your challenges as your final response.")
+        olympus_register_agent_spawn(pipeline_id, "eris")
 
         → Write gen-{n}/wonder.md from metis_wonder + eris_reflect dialogue
         olympus_log_collaboration(pipeline_id, "metis", "eris", "Gen {n} wonder/reflect dialogue")
@@ -361,14 +363,22 @@ Multi-perspective analysis with MANDATORY cross-reference between analysts.
 
    WAIT for both completion notifications → leader aggregates into analyst-findings.md
 
+   DEADLOCK FALLBACK: ares and poseidon each wait for the other's cross-reference response.
+     If 3 minutes elapse without both completing:
+     → SendMessage(to: "ares", "Cross-reference timeout. Proceed without waiting for poseidon. Note 'poseidon consultation pending'.")
+     → SendMessage(to: "poseidon", "Cross-reference timeout. Proceed without waiting for ares. Note 'ares consultation pending'.")
+     → Leader synthesizes from whichever responded; flags missing cross-reference in analyst-findings.md.
+
 5. Eris DA challenge (FOREGROUND):
    eris_da = Agent(name: "eris", team_name: ${TEAM},
      subagent_type: "olympus:eris",
-     prompt: "You are Eris. Artifact directory: ${ARTIFACT_DIR}/
+     prompt: "You are Eris in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+       LEADER_NAME: team-lead
        IMMEDIATE TASK: Read ${ARTIFACT_DIR}/analyst-findings.md.
        Challenge findings using fallacy-catalog.md. Max 2 rounds.
        Focus on: logical gaps, unsupported claims, overlooked risks.
        Output your evaluation as your final response.")
+   olympus_register_agent_spawn(pipeline_id, "eris")
    → Write da-evaluation.md from eris_da
 
 6. Consensus check + synthesis → analysis.md
@@ -516,8 +526,10 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
      prompt: "LEADER_NAME: team-lead
        IMMEDIATE TASK: Run build, lint, test, type-check.
        Output mechanical-result.json content as your final response.")
+   olympus_register_agent_spawn(pipeline_id, "hephaestus")
    → Write mechanical-result.json from mech_result
    → FAIL: BLOCKED verdict → exit
+   → ENV_UNAVAILABLE: MANUAL_REVIEW_REQUIRED — proceed to Stage 2 with caveat
    → PASS: Stage 2
 
 4. Stage 2 — Athena semantic evaluation (FOREGROUND):
@@ -529,6 +541,7 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
        Read ${ARTIFACT_DIR}/spec.md and mechanical-result.json.
        Evaluate each AC with file:line evidence.
        Output semantic-matrix.md content as your final response.")
+   olympus_register_agent_spawn(pipeline_id, "athena")
    → Write semantic-matrix.md from athena_result
    → AC compliance < 100% OR score < 0.8: INCOMPLETE → exit
    → PASS: check Stage 3 trigger
@@ -545,6 +558,7 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
          Read ${ARTIFACT_DIR}/semantic-matrix.md. Argue for APPROVE or REJECT from quality perspective.
          Include file:line evidence for every claim.
          Output your full position as your final response.")
+      olympus_register_agent_spawn(pipeline_id, "ares")
       olympus_log_collaboration(pipeline_id, "ares", "eris", "Tribunal debate: ares opening")
 
    b. Eris challenges — SEES ares's full argument (FOREGROUND):
@@ -556,6 +570,7 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
          Use fallacy-catalog.md. Include file:line counter-evidence.
          IMPORTANT: Respond SPECIFICALLY to ares's points — do not make independent arguments.
          Output your full rebuttal as your final response.")
+      olympus_register_agent_spawn(pipeline_id, "eris")
       olympus_log_collaboration(pipeline_id, "eris", "ares", "Tribunal debate: eris rebuttal")
 
    c. OPTIONAL: Ares rebuttal (if eris raised substantive new points, FOREGROUND):
@@ -566,6 +581,7 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
          Respond ONLY to new points eris raised. Do not repeat your opening.
          Concede where eris is right. Defend where you have stronger evidence.
          Output your rebuttal as your final response.")
+      olympus_register_agent_spawn(pipeline_id, "ares")
 
    d. Hera synthesizes — SEES the full debate transcript (FOREGROUND):
       hera_verdict = Agent(name: "hera", team_name: ${TEAM},
@@ -578,8 +594,9 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
          Synthesize the debate. Where ares and eris disagree, determine who has stronger evidence.
          Produce final verdict: APPROVE / REJECT with reasoned synthesis.
          Output your verdict as your final response.")
+      olympus_register_agent_spawn(pipeline_id, "hera")
 
-   Tally votes: supermajority >= 66%
+   Tally votes: supermajority >= 67% (per gate-thresholds.json consensus threshold)
    Save consensus-record.json
 
 6. Final verdict processing:
