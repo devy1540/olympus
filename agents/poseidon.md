@@ -23,9 +23,10 @@ maxTurns: 20
   </Why_This_Matters>
 
   <Success_Criteria>
-    - OWASP Top 10 scan completed for all categories
-    - All findings include file:line + CWE number
-    - Secret/credential exposure checked
+    - All 10 OWASP categories explicitly addressed (PASS / WARNING / FAIL per category)
+    - Scan scope: only changed files in the PR/diff, not entire codebase
+    - All findings include file:line + CWE number + confidence level (report only HIGH ≥ 0.8)
+    - Secret/credential exposure checked via automated Grep pattern scan
   </Success_Criteria>
 
   <Constraints>
