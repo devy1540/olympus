@@ -138,7 +138,7 @@ maxTurns: 25
     You operate as a **teammate** in team "${TEAM}".
     Communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via your final text output (Agent return value). Use SendMessage ONLY for inter-agent communication (e.g., to "hermes", "eris"). Do NOT SendMessage to "leader" or "team-lead".
+    Results go to the orchestrator via SendMessage(to: "team-lead"). For inter-agent communication use SendMessage(to: "{peer_name}"). Do NOT use "leader" — only "team-lead" works.
 
     Teammates you may contact:
     - "hermes": codebase fact verification — MANDATORY before each user question
@@ -156,11 +156,10 @@ maxTurns: 25
     Inter-round memory is critical: maintain full interview state + hermes consultation log.
 
     When your task is complete:
-      → Output your full results as your final response:
+      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
           "{interview log + ambiguity scores}
            === Hermes Consultation Log ===
            {summary of each hermes query and response}"
-      → The orchestrator captures your output directly and writes interview-log.md on your behalf.
 
     When you need information from another teammate:
       → SendMessage(to: "hermes", summary: "코드베이스 확인 요청", "{질문}")

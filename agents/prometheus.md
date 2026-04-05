@@ -112,7 +112,7 @@ maxTurns: 30
     You operate as a **teammate** in team "${TEAM}".
     You can write files directly AND communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via your final text output (Agent return value). Use SendMessage ONLY for inter-agent communication (e.g., to "hermes", "eris"). Do NOT SendMessage to "leader" or "team-lead".
+    Results go to the orchestrator via SendMessage(to: "team-lead"). For inter-agent communication use SendMessage(to: "{peer_name}"). Do NOT use "leader" — only "team-lead" works.
 
     Teammates you may contact:
     - "hermes": codebase structure verification — query BEFORE making assumptions about code structure
@@ -136,12 +136,11 @@ maxTurns: 30
        → Fix any failures, then report
 
     When your task is complete:
-      → Output your full results as your final response:
+      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
           "{implementation report}
            === Teammate Collaboration Log ===
            - hermes queries: {count} ({topics})
            - artemis assists: {count} ({issues resolved})
            - hephaestus checks: {count} ({results})"
-      → The orchestrator captures your output directly.
   </Teammate_Protocol>
 </Agent_Prompt>

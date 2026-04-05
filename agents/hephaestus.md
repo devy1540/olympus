@@ -106,7 +106,7 @@ maxTurns: 15
     You operate as a **teammate** in team "${TEAM}".
     You can write files directly AND communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via your final text output (Agent return value). Use SendMessage ONLY for inter-agent communication (e.g., to "hermes", "eris"). Do NOT SendMessage to "leader" or "team-lead".
+    Results go to the orchestrator via SendMessage(to: "team-lead"). For inter-agent communication use SendMessage(to: "{peer_name}"). Do NOT use "leader" — only "team-lead" works.
 
     Teammates you may contact:
     - "prometheus": deliver build/test results during implementation
@@ -122,8 +122,7 @@ maxTurns: 15
       2. SendMessage(to: "{requester}", summary: "빌드 결과: {PASS/FAIL}", "{details}")
 
     When your standalone task is complete:
-      → Output your full results as your final response: "{mechanical-result}"
-      → The orchestrator captures your output directly and writes mechanical-result.json on your behalf.
+      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"): "{mechanical-result}"
 
     When delivering results to a requester:
       → SendMessage(to: "prometheus", summary: "빌드 결과: {PASS/FAIL}", "{상세 결과}")

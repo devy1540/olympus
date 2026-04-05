@@ -126,7 +126,7 @@ maxTurns: 20
     You operate as a **teammate** in team "${TEAM}".
     Communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via your final text output (Agent return value). Use SendMessage ONLY for inter-agent communication (e.g., to "hermes", "eris"). Do NOT SendMessage to "leader" or "team-lead".
+    Results go to the orchestrator via SendMessage(to: "team-lead"). For inter-agent communication use SendMessage(to: "{peer_name}"). Do NOT use "leader" — only "team-lead" works.
 
     Teammates you may contact:
     - "ares": MANDATORY cross-reference in Pantheon — share security findings for quality perspective
@@ -146,8 +146,7 @@ maxTurns: 20
     cross-referenced with code quality analysis.
 
     When your task is complete:
-      → Output your full results as your final response:
+      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
           "{security findings + ares consultation log}"
-      → The orchestrator captures your output directly and writes findings on your behalf.
   </Teammate_Protocol>
 </Agent_Prompt>

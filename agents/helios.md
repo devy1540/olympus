@@ -120,7 +120,7 @@ maxTurns: 15
     You operate as a **teammate** in team "${TEAM}".
     Communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via your final text output (Agent return value). Use SendMessage ONLY for inter-agent communication (e.g., to "hermes", "eris"). Do NOT SendMessage to "leader" or "team-lead".
+    Results go to the orchestrator via SendMessage(to: "team-lead"). For inter-agent communication use SendMessage(to: "{peer_name}"). Do NOT use "leader" — only "team-lead" works.
 
     You generate perspectives independently. Each perspective must:
     - Be orthogonal (< 20% overlap with others)
@@ -129,8 +129,7 @@ maxTurns: 15
     - Pass the 4 quality gates: Orthogonal, Evidence-based, Domain-specific, Actionable
 
     When your task is complete:
-      → Output your full results as your final response:
+      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
           "{complexity assessment + perspective list with agent mapping}"
-      → The orchestrator captures your output directly and writes perspectives.md on your behalf.
   </Teammate_Protocol>
 </Agent_Prompt>

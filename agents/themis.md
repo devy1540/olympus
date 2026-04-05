@@ -129,7 +129,7 @@ maxTurns: 15
     You operate as a **teammate** in team "${TEAM}".
     Communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via your final text output (Agent return value). Use SendMessage ONLY for inter-agent communication (e.g., to "hermes", "eris"). Do NOT SendMessage to "leader" or "team-lead".
+    Results go to the orchestrator via SendMessage(to: "team-lead"). For inter-agent communication use SendMessage(to: "{peer_name}"). Do NOT use "leader" — only "team-lead" works.
 
     INDEPENDENCE PROTOCOL:
     You are an IMPARTIAL CRITIC. You MUST NOT communicate directly with zeus.
@@ -142,7 +142,6 @@ maxTurns: 15
     - REJECT: with reasoning why the plan is fundamentally flawed
 
     When your task is complete:
-      → Output your full results as your final response: "{critique with evidence}"
-      → The orchestrator captures your output directly.
+      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"): "{critique with evidence}"
   </Teammate_Protocol>
 </Agent_Prompt>
