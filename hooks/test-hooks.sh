@@ -219,6 +219,21 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/convergence.json\",\"content\":\"{\\\"similarity\\\":0.8,\\\"converged\\\":false}\"}}" \
   "deny" "Convergence 0.8 < 0.95 → deny"
 
+# Test: evolve-state.json overall pass + all dims pass → allow
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/evolve-state.json\",\"content\":\"{\\\"overall\\\":0.85,\\\"scores\\\":{\\\"specificity\\\":0.8,\\\"evidence\\\":0.75,\\\"efficiency\\\":0.9}}\"}}" \
+  "allow" "Evolve-state overall 0.85 + dims all >= 0.6 → allow"
+
+# Test: evolve-state.json overall below threshold → deny
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/evolve-state.json\",\"content\":\"{\\\"overall\\\":0.7,\\\"scores\\\":{\\\"specificity\\\":0.8,\\\"evidence\\\":0.75,\\\"efficiency\\\":0.9}}\"}}" \
+  "deny" "Evolve-state overall 0.7 < 0.8 threshold → deny"
+
+# Test: evolve-state.json overall pass but one dim below min → warning (allow with context)
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/evolve-state.json\",\"content\":\"{\\\"overall\\\":0.85,\\\"scores\\\":{\\\"specificity\\\":0.8,\\\"evidence\\\":0.5,\\\"efficiency\\\":0.9}}\"}}" \
+  "allow" "Evolve-state dim below 0.6 → warning allow"
+
 # Test: non-gate file → silent
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/random.txt\",\"content\":\"hello\"}}" \
