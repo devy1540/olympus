@@ -328,7 +328,7 @@ Multi-perspective analysis with MANDATORY cross-reference between analysts.
            IMMEDIATE TASK: Analyze from Code Quality perspective.
            DO NOT write files — you are read-only.
            Read ${ARTIFACT_DIR}/spec.md, codebase-context.md, perspectives.md.
-           Include file:line evidence for all findings.
+           Each finding: Severity (CRITICAL/WARNING/INFO), file:line, confidence 0.0-1.0 (report only ≥ 0.7).
            MANDATORY CROSS-REFERENCE: After your initial analysis, share key findings with 'poseidon':
              SendMessage(to: 'poseidon', summary: '코드품질→보안 크로스레퍼런스',
                'My key findings: {top 3 issues}. Questions:
@@ -346,7 +346,8 @@ Multi-perspective analysis with MANDATORY cross-reference between analysts.
            IMMEDIATE TASK: Analyze from Security perspective.
            DO NOT write files — you are read-only.
            Read ${ARTIFACT_DIR}/spec.md, codebase-context.md, perspectives.md.
-           OWASP Top 10 + project-specific security scan. Include file:line evidence.
+           OWASP Top 10 + project-specific security scan.
+           Each finding: Severity, CWE, file:line, confidence 0.0-1.0 (report only ≥ 0.7).
            MANDATORY CROSS-REFERENCE: After your initial analysis, share key findings with 'ares':
              SendMessage(to: 'ares', summary: '보안→코드품질 크로스레퍼런스',
                'My security findings: {top concerns}. Questions:

@@ -199,6 +199,10 @@ FOR each round (max 3):
          Output your rebuttal as your final response.")
      olympus_register_agent_spawn(pipeline_id, "zeus-cross")
 
+  olympus_record_execution(pipeline_id, "agora", "zeus-r{n}", ...)
+  olympus_record_execution(pipeline_id, "agora", "ares-r{n}", ...)
+  olympus_record_execution(pipeline_id, "agora", "ux-r{n}", ...)
+
   4. Measure consensus (per consensus-levels.md):
      - Strong (3/3): unanimous → exit
      - Working (2/3): majority → record dissent, exit

@@ -94,6 +94,8 @@ athena_result = Agent(name: "athena", team_name: ${TEAM},
         2-4. Clarity Scan: banned phrases from clarity-enforcement.md
         2-5. Delegation Pattern: Write/Edit disabled agents use final text output for results
         2-6. Pipeline State Schema: state structures match pipeline-states.json
+        2-7. LEADER_NAME Consistency: every agent spawn prompt in SKILL.md files contains
+             "LEADER_NAME: team-lead" (literal). Missing LEADER_NAME is a configuration violation.
         MANDATORY CONSULTATION: Before outputting final results, you MUST:
           SendMessage(to: 'hephaestus') with at least one cross-check question.
           Wait for response. Include consultation exchange in your output.
