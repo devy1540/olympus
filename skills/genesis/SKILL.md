@@ -118,6 +118,7 @@ FOR each generation n:
      olympus_register_agent_spawn(pipeline_id, "eris")
      → Write gen-{n}/reflect.md from eris_reflect
      olympus_record_execution(pipeline_id, "genesis", "eris", ...)
+     olympus_log_collaboration(pipeline_id, "metis", "eris", "Wonder/Reflect 다이얼로그 gen-{n}")
 
   d. Seed (Crystallization):
      Based on wonder.md + reflect.md:
@@ -192,6 +193,7 @@ ELSE:
   - olympus_register_agent_spawn: after each agent spawn — metis and eris per generation (MUST)
   - olympus_gate_check: each convergence check (MUST)
   - olympus_next_action: stagnation recovery strategy (SHOULD)
+  - olympus_log_collaboration: metis↔eris Wonder/Reflect exchange per generation (SHOULD)
   - olympus_record_execution: each generation (SHOULD)
 
   Team Tools:
