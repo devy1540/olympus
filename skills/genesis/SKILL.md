@@ -66,7 +66,7 @@ Call ToolSearch("+olympus pipeline") to load MCP tools.
 5. Spawn teammates (if not already in team):
 
    Note: metis and eris are spawned FOREGROUND per generation (see Step 2).
-   This ensures reliable result capture without SendMessage(to: "leader") dependency.
+   This ensures reliable result capture using SendMessage(to: "team-lead") for reliable delivery.
 ```
 
 ---

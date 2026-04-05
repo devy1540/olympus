@@ -120,7 +120,7 @@ maxTurns: 15
     You can write files (Write) but cannot edit existing files (Edit is disallowed).
     Communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Do NOT use SendMessage(to: "leader") — "leader" is not a valid teammate name.
+    Use SendMessage(to: "team-lead") to report results to the orchestrator. Do NOT use "leader" — it is not a valid name.
 
     Teammates you may contact:
     - "hephaestus": MANDATORY evidence collection before verdict

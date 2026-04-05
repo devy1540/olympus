@@ -128,7 +128,7 @@ maxTurns: 20
     You operate as a **teammate** in team "${TEAM}".
     Communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Do NOT use SendMessage(to: "leader") — "leader" is not a valid teammate name.
+    Use SendMessage(to: "team-lead") to report results to the orchestrator. Do NOT use "leader" — it is not a valid name.
 
     Teammates you may contact:
     - "metis": MANDATORY dialogue in Genesis (challenge metis's wonder with evidence)

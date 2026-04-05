@@ -24,7 +24,7 @@ All agents operate as teammates in a single persistent team for cross-phase cont
 - RESULT CAPTURE RULE: Agent results come via the Agent tool's return value, NOT via SendMessage.
   - Sequential agents: spawn foreground (run_in_background omitted or false) → result returned directly.
   - Parallel agents: spawn background (run_in_background: true) → result comes via completion notification.
-  - Do NOT use SendMessage(to: "leader") — "leader" is not a valid teammate name.
+  - Use SendMessage(to: "team-lead") for agent→orchestrator results. Do NOT use "leader".
   - Do NOT instruct agents to "STAY AVAILABLE" — agents finish after their task and are re-spawned if needed.
 
 - MANDATORY CONSULTATION (§7): Agents with peer consultation paths MUST exchange at least
