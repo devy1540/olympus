@@ -318,6 +318,7 @@ Multi-perspective analysis with MANDATORY cross-reference between analysts.
            Output your full results as your final response.")
    olympus_register_agent_spawn(pipeline_id, "helios")
    → Write perspectives.md from helios_result
+   olympus_record_execution(pipeline_id, "pantheon", "helios", ...)
 
 3. Perspective approval:
    AskUserQuestion with generated perspectives
@@ -368,6 +369,8 @@ Multi-perspective analysis with MANDATORY cross-reference between analysts.
    olympus_log_collaboration(pipeline_id, "ares", "poseidon", "코드품질↔보안 크로스레퍼런스")
 
    WAIT for both completion notifications → leader aggregates into analyst-findings.md
+   olympus_record_execution(pipeline_id, "pantheon", "ares", ...)
+   olympus_record_execution(pipeline_id, "pantheon", "poseidon", ...)
 
    DEADLOCK FALLBACK: ares and poseidon each wait for the other's cross-reference response.
      If 3 minutes elapse without both completing:
@@ -386,6 +389,7 @@ Multi-perspective analysis with MANDATORY cross-reference between analysts.
        Output your evaluation as your final response.")
    olympus_register_agent_spawn(pipeline_id, "eris")
    → Write da-evaluation.md from eris_da
+   olympus_record_execution(pipeline_id, "pantheon", "eris", ...)
 
 6. Consensus check + synthesis → analysis.md
 
@@ -419,6 +423,7 @@ Create implementation plan with independent critique. Zeus consults hermes; Them
            Output your full results as your final response.")
    olympus_register_agent_spawn(pipeline_id, "zeus")
    → Write plan.md from zeus_result
+   olympus_record_execution(pipeline_id, "planning", "zeus", ...)
 
 4. SPAWN themis with IMMEDIATE TASK (after plan.md exists, FOREGROUND):
 
@@ -434,6 +439,7 @@ Create implementation plan with independent critique. Zeus consults hermes; Them
            Verdict: APPROVE / REVISE / REJECT with specific reasons and evidence.
            Output your full results as your final response.")
    olympus_register_agent_spawn(pipeline_id, "themis")
+   olympus_record_execution(pipeline_id, "planning", "themis", ...)
    → Extract verdict from themis_result
 
 5. Verdict loop (max 3 iterations):
@@ -447,6 +453,7 @@ Create implementation plan with independent critique. Zeus consults hermes; Them
              Read ${ARTIFACT_DIR}/plan.md and fix precisely what Themis flagged.
              Output your revised plan as your final response.")
      olympus_register_agent_spawn(pipeline_id, "zeus")
+     olympus_record_execution(pipeline_id, "planning", "zeus-revised", ...)
      → Update plan.md from zeus_revised
      Re-spawn themis (FOREGROUND) for re-review:
        themis_recheck = Agent(name: "themis", team_name: ${TEAM},
@@ -456,6 +463,7 @@ Create implementation plan with independent critique. Zeus consults hermes; Them
              Re-review revised ${ARTIFACT_DIR}/plan.md against spec.md.
              Output verdict as your final response.")
      olympus_register_agent_spawn(pipeline_id, "themis")
+     olympus_record_execution(pipeline_id, "planning", "themis-recheck", ...)
      → Re-check verdict
    → 3 consecutive REVISE: trigger Agora debate
      (ares, zeus, eris structured debate → forward to zeus → Themis re-review)
@@ -543,6 +551,7 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
        IMMEDIATE TASK: Run build, lint, test, type-check.
        Output mechanical-result.json content as your final response.")
    olympus_register_agent_spawn(pipeline_id, "hephaestus")
+   olympus_record_execution(pipeline_id, "tribunal", "hephaestus", ...)
    → Write mechanical-result.json from mech_result
    → FAIL: BLOCKED verdict → exit
    → ENV_UNAVAILABLE: MANUAL_REVIEW_REQUIRED — proceed to Stage 2 with caveat
@@ -558,6 +567,7 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
        Evaluate each AC with file:line evidence.
        Output semantic-matrix.md content as your final response.")
    olympus_register_agent_spawn(pipeline_id, "athena")
+   olympus_record_execution(pipeline_id, "tribunal", "athena", ...)
    → Write semantic-matrix.md from athena_result
    → AC compliance < 100% OR score < 0.8: INCOMPLETE → exit
    → PASS: check Stage 3 trigger
