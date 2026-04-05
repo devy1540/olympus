@@ -170,15 +170,14 @@ Rewind support: select generation from lineage → load that gen's spec.md
 ## Step 4: Teardown
 
 ```
+Note: metis and eris are spawned FOREGROUND per generation and complete automatically.
+No explicit shutdown needed — they are not persistent background agents.
+
 IF standalone:
-  SendMessage(to: "metis", message: { type: "shutdown_request", reason: "Evolution converged" })
-  WAIT for shutdown_response
-  SendMessage(to: "eris", message: { type: "shutdown_request", reason: "Evolution converged" })
-  WAIT for shutdown_response
   TeamDelete(team_name: "genesis-${CLAUDE_SESSION_ID}")
 ELSE:
-  Teammates persist for Odyssey's next phase (Pantheon)
-  ← metis and eris retain evolution insights for downstream analysis
+  Team persists for Odyssey's next phase (Pantheon)
+  ← generation history in artifacts retained for downstream analysis
 ```
 
 </Steps>
@@ -186,7 +185,7 @@ ELSE:
 <Tool_Usage>
   MCP Tools:
   - olympus_start_pipeline: Step 1 (MUST)
-  - olympus_register_agent_spawn: after team creation (MUST)
+  - olympus_register_agent_spawn: after each agent spawn — metis and eris per generation (MUST)
   - olympus_gate_check: each convergence check (MUST)
   - olympus_record_execution: each generation (SHOULD)
 

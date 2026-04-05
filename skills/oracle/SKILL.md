@@ -133,7 +133,14 @@ Agent(name: "apollo", team_name: ${TEAM},
         When done: SendMessage(to: 'team-lead', summary: '인터뷰 완료', '{interview log + scores}')")
 olympus_register_agent_spawn(pipeline_id, "apollo")
 
-→ Write interview-log.md, ambiguity-scores.json from apollo_result
+APOLLO INTERVIEW PROXY LOOP (leader handles while Apollo runs in background):
+  WHILE apollo has not sent '인터뷰 완료':
+    1. Receive SendMessage from apollo (summary: '인터뷰 질문 {n}')
+    2. AskUserQuestion(question: "{apollo's question}", options: ["답변 입력..."])
+    3. Relay user answer back: SendMessage(to: "apollo", "{user's answer}")
+    Note: if user wants to skip interview → send "SKIP" to apollo; apollo terminates and reports current score.
+
+→ Write interview-log.md, ambiguity-scores.json from apollo's final '인터뷰 완료' message
 olympus_record_execution(pipeline_id, "oracle", "apollo", ...)
 ```
 

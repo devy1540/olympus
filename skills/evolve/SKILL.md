@@ -161,6 +161,11 @@ Agent(name: "eris", team_name: ${TEAM},
         Output your full results as your final response.")
 olympus_register_agent_spawn(pipeline_id, "eris")
 
+DEADLOCK FALLBACK: metis sends draft to eris; eris challenges back. If 5 minutes elapse without both completing:
+  → SendMessage(to: "metis", "Cross-verification timeout. Finalize diagnosis without eris response. Note 'eris consultation pending'.")
+  → SendMessage(to: "eris", "Cross-verification timeout. Finalize evaluation without metis draft. Note 'metis draft pending'.")
+  → Leader synthesizes from whichever responded; flags incomplete cross-verification in diagnosis.md.
+
 WAIT for both completion notifications → leader synthesizes into diagnosis.md
 olympus_record_execution for each
 ```

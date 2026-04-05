@@ -69,15 +69,18 @@ maxTurns: 15
     {
       "timestamp": "2026-03-05T10:00:00Z",
       "results": {
-        "build": { "status": "PASS|FAIL", "output": "...", "duration_ms": 0 },
-        "lint": { "status": "PASS|FAIL", "errors": [], "warnings": [] },
+        "build": { "status": "PASS|FAIL|SKIP", "output": "...", "duration_ms": 0 },
+        "lint": { "status": "PASS|FAIL|SKIP", "errors": [], "warnings": [] },
         "typecheck": { "status": "PASS|FAIL|SKIP", "errors": [] },
-        "test": { "status": "PASS|FAIL", "passed": 0, "failed": 0, "skipped": 0, "failures": [] }
+        "test": { "status": "PASS|FAIL|SKIP", "passed": 0, "failed": 0, "skipped": 0, "failures": [] }
       },
-      "overall": "PASS|FAIL",
+      "overall": "PASS|FAIL|ENV_UNAVAILABLE",
+      "env_note": "populated only when overall=ENV_UNAVAILABLE — e.g., 'No build system detected'",
       "blocking_errors": []
     }
     ```
+    Note: ENV_UNAVAILABLE means no build system was detected; all checks are SKIP.
+    Tribunal interprets ENV_UNAVAILABLE as MANUAL_REVIEW_REQUIRED — semantic evaluation still runs.
   </Output_Format>
 
   <Failure_Modes_To_Avoid>

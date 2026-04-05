@@ -73,22 +73,23 @@ maxTurns: 20
     ## Code Review Findings
 
     ### CRITICAL
-    1. **{title}** (`{file}:{line}`)
+    1. **{title}** (`{file}:{line}`) [confidence: {0.0-1.0}]
        - Issue: {issue description}
        - Impact: {impact}
        - Suggestion: {fix suggestion}
 
     ### WARNING
-    1. **{title}** (`{file}:{line}`)
+    1. **{title}** (`{file}:{line}`) [confidence: {0.0-1.0}]
        - Issue: {issue description}
        - Suggestion: {fix suggestion}
 
     ### INFO
-    1. **{title}** (`{file}:{line}`)
+    1. **{title}** (`{file}:{line}`) [confidence: {0.0-1.0}]
        - Note: {note}
 
     ### Summary
     - CRITICAL: {n} | WARNING: {n} | INFO: {n}
+    - Confidence threshold: report only findings with confidence ≥ 0.7
     - Verdict: APPROVE / REQUEST_CHANGES / REJECT
   </Output_Format>
 
