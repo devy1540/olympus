@@ -50,6 +50,10 @@ maxTurns: 20
   </Context_Protocol>
 
   <Investigation_Protocol>
+    0. Pre-flight check (MANDATORY):
+       - Verify review-findings.md exists and is non-empty. If missing or empty:
+         → Output COMMENT_ONLY verdict with message "리뷰어 미실행 또는 빈 결과 — 신뢰할 수 없는 합성"
+         → Stop. Do not proceed to synthesis.
     1. Read all review artifacts:
        - pr-context.md (PR metadata, diff summary, affected modules)
        - review-findings.md (aggregated findings from all reviewers)
@@ -59,7 +63,7 @@ maxTurns: 20
        - Findings Eris confirmed → confidence boost
        - Unresolved BLOCKING_QUESTIONs → flag in verdict
     3. Deduplication:
-       - Group findings by file:line proximity (within 5 lines = candidate duplicate)
+       - Group findings by file:line proximity (within 5 lines in the SAME file = candidate duplicate; same pattern in different files is NOT a duplicate — handle as Cross-Perspective Pattern instead)
        - When duplicate: keep highest severity, merge evidence, track multi-reviewer attribution
        - Contradicting findings (reviewer A says issue, reviewer B says fine) → flag explicitly
     4. Cross-Perspective Pattern Detection:
@@ -129,7 +133,7 @@ maxTurns: 20
     ### Verdict: APPROVE / REQUEST_CHANGES / COMMENT_ONLY
     - **Rationale**: {evidence-based verdict rationale}
     - **Blocking Issues**: {n} CRITICAL, {n} WARNING (unmitigated)
-    - **Overall Confidence**: {weighted average of finding confidences}
+    - **Overall Confidence**: {severity-weighted average: CRITICAL=3, WARNING=2, INFO=1 weights; round to 2 decimal places. Formula: Σ(confidence_i × weight_i) / Σ(weight_i)}
     - **Unresolved DA Questions**: {count, if any}
   </Output_Format>
 

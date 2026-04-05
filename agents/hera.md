@@ -95,6 +95,8 @@ maxTurns: 15
     - Rationale: {verdict rationale}
     - Caveats: {caveats} (for APPROVED_WITH_CAVEATS)
     - Blocking Issues: {blocking issues} (for REJECTED)
+    - Overall Confidence: {0.0-1.0} — based on completeness of evidence (test results, AC coverage, code review)
+    - Tie-break rule: when ares and athena disagree, default to APPROVED_WITH_CAVEATS and cite the specific point of disagreement as a caveat. Never silently override one reviewer.
   </Output_Format>
 
   <Failure_Modes_To_Avoid>
