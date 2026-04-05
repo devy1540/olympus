@@ -94,6 +94,7 @@ SKILL.md의 Step에서 지정된 에이전트는 **반드시** Agent tool(name +
 - 상태 머신: `docs/shared/pipeline-states.json` (CC의 query.ts Terminal/Continue 패턴 포팅)
 - 훅: `hooks/hooks.json` — Pre-Write(권한·계약·스폰 검증), Post-Write(스키마·게이트·상태 검증 + 체크포인트)
 - 스폰 강제: `artifact-contracts.json`의 `required_spawn` 필드 + `enforce-spawn-gate.sh` 훅이 §0 위반 차단 (22건 등록)
+- 검증 마인드셋: 모든 15개 에이전트에 역할별 `<Verification_Mindset>` 섹션 — "Your job is to [FIND/BREAK/EXPOSE/CHALLENGE] X, not [confirm/validate] Y" + 2가지 실패 패턴 + 증거 기준
 - 런타임 안정성: 에이전트 출력 5000자 권장/50000자 한도, 피어 무응답 시 2회 재시도 후 graceful degradation
 - 런타임 아티팩트: `.olympus/{skill}-{YYYYMMDD}-{uuid}/` (gitignored, `.checkpoints/`에 자동 백업)
 
