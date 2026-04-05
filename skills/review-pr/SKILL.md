@@ -342,6 +342,7 @@ Shutdown all teammates → TeamDelete
   | review-findings.md | 6 | Leader (from reviewers) | eris, nemesis |
   | da-evaluation.md | 7 | Leader (from eris) | nemesis |
   | verdict.md | 8 | Leader (from nemesis) | User, GitHub |
+  | review-pr-state.json | 2,9 | Leader | Auto-mode PR tracking |
 </Artifact_Contracts>
 
 <State_File>
