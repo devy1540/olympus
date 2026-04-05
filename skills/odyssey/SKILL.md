@@ -31,6 +31,8 @@ All agents operate as teammates in a single persistent team for cross-phase cont
   one round of inter-agent messages BEFORE reporting final results.
   Reports lacking consultation evidence are incomplete — send agent back to consult.
 
+- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
+
 - SEQUENTIAL SPAWN: Within each phase, spawn agents in dependency order, not all at once.
   Wait for prerequisite agent results before spawning dependent agents.
 </Execution_Policy>
@@ -194,6 +196,7 @@ Agents are spawned SEQUENTIALLY with IMMEDIATE TASKS — not all at once.
              Read ${ARTIFACT_DIR}/interview-log.md for previous rounds.
              Ambiguity still at {score}. Continue interview, focus on: {gap areas}.
              Output updated results as your final response.")
+       olympus_register_agent_spawn(pipeline_id, "apollo")
        → Update interview-log.md + ambiguity-scores.json from apollo_retry
    → IF failed AND rounds >= 10: AskUserQuestion with remaining gaps
 
@@ -433,7 +436,7 @@ Create implementation plan with independent critique. Zeus consults hermes; Them
            prompt: "You are Themis. Re-review revised ${ARTIFACT_DIR}/plan.md against spec.md.
              Output verdict as your final response.")
      → Re-check verdict
-   → 2 consecutive REVISE: trigger Agora debate
+   → 3 consecutive REVISE: trigger Agora debate
      (ares, zeus, eris structured debate → forward to zeus → Themis re-review)
    → REJECT: AskUserQuestion (Return to Oracle / Pantheon / Exit)
 
@@ -483,6 +486,7 @@ Implement the approved plan. **Teammate mode shines here — agents collaborate 
        prompt: "Build/test failed: {heph_result summary}.
          Fix the failures. You CAN write files directly.
          Output your fix report as your final response.")
+     olympus_register_agent_spawn(pipeline_id, "prometheus")
 
      → Re-run hephaestus verification (FOREGROUND)
 

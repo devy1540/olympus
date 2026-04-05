@@ -156,14 +156,16 @@ FOR each round (max 3):
 
      Agent(name: "ares-r{n}", team_name: ${TEAM}, subagent_type: "olympus:ares",
        run_in_background: true,
-       prompt: "DO NOT write files — you are read-only.
+       prompt: "LEADER_NAME: team-lead
+         DO NOT write files — you are read-only.
          Read ${ARTIFACT_DIR}/debate-frame.json.
          Present: preferred option from technical perspective + evidence.
          Output your position as your final response.")
 
      Agent(name: "ux-r{n}", team_name: ${TEAM},
        run_in_background: true,
-       prompt: "DO NOT write files — you are read-only.
+       prompt: "LEADER_NAME: team-lead
+         DO NOT write files — you are read-only.
          Read ${ARTIFACT_DIR}/debate-frame.json.
          Present: preferred option from UX perspective + evidence.
          Output your position as your final response.")
@@ -200,7 +202,8 @@ FOR each round (max 3):
 ```
 eris_challenge = Agent(name: "eris-da", team_name: ${TEAM},
     subagent_type: "olympus:eris",
-    prompt: "DO NOT write files — you are read-only.
+    prompt: "LEADER_NAME: team-lead
+      DO NOT write files — you are read-only.
       Read all committee positions from previous rounds.
       Challenge each claim by name — do not issue abstract challenges.
       Challenge areas:
@@ -208,14 +211,18 @@ eris_challenge = Agent(name: "eris-da", team_name: ${TEAM},
         - Overlooked strengths of rejected options
         - Logical fallacies per fallacy-catalog.md (cite the fallacy name)
       Output your challenges as your final response.")
+olympus_register_agent_spawn(pipeline_id, "eris")
 olympus_record_execution(pipeline_id, "agora", "eris", ...)
 
 Committee response (MANDATORY — FOREGROUND sequential):
   zeus_response = Agent(name: "zeus-resp", subagent_type: "olympus:zeus",
-    prompt: "Eris challenged your position: {eris_challenge}. Respond specifically.
+    prompt: "LEADER_NAME: team-lead
+      Eris challenged your position: {eris_challenge}. Respond specifically.
       Output your response as your final response.")
   ares_response = Agent(name: "ares-resp", subagent_type: "olympus:ares",
-    prompt: "Eris challenged your position: {eris_challenge}. Respond specifically.
+    prompt: "LEADER_NAME: team-lead
+      DO NOT write files — you are read-only.
+      Eris challenged your position: {eris_challenge}. Respond specifically.
       Output your response as your final response.")
   → Re-measure consensus if changed
 ```
