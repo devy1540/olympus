@@ -67,6 +67,41 @@ test_hook "enforce-perm" "$SCRIPT_DIR/enforce-permissions.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/spec.md\",\"content\":\"# Spec\"}}" \
   "allow" "Orchestrator-written artifact passes"
 
+# Test: genesis gen-{n}/ path pattern → writer is orchestrator → allow
+GENESIS_ARTIFACT_DIR="${TEST_DIR}/.olympus/genesis-20260401-test5678/gen-1"
+mkdir -p "$GENESIS_ARTIFACT_DIR"
+test_hook "enforce-perm" "$SCRIPT_DIR/enforce-permissions.sh" \
+  "{\"tool_input\":{\"file_path\":\"${GENESIS_ARTIFACT_DIR}/wonder.md\",\"content\":\"wonder\"}}" \
+  "allow" "Genesis gen-{n}/ pattern resolves to orchestrator writer → allow"
+
+# Test: full-permission agent (zeus) as contract writer → allow
+ODYSSEY_ARTIFACT_DIR="${TEST_DIR}/.olympus/odyssey-20260401-test9012"
+mkdir -p "$ODYSSEY_ARTIFACT_DIR"
+test_hook "enforce-perm" "$SCRIPT_DIR/enforce-permissions.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ODYSSEY_ARTIFACT_DIR}/plan.md\",\"content\":\"plan\"}}" \
+  "allow" "Full-permission agent (zeus) as contract writer → allow"
+
+# Test: read-only agent as contract writer → deny
+# Inject a test contract entry with athena (read-only) as writer
+TEMP_PLUGIN_ROOT=$(mktemp -d)
+mkdir -p "${TEMP_PLUGIN_ROOT}/docs/shared"
+jq '.oracle["readonly-test.md"] = {"phase": 99, "writer": "athena", "readers": ["all"]}' \
+  "${CLAUDE_PLUGIN_ROOT}/docs/shared/artifact-contracts.json" \
+  > "${TEMP_PLUGIN_ROOT}/docs/shared/artifact-contracts.json"
+cp "${CLAUDE_PLUGIN_ROOT}/docs/shared/agent-schema.json" "${TEMP_PLUGIN_ROOT}/docs/shared/"
+ORACLE_PERM_DIR="${TEST_DIR}/.olympus/oracle-20260401-permtest"
+mkdir -p "$ORACLE_PERM_DIR"
+ORIG_PLUGIN_ROOT="$CLAUDE_PLUGIN_ROOT"
+export CLAUDE_PLUGIN_ROOT="$TEMP_PLUGIN_ROOT"
+test_hook "enforce-perm" "$SCRIPT_DIR/enforce-permissions.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ORACLE_PERM_DIR}/readonly-test.md\",\"content\":\"test\"}}" \
+  "deny" "Read-only agent (athena) as contract writer → deny"
+export CLAUDE_PLUGIN_ROOT="$ORIG_PLUGIN_ROOT"
+rm -rf "$TEMP_PLUGIN_ROOT"
+# Reset consecutive denial count so downstream deny tests don't escalate to ask
+source "$SCRIPT_DIR/lib/denial-tracking.sh"
+denial_tracking_record_success > /dev/null 2>&1
+
 # ============================================================
 echo "--- verify-artifacts.sh ---"
 # ============================================================
