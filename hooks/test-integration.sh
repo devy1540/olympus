@@ -394,11 +394,17 @@ RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
   "${GENESIS_DIR}/gen-1/reflect.md" "## Reflect\n### Challenge 1: Hasty Generalization")
 check_result "Genesis: gen-1/reflect.md (eris reflect)" "$RESULT" "allow"
 
-# Step 4: convergence.json (orchestrator)
+# Step 4: convergence.json (orchestrator) — passing
 echo "  [genesis] Orchestrator → convergence.json"
 RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
   "${GENESIS_DIR}/convergence.json" '{"similarity":0.97,"converged":true}')
 check_result "Genesis: convergence.json (convergence check)" "$RESULT" "allow"
+
+# Step 4b: convergence gate FAIL (similarity below 0.95) → deny
+echo "  [genesis] Convergence gate fail (0.8 similarity)"
+RESULT=$(run_hook "$SCRIPT_DIR/validate-gate.sh" \
+  "${GENESIS_DIR}/convergence.json" '{"similarity":0.8,"converged":false}')
+check_result "Genesis: convergence 0.8 < 0.95 → deny" "$RESULT" "deny"
 
 # ============================================================
 echo ""
