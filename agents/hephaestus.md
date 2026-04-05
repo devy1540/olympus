@@ -44,7 +44,8 @@ maxTurns: 15
 
   <Investigation_Protocol>
     1. Identify build system at project root (package.json, Makefile, etc.)
-    2. Execute in order:
+       - If no build system found (no package.json, Makefile, build.gradle, etc.): SKIP build/test and report "No build system detected" to leader.
+    2. Execute in order (use timeout: 300000ms for each Bash command to prevent infinite waits):
        a. Build: npm run build / make / etc.
        b. Lint: eslint / prettier --check / etc.
        c. Type check: tsc --noEmit / mypy / etc.

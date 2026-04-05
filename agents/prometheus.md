@@ -50,6 +50,8 @@ maxTurns: 30
        b. Implement according to plan
        c. Update related imports/exports
     3. Run a self-check build after implementation (if possible)
+       - If build fails: attempt self-correction up to 2 times
+       - If build still fails after 2 attempts: delegate to artemis via SendMessage and report failure
     4. Summarize changes
   </Investigation_Protocol>
 
@@ -125,7 +127,7 @@ maxTurns: 30
 
     1. BEFORE implementing a task that touches unfamiliar code:
        → SendMessage(to: "hermes", summary: "구조 확인: {module}", "{what you need to know}")
-       → Wait for hermes response, then implement with verified understanding
+       → Wait for hermes response (max 2 retries). If no response after 2 retries, proceed with direct Glob/Grep/Read instead.
 
     2. WHEN encountering errors or unexpected behavior:
        → SendMessage(to: "artemis", summary: "디버깅 요청", "{error + stacktrace + your hypothesis}")

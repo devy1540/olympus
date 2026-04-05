@@ -71,6 +71,7 @@ maxTurns: 25
          - Notification domain: channel priority (email/push/SMS), opt-out, batching/digest, delivery tracking
          - Search domain: full-text vs filtered, indexing strategy, ranking, faceted search, latency SLA
          - Scheduling/Batch domain: idempotency, retry policy, timeout, dead letter queue, concurrency control
+       - Multi-domain merge rule: if 2+ domains detected simultaneously, merge all mandatory questions and prioritize by dependency order (core domain first, e.g., Auth before API before Data/CRUD). Never skip a domain's mandatory questions just because another domain is also present.
        - Ensure all mandatory questions are covered before gate check
     4. Generate questions starting from the most ambiguous dimension
     5. Send 1 question at a time to leader via SendMessage (leader proxies AskUserQuestion)
