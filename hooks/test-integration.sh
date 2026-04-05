@@ -402,6 +402,25 @@ RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
   "${EVOLVE_DIR}/diagnosis.md" "## Diagnosis\n### Improvement Proposals")
 check_result "Evolve: diagnosis.md (metis+eris source)" "$RESULT" "allow"
 
+# Step 5: evolve-state.json gate validation
+echo "  [evolve] Gate check: evolve-state.json (overall ≥ 0.8 + all dims ≥ 0.6) → allow"
+RESULT=$(run_hook "$SCRIPT_DIR/validate-gate.sh" \
+  "${EVOLVE_DIR}/evolve-state.json" \
+  '{"iteration":2,"overall":0.85,"scores":{"specificity":0.9,"evidence":0.8,"role":0.75,"efficiency":0.85,"actionability":0.8}}')
+check_result "Evolve: evolve-state.json (all pass) → allow" "$RESULT" "allow"
+
+echo "  [evolve] Gate check: evolve-state.json overall < 0.8 → deny"
+RESULT=$(run_hook "$SCRIPT_DIR/validate-gate.sh" \
+  "${EVOLVE_DIR}/evolve-state.json" \
+  '{"iteration":1,"overall":0.72,"scores":{"specificity":0.7,"evidence":0.7}}')
+check_result "Evolve: evolve-state.json overall 0.72 < 0.8 → deny" "$RESULT" "deny"
+
+echo "  [evolve] Gate check: evolve-state.json dim below 0.6 → warning (allow)"
+RESULT=$(run_hook "$SCRIPT_DIR/validate-gate.sh" \
+  "${EVOLVE_DIR}/evolve-state.json" \
+  '{"iteration":2,"overall":0.85,"scores":{"specificity":0.9,"evidence":0.5,"role":0.8}}')
+check_result "Evolve: evolve-state.json evidence=0.5 < 0.6 → dim warning allow" "$RESULT" "allow"
+
 # ============================================================
 echo ""
 echo "--- Phase 7: Genesis Pipeline (gen-{n} pattern) ---"
