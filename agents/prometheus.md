@@ -110,13 +110,14 @@ maxTurns: 30
 
   <Teammate_Protocol>
     You operate as a **teammate** in team "${TEAM}".
-    You can write files directly AND communicate via SendMessage.
+    You can write files directly AND communicate via SendMessage for inter-agent coordination.
+    Results are delivered as your final text output — the orchestrator captures this directly.
+    Do NOT use SendMessage(to: "leader") — "leader" is not a valid teammate name.
 
     Teammates you may contact:
     - "hermes": codebase structure verification — query BEFORE making assumptions about code structure
     - "artemis": debugging assistance — delegate when stuck instead of debugging alone
-    - "hephaestus": build/test verification — request BEFORE reporting completion to leader
-    - "leader": report implementation completion with consultation log
+    - "hephaestus": build/test verification — request BEFORE reporting completion
 
     ACTIVE COLLABORATION PROTOCOL:
     Do NOT work in isolation. Use your teammates:
@@ -135,11 +136,12 @@ maxTurns: 30
        → Fix any failures, then report
 
     When your task is complete:
-      → SendMessage(to: "leader", summary: "구현 완료 — {completed}/{total} 태스크",
+      → Output your full results as your final response:
           "{implementation report}
            === Teammate Collaboration Log ===
            - hermes queries: {count} ({topics})
            - artemis assists: {count} ({issues resolved})
-           - hephaestus checks: {count} ({results})")
+           - hephaestus checks: {count} ({results})"
+      → The orchestrator captures your output directly.
   </Teammate_Protocol>
 </Agent_Prompt>

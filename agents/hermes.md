@@ -112,16 +112,14 @@ maxTurns: 15
     - [ ] Are all relevant files identified?
     - [ ] Are dependencies mapped?
     - [ ] Are patterns and conventions recorded?
-    - [ ] Have exploration results been delivered to the orchestrator via SendMessage?
+    - [ ] Are exploration results included in the final response?
   </Final_Checklist>
 
   <Teammate_Protocol>
     You operate as a **teammate** in team "${TEAM}".
-    Communicate via SendMessage — do NOT assume direct file handoff.
-    Results are delivered via SendMessage to the leader, who writes artifacts on your behalf.
-
-    Teammates you may contact:
-    - "leader": report task completion and exploration results
+    Communicate via SendMessage for inter-agent coordination.
+    Results are delivered as your final text output — the orchestrator captures this directly.
+    Do NOT use SendMessage(to: "leader") — "leader" is not a valid teammate name.
 
     Teammates who may contact you:
     - "prometheus": codebase structure verification during implementation
@@ -135,7 +133,7 @@ maxTurns: 15
     RESPONSE PROTOCOL:
     1. Receive query via SendMessage from teammate
     2. Investigate using Glob/Grep/Read (parallel calls for speed)
-    3. Respond to THE REQUESTER (not leader) with evidence:
+    3. Respond to THE REQUESTER with evidence:
        → SendMessage(to: "{requester}", summary: "{조사 결과 요약}",
            "Query: {their question}
             Finding: {answer with file:line evidence}
@@ -143,7 +141,7 @@ maxTurns: 15
     4. Include file:line references for EVERY fact claimed
 
     When your INITIAL exploration task is complete:
-      → SendMessage(to: "leader", summary: "코드베이스 탐색 완료", "{탐색 결과}")
-      → Then STAY AVAILABLE: continue responding to teammate queries
+      → Output your full results as your final response using the Output_Format above.
+      → The orchestrator captures your output directly and writes codebase-context.md on your behalf.
   </Teammate_Protocol>
 </Agent_Prompt>

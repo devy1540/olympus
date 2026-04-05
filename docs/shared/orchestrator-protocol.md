@@ -274,7 +274,7 @@ Each skill creates one team. Odyssey creates a single team that spans all sub-sk
 
 When Odyssey invokes a sub-skill (e.g., Oracle phase), agents are spawned into the **Odyssey team** — not a separate Oracle team. This enables cross-phase reuse (e.g., Hermes spawned in Oracle is reused in Execution).
 
-### 6.3 Proactive Spawn Strategy
+### 6.3 Proactive Spawn Strategy + Result Capture
 
 **CRITICAL RULE: Spawn with Immediate Task, not passive waiting.**
 
@@ -283,49 +283,53 @@ The old pattern (`Agent(prompt: "Wait for messages")` → later `SendMessage(tas
 - Task delivery failures when SendMessage doesn't reach the idle agent
 - Leader falling back to direct execution (§0 violation)
 
+**CRITICAL: `SendMessage(to: "leader")` is BANNED.**
+
+"leader" is not a valid teammate name — the orchestrator is the parent process, not a named teammate. Agent results are delivered via the Agent tool's return value, not via SendMessage.
+
 **Proactive Spawn Pattern** (mandatory for all SKILL.md):
 ```
-# FIRST SPAWN — agent gets its task immediately
-IF "{agent}" not in team:
-  Agent(name: "{agent}", team_name: "${TEAM}", subagent_type: "olympus:{agent}",
-        run_in_background: true,
-        prompt: "You are {Agent} in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-          IMMEDIATE TASK: {concrete task description with all context}.
-          CONSULTATION: Before reporting, consult '{peer}' about {topic} via SendMessage.
-          When done: SendMessage(to: 'leader', summary: '{완료 요약}', '{결과}')
-          Then STAY AVAILABLE for follow-up queries from teammates.")
-  olympus_register_agent_spawn(pipeline_id, "{agent}")
+# SEQUENTIAL SPAWN (FOREGROUND) — result captured directly
+result = Agent(name: "{agent}", team_name: "${TEAM}", subagent_type: "olympus:{agent}",
+      prompt: "You are {Agent} in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        IMMEDIATE TASK: {concrete task description with all context}.
+        Output your full results as your final response.")
+olympus_register_agent_spawn(pipeline_id, "{agent}")
+→ Write artifact from result
 
-# REUSE — agent already in team, send follow-up task
-ELSE:
-  SendMessage(to: "{agent}", summary: "{태스크 요약}", "{new task details}")
+# PARALLEL SPAWN (BACKGROUND) — result via completion notification
+Agent(name: "{agent_a}", team_name: "${TEAM}", subagent_type: "olympus:{agent_a}",
+      run_in_background: true,
+      prompt: "IMMEDIATE TASK: {task}. Cross-reference with '{agent_b}' via SendMessage.
+        Output your full results as your final response.")
+Agent(name: "{agent_b}", ..., run_in_background: true, ...)
+→ WAIT for both completion notifications → aggregate results
 ```
 
 **Key differences from old pattern:**
-| Aspect | Old (BANNED) | New (Proactive) |
-|:-------|:-------------|:----------------|
+| Aspect | Old (BANNED) | New (Proactive + Direct Result) |
+|:-------|:-------------|:-------------------------------|
 | Spawn prompt | "Wait for messages" | Concrete task + context |
-| Task delivery | Separate SendMessage (unreliable) | In spawn prompt (guaranteed) |
-| Agent behavior | Passive → idle → maybe activate | Immediately working |
-| Peer consultation | Optional afterthought | Mandatory before report |
-| After first task | Unknown state | "Stay available" for reuse |
+| Result delivery | `SendMessage(to: "leader")` ❌ | Agent return value ✅ |
+| Sequential steps | `run_in_background: true` + WAIT | Foreground (no background) |
+| Parallel steps | Background + `SendMessage(to: "leader")` | Background + completion notification |
+| After first task | "Stay available" (agent never finishes) | Agent finishes, re-spawn if needed |
 
 **Sequential spawn within a phase:**
-Agents with dependencies are spawned SEQUENTIALLY, not all at once:
+Agents with dependencies are spawned SEQUENTIALLY in FOREGROUND:
 ```
 Phase 1 (Oracle):
-  1. spawn hermes (with task: explore) → WAIT for result
-  2. spawn apollo (with task: interview, hermes available) → WAIT for result
-  3. spawn metis (with task: gap analysis) → WAIT for result
-  4. eris spawned lazily only if DA challenge needed
+  1. hermes_result = Agent(hermes, FOREGROUND) → write codebase-context.md
+  2. apollo_result = Agent(apollo, FOREGROUND) → write interview-log.md
+  3. metis_result = Agent(metis, FOREGROUND) → write gap-analysis.md
 
 Phase 3 (Pantheon):
-  1. spawn helios (with task: perspectives) → WAIT for result
-  2. spawn ares, poseidon IN PARALLEL (with task: analysis + cross-consult)
-  3. eris reused (SendMessage: DA challenge)
+  1. helios_result = Agent(helios, FOREGROUND) → write perspectives.md
+  2. Agent(ares, BACKGROUND) + Agent(poseidon, BACKGROUND) → cross-reference → both finish → aggregate
+  3. eris_result = Agent(eris, FOREGROUND) → write da-evaluation.md
 ```
 
-Memory impact: ~125MB per concurrent in-process teammate. Sequential spawn keeps peak lower (~500MB at 4 concurrent active).
+Memory impact: ~125MB per concurrent in-process agent. Foreground spawn keeps only 1 active at a time (~125MB). Parallel spawn: 2 concurrent (~250MB).
 
 ### 6.4 Inter-Agent Communication & Mandatory Consultation
 
@@ -349,8 +353,8 @@ Teammates communicate via SendMessage. The leader does NOT need to relay every m
 | Any agent | leader | Task completion, results, escalation | Mandatory |
 
 **Communication rules:**
-1. All messages use `SendMessage(to: "{name}", summary: "{5-10 words}", "{content}")`
-2. Agents MUST report task completion to the leader
+1. Inter-agent messages use `SendMessage(to: "{teammate_name}", summary: "{5-10 words}", "{content}")`
+2. Agents deliver results as their final text output (NOT via `SendMessage(to: "leader")` — "leader" is not a valid teammate name)
 3. Agents MUST NOT bypass the leader for phase transitions or gate checks
 4. Agents MUST NOT spawn other teammates (only the leader can spawn)
 5. Message order is NOT strictly guaranteed — do not rely on ordering for correctness
@@ -373,8 +377,8 @@ CONSULTATION EXCHANGE (minimum 2 turns):
         - {recommendation}")
 
   3. Agent A incorporates B's feedback into final report
-  4. Agent A → SendMessage(to: "leader", summary: "{완료}",
-       "... Consultation with {agent_b}: {what changed based on feedback}")
+  4. Agent A outputs final result as text (orchestrator captures via Agent tool return value):
+       "... Consultation with {agent_b}: {what changed based on feedback}"
 ```
 
 **Why Mandatory Consultation matters:**
@@ -436,12 +440,13 @@ When teammate features are unavailable or fail:
 | Failure | Fallback |
 |:--------|:---------|
 | Teammate spawn fails | Retry once → fall back to subagent (Agent tool without team_name) |
-| SendMessage delivery fails | Leader relays the message content manually |
+| Agent return value empty/truncated | Re-spawn agent with narrower scope or direct investigation |
 | MCP server unavailable | Proceed without MCP — hooks provide validation |
-| Teammate crashes mid-task | Re-spawn into same team (new context, but team persists) |
-| Memory pressure (too many active) | Send idle agents `shutdown_request`, re-spawn if needed later |
+| Agent exceeds maxTurns before completing | Re-spawn with focused prompt + previous partial results |
+| Memory pressure (too many active) | Foreground spawn keeps only 1 active; parallel spawn limited to 2-3 |
 
-**Important**: Fallback to subagent mode loses cross-phase context and inter-agent communication. Log a warning when this occurs: `"FALLBACK: {agent} teammate spawn failed, using subagent mode. Cross-phase context will be lost."`
+**CRITICAL**: Never fall back to the orchestrator performing the agent's work directly. This violates §0.
+If agent communication fails: re-spawn the agent, don't substitute yourself.
 
 ---
 

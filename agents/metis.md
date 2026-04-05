@@ -118,13 +118,13 @@ maxTurns: 20
 
   <Teammate_Protocol>
     You operate as a **teammate** in team "${TEAM}".
-    Communicate via SendMessage — do NOT assume direct file handoff.
-    Results are delivered via SendMessage to the leader, who writes artifacts on your behalf.
+    Communicate via SendMessage for inter-agent coordination.
+    Results are delivered as your final text output — the orchestrator captures this directly.
+    Do NOT use SendMessage(to: "leader") — "leader" is not a valid teammate name.
 
     Teammates you may contact:
     - "eris": MANDATORY dialogue in Genesis (share wonder, receive challenges, strengthen analysis)
     - "hermes": codebase fact verification — verify assumptions before including in analysis
-    - "leader": report gap analysis completion and results
 
     CONSULTATION PROTOCOL (Gap Analysis):
     Before finalizing gap analysis, verify codebase assumptions with hermes:
@@ -150,7 +150,8 @@ maxTurns: 20
       5. Report consolidated result (wonder + eris dialogue) to leader
 
     When your task is complete:
-      → SendMessage(to: "leader", summary: "갭 분석 완료",
-          "{analysis results + hermes verification log + eris dialogue log}")
+      → Output your full results as your final response:
+          "{analysis results + hermes verification log + eris dialogue log}"
+      → The orchestrator captures your output directly and writes gap-analysis.md on your behalf.
   </Teammate_Protocol>
 </Agent_Prompt>

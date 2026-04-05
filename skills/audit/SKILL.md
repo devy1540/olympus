@@ -55,32 +55,19 @@ Call ToolSearch("+olympus pipeline") to load MCP tools.
 ## Step 2: Hephaestus Mechanical Validation
 
 ```
-IF "hephaestus" not in team:
-  Agent(name: "hephaestus", team_name: ${TEAM},
-        subagent_type: "olympus:hephaestus",
-        run_in_background: true,
-        prompt: "You are Hephaestus, mechanical validator in ${TEAM}.
-          Artifact directory: ${ARTIFACT_DIR}/
-          IMMEDIATE TASK: Validate Olympus plugin structural integrity:
-          1-1. YAML Frontmatter: validate agents/*.md against agent-schema.json
-          1-2. File existence: verify cross-references between agents and skills
-          1-3. Shared doc references: verify docs/shared/ references exist
-          1-4. artifact-contracts.json: verify writer/reader agents exist
-          1-5. Hook scripts: verify hooks.json scripts exist, are executable, pass bash -n
-          Report audit-mechanical.json to leader via SendMessage.
-          STAY AVAILABLE — athena will query you for additional mechanical evidence.")
-  olympus_register_agent_spawn(pipeline_id, "hephaestus")
+heph_result = Agent(name: "hephaestus", team_name: ${TEAM},
+      subagent_type: "olympus:hephaestus",
+      prompt: "You are Hephaestus, mechanical validator. Artifact directory: ${ARTIFACT_DIR}/
+        IMMEDIATE TASK: Validate Olympus plugin structural integrity:
+        1-1. YAML Frontmatter: validate agents/*.md against agent-schema.json
+        1-2. File existence: verify cross-references between agents and skills
+        1-3. Shared doc references: verify docs/shared/ references exist
+        1-4. artifact-contracts.json: verify writer/reader agents exist
+        1-5. Hook scripts: verify hooks.json scripts exist, are executable, pass bash -n
+        Output audit-mechanical.json content as your final response.")
+olympus_register_agent_spawn(pipeline_id, "hephaestus")
 
-SendMessage(to: "hephaestus", summary: "기계적 검증",
-  "Validate Olympus plugin structural integrity:
-   1-1. YAML Frontmatter: validate agents/*.md against agent-schema.json
-   1-2. File existence: verify cross-references between agents and skills
-   1-3. Shared doc references: verify docs/shared/ references exist
-   1-4. artifact-contracts.json: verify writer/reader agents exist
-   1-5. Hook scripts: verify hooks.json scripts exist, are executable, pass bash -n
-   Report audit-mechanical.json to leader.")
-
-WAIT → leader writes audit-mechanical.json
+→ Write audit-mechanical.json from heph_result
 olympus_record_execution(pipeline_id, "audit", "hephaestus", ...)
 ```
 
@@ -89,44 +76,27 @@ olympus_record_execution(pipeline_id, "audit", "hephaestus", ...)
 ## Step 3: Athena Semantic Validation
 
 ```
-IF "athena" not in team:
-  Agent(name: "athena", team_name: ${TEAM},
-        subagent_type: "olympus:athena",
-        run_in_background: true,
-        prompt: "You are Athena, semantic validator in ${TEAM}.
-          Artifact directory: ${ARTIFACT_DIR}/
-          IMMEDIATE TASK: Wait for audit-mechanical.json to appear in ${ARTIFACT_DIR}/.
-          Once available, read it to understand hephaestus mechanical findings,
-          then perform semantic validation (agents/*.md, skills/*.md, docs/shared/*).
-          MANDATORY CONSULTATION: Before reporting to leader, you MUST:
-            1. SendMessage(to: 'hephaestus') with at least one cross-check question
-               based on your semantic findings vs mechanical results
-            2. Wait for hephaestus response
-            3. Include consultation exchange in your final report
-          Report audit-semantic.json to leader via SendMessage.
-          STAY AVAILABLE.")
-  olympus_register_agent_spawn(pipeline_id, "athena")
+athena_result = Agent(name: "athena", team_name: ${TEAM},
+      subagent_type: "olympus:athena",
+      prompt: "You are Athena, semantic validator. Artifact directory: ${ARTIFACT_DIR}/
+        DO NOT write files — you are read-only.
+        IMMEDIATE TASK: Perform semantic validation of Olympus plugin.
+        Step 1 — Read ${ARTIFACT_DIR}/audit-mechanical.json (hephaestus results).
+        Step 2 — Read agents/*.md, skills/*.md, docs/shared/*.
+        Step 3 — Validate:
+        2-1. Permission-Role Consistency: disallowedTools vs prompt content
+        2-2. Artifact Contract Completeness: skill files vs contracts
+        2-3. Gate Consistency: gate-thresholds.json vs SKILL.md values
+        2-4. Clarity Scan: banned phrases from clarity-enforcement.md
+        2-5. Delegation Pattern: Write/Edit disabled agents use final text output for results
+        2-6. Pipeline State Schema: state structures match pipeline-states.json
+        MANDATORY CONSULTATION: Before outputting final results, you MUST:
+          SendMessage(to: 'hephaestus') with at least one cross-check question.
+          Wait for response. Include consultation exchange in your output.
+        Output audit-semantic.json content as your final response.")
+olympus_register_agent_spawn(pipeline_id, "athena")
 
-SendMessage(to: "athena", summary: "의미적 검증",
-  "DO NOT write files — you are read-only.
-   SEQUENTIAL DEPENDENCY: hephaestus has completed mechanical validation.
-   Step 1 — Read ${ARTIFACT_DIR}/audit-mechanical.json (hephaestus results).
-             Note all mechanical findings — use them as context for semantic checks.
-   MANDATORY: Before reporting, you MUST SendMessage(to: 'hephaestus') with at least one
-   cross-check question based on your semantic findings. Include the consultation exchange
-   in your final report. Reports without consultation log are incomplete.
-   Step 2 — Read agents/*.md, skills/*.md, docs/shared/*.
-   Step 3 — Validate (referencing audit-mechanical.json findings where relevant):
-   2-1. Permission-Role Consistency: disallowedTools vs prompt content
-   2-2. Artifact Contract Completeness: skill files vs contracts
-   2-3. Gate Consistency: gate-thresholds.json vs SKILL.md values
-   2-4. Clarity Scan: banned phrases from clarity-enforcement.md
-   2-5. Delegation Pattern: Write/Edit disabled agents have SendMessage + handoff
-   2-6. Pipeline State Schema: state structures match pipeline-states.json
-   Include reference to hephaestus findings in your report where applicable.
-   Report audit-semantic.json to leader.")
-
-WAIT → leader writes audit-semantic.json
+→ Write audit-semantic.json from athena_result
 olympus_record_execution(pipeline_id, "audit", "athena", ...)
 ```
 

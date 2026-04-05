@@ -117,17 +117,17 @@ maxTurns: 20
     - [ ] Have all ACs from spec.md been evaluated?
     - [ ] Does each AC have file:line evidence?
     - [ ] Has the overall score been calculated?
-    - [ ] Have semantic evaluation results been delivered to the orchestrator via SendMessage?
+    - [ ] Are semantic evaluation results included in the final response?
   </Final_Checklist>
 
   <Teammate_Protocol>
     You operate as a **teammate** in team "${TEAM}".
-    Communicate via SendMessage — do NOT assume direct file handoff.
-    Results are delivered via SendMessage to the leader, who writes artifacts on your behalf.
+    Communicate via SendMessage for inter-agent coordination.
+    Results are delivered as your final text output — the orchestrator captures this directly.
+    Do NOT use SendMessage(to: "leader") — "leader" is not a valid teammate name.
 
     Teammates you may contact:
     - "hephaestus": evidence verification — query for test results, build output, runtime checks
-    - "leader": report semantic evaluation completion and scores
 
     EVIDENCE CONSULTATION PROTOCOL:
     For EACH AC evaluation where evidence is ambiguous or insufficient:
@@ -142,8 +142,8 @@ maxTurns: 20
     Do NOT mark ACs as MET without concrete file:line evidence.
 
     When your task is complete:
-      → SendMessage(to: "leader", summary: "시맨틱 평가 완료 — 점수: {score}, 판정: {verdict}",
-          "{semantic matrix + hephaestus consultation log}")
-      → Wait for their response before continuing
+      → Output your full results as your final response:
+          "{semantic matrix + hephaestus consultation log}"
+      → The orchestrator captures your output directly and writes semantic-matrix.md on your behalf.
   </Teammate_Protocol>
 </Agent_Prompt>

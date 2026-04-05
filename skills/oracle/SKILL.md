@@ -95,19 +95,16 @@ Complexity assessment:
 ## Step 3: Hermes Codebase Exploration
 
 ```
-IF "hermes" not in team:
-  Agent(name: "hermes", team_name: ${TEAM},
-        subagent_type: "olympus:hermes",
-        run_in_background: true,
-        prompt: "You are Hermes in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-          IMMEDIATE TASK: Explore codebase related to: {user_input}.
-          DO NOT write files — you are read-only.
-          Gather: project structure, relevant modules, existing patterns, dependencies.
-          When done: SendMessage(to: 'leader', summary: '코드베이스 탐색 완료', '{결과}')
-          Then STAY AVAILABLE: respond to queries from apollo, metis via SendMessage.")
-  olympus_register_agent_spawn(pipeline_id, "hermes")
+hermes_result = Agent(name: "hermes", team_name: ${TEAM},
+      subagent_type: "olympus:hermes",
+      prompt: "You are Hermes in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        IMMEDIATE TASK: Explore codebase related to: {user_input}.
+        DO NOT write files — you are read-only.
+        Gather: project structure, relevant modules, existing patterns, dependencies.
+        Output your full results as your final response.")
+olympus_register_agent_spawn(pipeline_id, "hermes")
 
-WAIT for hermes SendMessage → leader writes codebase-context.md
+→ Write codebase-context.md from hermes_result
 olympus_record_execution(pipeline_id, "oracle", "hermes", ...)
 ```
 
@@ -116,29 +113,23 @@ olympus_record_execution(pipeline_id, "oracle", "hermes", ...)
 ## Step 4: Apollo Interview Loop
 
 ```
-IF "apollo" not in team:
-  Agent(name: "apollo", team_name: ${TEAM},
-        subagent_type: "olympus:apollo",
-        run_in_background: true,
-        prompt: "You are Apollo in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-          IMMEDIATE TASK: Conduct Socratic interview about: {user_input}. Complexity: {level}.
-          DO NOT write files — you are read-only.
-          Read ${ARTIFACT_DIR}/codebase-context.md for project context.
-          MANDATORY CONSULTATION: Before each question, query 'hermes' to verify codebase facts:
-            SendMessage(to: 'hermes', summary: '팩트 확인', '{question about codebase}')
-            Wait for hermes response, then ask user with verified context.
-          Interview rules: One question at a time via AskUserQuestion.
-          Track ambiguity scores internally (per ambiguity-scoring.md). Terminate when ambiguity ≤ 0.2 or max 10 rounds.
-          Stagnation detection:
-            - Spinning: same topic 3 times → move on
-            - Oscillation: A↔B repetition → ask user to decide
-            - Diminishing: delta < 0.02 → terminate dimension
-          When done: SendMessage(to: 'leader', summary: '인터뷰 완료 — 모호성: {score}',
-            '{interview log + ambiguity scores + consultation log with hermes}')
-          Then STAY AVAILABLE for follow-up rounds.")
-  olympus_register_agent_spawn(pipeline_id, "apollo")
+apollo_result = Agent(name: "apollo", team_name: ${TEAM},
+      subagent_type: "olympus:apollo",
+      prompt: "You are Apollo in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        IMMEDIATE TASK: Conduct Socratic interview about: {user_input}. Complexity: {level}.
+        DO NOT write files — you are read-only.
+        Read ${ARTIFACT_DIR}/codebase-context.md for project context.
+        Interview rules: One question at a time via AskUserQuestion.
+        Track ambiguity scores internally (per ambiguity-scoring.md). Terminate when ambiguity ≤ 0.2 or max 10 rounds.
+        Stagnation detection:
+          - Spinning: same topic 3 times → move on
+          - Oscillation: A↔B repetition → ask user to decide
+          - Diminishing: delta < 0.02 → terminate dimension
+        Output your full results as your final response:
+          interview log + ambiguity scores.")
+olympus_register_agent_spawn(pipeline_id, "apollo")
 
-WAIT for apollo SendMessage → leader writes interview-log.md, ambiguity-scores.json
+→ Write interview-log.md, ambiguity-scores.json from apollo_result
 olympus_record_execution(pipeline_id, "oracle", "apollo", ...)
 ```
 
@@ -154,10 +145,13 @@ IF passed (ambiguity ≤ 0.2):
   → proceed to Step 6
 
 ELSE IF rounds < 10:
-  → SendMessage(to: "apollo", summary: "추가 인터뷰",
-      "DO NOT write files — you are read-only.
-       Ambiguity still at {score}. Continue interview, focus on: {gap areas}")
-  ← Apollo REMEMBERS previous rounds — no re-initialization!
+  → Re-spawn apollo (FOREGROUND) with follow-up task:
+    apollo_retry = Agent(name: "apollo", team_name: ${TEAM},
+        subagent_type: "olympus:apollo",
+        prompt: "You are Apollo. Artifact directory: ${ARTIFACT_DIR}/
+          Read ${ARTIFACT_DIR}/interview-log.md for previous rounds.
+          Ambiguity still at {score}. Continue interview, focus on: {gap areas}.
+          Output updated results as your final response.")
   → re-check gate after completion
 
 ELSE (rounds >= 10):
@@ -170,24 +164,18 @@ ELSE (rounds >= 10):
 ## Step 6: Metis Gap Analysis
 
 ```
-IF "metis" not in team:
-  Agent(name: "metis", team_name: ${TEAM},
-        subagent_type: "olympus:metis",
-        run_in_background: true,
-        prompt: "You are Metis in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-          IMMEDIATE TASK: Perform gap analysis on interview results.
-          DO NOT write files — you are read-only.
-          Read ${ARTIFACT_DIR}/interview-log.md and ${ARTIFACT_DIR}/codebase-context.md.
-          Analyze: Missing Questions, Undefined Guardrails, Scope Risks,
-          Unvalidated Assumptions, Acceptance Criteria, Edge Cases.
-          CONSULTATION: Query 'hermes' to verify any codebase assumptions:
-            SendMessage(to: 'hermes', summary: '가정 검증', '{assumption to verify}')
-          When done: SendMessage(to: 'leader', summary: '갭 분석 완료',
-            '{gap analysis results + hermes consultation log}')
-          Then STAY AVAILABLE for Genesis wonder phase.")
-  olympus_register_agent_spawn(pipeline_id, "metis")
+metis_result = Agent(name: "metis", team_name: ${TEAM},
+      subagent_type: "olympus:metis",
+      prompt: "You are Metis in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        IMMEDIATE TASK: Perform gap analysis on interview results.
+        DO NOT write files — you are read-only.
+        Read ${ARTIFACT_DIR}/interview-log.md and ${ARTIFACT_DIR}/codebase-context.md.
+        Analyze: Missing Questions, Undefined Guardrails, Scope Risks,
+        Unvalidated Assumptions, Acceptance Criteria, Edge Cases.
+        Output your full results as your final response.")
+olympus_register_agent_spawn(pipeline_id, "metis")
 
-WAIT for metis SendMessage → leader writes gap-analysis.md
+→ Write gap-analysis.md from metis_result
 olympus_record_execution(pipeline_id, "oracle", "metis", ...)
 ```
 
@@ -219,9 +207,6 @@ Write ${ARTIFACT_DIR}/spec.md
 
 ```
 IF standalone (not called from Odyssey):
-  FOR each active teammate:
-    SendMessage(to: "{name}", message: { type: "shutdown_request" })
-    WAIT for shutdown_response
   TeamDelete(team_name: "oracle-${CLAUDE_SESSION_ID}")
 ELSE:
   Teammates persist for Odyssey's next phase

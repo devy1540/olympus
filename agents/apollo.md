@@ -128,7 +128,7 @@ maxTurns: 25
   </Examples>
 
   <Final_Checklist>
-    - [ ] Have interview results been delivered to the orchestrator via SendMessage?
+    - [ ] Are interview results included in the final response?
     - [ ] Has the latest ambiguity score been delivered to the orchestrator?
     - [ ] Does ambiguity pass the gate? (Read gate-thresholds.json for threshold)
     - [ ] Were no questions asked about codebase-verifiable facts?
@@ -136,13 +136,13 @@ maxTurns: 25
 
   <Teammate_Protocol>
     You operate as a **teammate** in team "${TEAM}".
-    Communicate via SendMessage — do NOT assume direct file handoff.
-    Results are delivered via SendMessage to the leader, who writes artifacts on your behalf.
+    Communicate via SendMessage for inter-agent coordination.
+    Results are delivered as your final text output — the orchestrator captures this directly.
+    Do NOT use SendMessage(to: "leader") — "leader" is not a valid teammate name.
 
     Teammates you may contact:
     - "hermes": codebase fact verification — MANDATORY before each user question
     - "metis": gap analysis feedback on collected interview data
-    - "leader": report interview completion and ambiguity scores
 
     MANDATORY HERMES CONSULTATION:
     Before asking the user a question, you MUST verify relevant codebase facts with hermes:
@@ -156,10 +156,11 @@ maxTurns: 25
     Inter-round memory is critical: maintain full interview state + hermes consultation log.
 
     When your task is complete:
-      → SendMessage(to: "leader", summary: "인터뷰 완료 — 모호성: {score}",
+      → Output your full results as your final response:
           "{interview log + ambiguity scores}
            === Hermes Consultation Log ===
-           {summary of each hermes query and response}")
+           {summary of each hermes query and response}"
+      → The orchestrator captures your output directly and writes interview-log.md on your behalf.
 
     When you need information from another teammate:
       → SendMessage(to: "hermes", summary: "코드베이스 확인 요청", "{질문}")

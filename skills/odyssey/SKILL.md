@@ -19,19 +19,20 @@ All agents operate as teammates in a single persistent team for cross-phase cont
 
 - PROACTIVE SPAWN RULE (§6.3): Every Agent() call MUST include the agent's IMMEDIATE TASK
   in the prompt. NEVER use "Wait for messages — do not act until prompted."
-  The agent starts working the moment it spawns. SendMessage is ONLY for follow-up tasks.
+  The agent starts working the moment it spawns. SendMessage is ONLY for inter-agent communication.
+
+- RESULT CAPTURE RULE: Agent results come via the Agent tool's return value, NOT via SendMessage.
+  - Sequential agents: spawn foreground (run_in_background omitted or false) → result returned directly.
+  - Parallel agents: spawn background (run_in_background: true) → result comes via completion notification.
+  - Do NOT use SendMessage(to: "leader") — "leader" is not a valid teammate name.
+  - Do NOT instruct agents to "STAY AVAILABLE" — agents finish after their task and are re-spawned if needed.
 
 - MANDATORY CONSULTATION (§7): Agents with peer consultation paths MUST exchange at least
-  one round of inter-agent messages BEFORE reporting final results to the leader.
+  one round of inter-agent messages BEFORE reporting final results.
   Reports lacking consultation evidence are incomplete — send agent back to consult.
 
 - SEQUENTIAL SPAWN: Within each phase, spawn agents in dependency order, not all at once.
   Wait for prerequisite agent results before spawning dependent agents.
-
-- RESPONSE RULE: If a teammate does not report within reasonable time:
-  1. SendMessage(to: "{agent}", "Report your findings now. Include consultation results. Keep under 5000 chars.")
-  2. Retry up to 3 times.
-  3. NEVER do the agent's work directly — this violates §0.
 </Execution_Policy>
 
 <Team_Structure>
@@ -140,42 +141,35 @@ Agents are spawned SEQUENTIALLY with IMMEDIATE TASKS — not all at once.
 ```
 1. MCP: olympus_next_phase(pipeline_id) → confirm "oracle" is valid
 
-2. SPAWN hermes with IMMEDIATE TASK (sequential — first agent):
+2. SPAWN hermes with IMMEDIATE TASK (sequential — first agent, FOREGROUND):
 
-   Agent(name: "hermes", team_name: ${TEAM},
+   hermes_result = Agent(name: "hermes", team_name: ${TEAM},
          subagent_type: "olympus:hermes",
-         run_in_background: true,
          prompt: "You are Hermes in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
            IMMEDIATE TASK: Explore codebase related to: {user_input}.
            DO NOT write files — you are read-only.
            Gather: project structure, relevant modules, existing patterns, dependencies.
-           When done: SendMessage(to: 'leader', summary: '코드베이스 탐색 완료', '{결과}')
-           Then STAY AVAILABLE: respond to queries from apollo, metis, prometheus via SendMessage.")
+           Output your full results as your final response.")
    olympus_register_agent_spawn(pipeline_id, "hermes")
 
-   WAIT for hermes SendMessage → leader writes codebase-context.md
+   → Write codebase-context.md from hermes_result
    olympus_record_execution(pipeline_id, "oracle", "hermes", ...)
 
-3. SPAWN apollo with IMMEDIATE TASK (after hermes completes):
+3. SPAWN apollo with IMMEDIATE TASK (after hermes completes, FOREGROUND):
 
-   Agent(name: "apollo", team_name: ${TEAM},
+   apollo_result = Agent(name: "apollo", team_name: ${TEAM},
          subagent_type: "olympus:apollo",
-         run_in_background: true,
          prompt: "You are Apollo in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
            IMMEDIATE TASK: Conduct Socratic interview about: {user_input}. Complexity: {level}.
            DO NOT write files — you are read-only.
            Read ${ARTIFACT_DIR}/codebase-context.md for project context.
-           MANDATORY CONSULTATION: Before each question, query 'hermes' to verify codebase facts:
-             SendMessage(to: 'hermes', summary: '팩트 확인', '{question about codebase}')
-             Wait for hermes response, then ask user with verified context.
            Interview rules: One question at a time via AskUserQuestion.
            Track ambiguity scores internally. Terminate when ambiguity ≤ 0.2 or max 10 rounds.
-           When done: SendMessage(to: 'leader', summary: '인터뷰 완료 — 모호성: {score}',
-             '{interview log + ambiguity scores + consultation log with hermes}')
-           Then STAY AVAILABLE for follow-up rounds.")
+           Output your full results as your final response:
+             interview log + ambiguity scores.")
    olympus_register_agent_spawn(pipeline_id, "apollo")
 
-   WAIT for apollo SendMessage → leader writes interview-log.md + ambiguity-scores.json
+   → Write interview-log.md + ambiguity-scores.json from apollo_result
    olympus_record_execution(pipeline_id, "oracle", "apollo", ...)
 
 4. Ambiguity gate:
@@ -183,30 +177,30 @@ Agents are spawned SEQUENTIALLY with IMMEDIATE TASKS — not all at once.
    olympus_gate_check(pipeline_id, "ambiguity", ambiguityScore)
    → IF passed: proceed to step 5
    → IF failed AND rounds < 10:
-       SendMessage(to: "apollo", summary: "추가 인터뷰",
-         "Ambiguity still at {score}. Focus on: {gap areas}.
-          Continue consulting 'hermes' for fact verification.")
+       Re-spawn apollo (FOREGROUND) with follow-up task:
+       apollo_retry = Agent(name: "apollo", team_name: ${TEAM},
+           subagent_type: "olympus:apollo",
+           prompt: "You are Apollo. Artifact directory: ${ARTIFACT_DIR}/
+             Read ${ARTIFACT_DIR}/interview-log.md for previous rounds.
+             Ambiguity still at {score}. Continue interview, focus on: {gap areas}.
+             Output updated results as your final response.")
+       → Update interview-log.md + ambiguity-scores.json from apollo_retry
    → IF failed AND rounds >= 10: AskUserQuestion with remaining gaps
 
-5. SPAWN metis with IMMEDIATE TASK (after apollo completes):
+5. SPAWN metis with IMMEDIATE TASK (after apollo completes, FOREGROUND):
 
-   Agent(name: "metis", team_name: ${TEAM},
+   metis_result = Agent(name: "metis", team_name: ${TEAM},
          subagent_type: "olympus:metis",
-         run_in_background: true,
          prompt: "You are Metis in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
            IMMEDIATE TASK: Perform gap analysis on interview results.
            DO NOT write files — you are read-only.
            Read ${ARTIFACT_DIR}/interview-log.md and ${ARTIFACT_DIR}/codebase-context.md.
            Analyze: Missing Questions, Undefined Guardrails, Scope Risks,
            Unvalidated Assumptions, Acceptance Criteria, Edge Cases.
-           CONSULTATION: Query 'hermes' to verify any codebase assumptions:
-             SendMessage(to: 'hermes', summary: '가정 검증', '{assumption to verify}')
-           When done: SendMessage(to: 'leader', summary: '갭 분석 완료',
-             '{gap analysis results + hermes consultation log}')
-           Then STAY AVAILABLE for Genesis wonder phase.")
+           Output your full results as your final response.")
    olympus_register_agent_spawn(pipeline_id, "metis")
 
-   WAIT for metis SendMessage → leader writes gap-analysis.md
+   → Write gap-analysis.md from metis_result
    olympus_record_execution(pipeline_id, "oracle", "metis", ...)
 
 6. Synthesize spec.md from interview-log.md + gap-analysis.md
@@ -236,46 +230,31 @@ When enabled:
 
 1. MCP: olympus_next_phase(pipeline_id) → confirm "genesis" is valid
 
-2. Spawn eris (metis already in team from Oracle):
-
-   Agent(name: "eris", team_name: ${TEAM},
-         subagent_type: "olympus:eris",
-         run_in_background: true,
-         prompt: "You are Eris in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-           IMMEDIATE TASK: Enter Genesis reflect mode.
-           DO NOT write files — you are read-only.
-           You will receive wonder results from 'metis' via SendMessage.
-           For EACH generation: read metis's wonder, challenge it with fallacy-catalog.md,
-           then SendMessage(to: 'metis', summary: '반박: Gen {n}', '{challenges}')
-           so metis can incorporate your feedback in the next generation.
-           Also report each reflect to leader.
-           STAY AVAILABLE across all generations.")
-   olympus_register_agent_spawn(pipeline_id, "eris")
-
-   SendMessage(to: "metis", summary: "Genesis 모드 전환",
-     "Switching to Genesis wonder mode. Build on Oracle insights.
-      MANDATORY DIALOGUE: After each wonder, share with 'eris' via SendMessage.
-      Wait for eris's challenges, then incorporate into next generation.
-      Artifact directory: ${ARTIFACT_DIR}/")
-
-3. Evolution loop (max 30 generations):
+2. For EACH generation, spawn metis and eris as a pair (FOREGROUND per generation):
 
    FOR each generation n:
 
      a. Create gen directory: ${ARTIFACT_DIR}/gen-{n}/
 
-     b. Wonder + Dialogue (Metis ↔ Eris):
-        SendMessage(to: "metis", summary: "Gen {n} wonder",
-          "Generation {n}. Read ${ARTIFACT_DIR}/gen-{n}/spec.md and ontology.json.
-           Answer 4 questions: Essence, Root Cause, Preconditions, Hidden Assumptions.
-           THEN share your wonder with 'eris': SendMessage(to: 'eris', summary: 'Wonder Gen {n}', '{findings}')
-           Wait for eris's challenges.
-           Report to leader: wonder + eris challenges + your response to challenges.")
-        WAIT → leader writes gen-{n}/wonder.md (includes metis↔eris dialogue)
+     b. Spawn metis for wonder (FOREGROUND):
+        metis_wonder = Agent(name: "metis-gen{n}", team_name: ${TEAM},
+              subagent_type: "olympus:metis",
+              prompt: "You are Metis in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+                IMMEDIATE TASK: Genesis wonder for generation {n}.
+                Read ${ARTIFACT_DIR}/gen-{n}/spec.md and ontology.json.
+                Answer 4 questions: Essence, Root Cause, Preconditions, Hidden Assumptions.
+                Output your wonder analysis as your final response.")
 
-        Note: The dialogue happens BETWEEN metis and eris directly.
-        Metis sends wonder to eris, eris challenges back, metis responds.
-        Leader receives the FINAL consolidated result.
+     c. Spawn eris for reflect (FOREGROUND, receives metis wonder):
+        eris_reflect = Agent(name: "eris-gen{n}", team_name: ${TEAM},
+              subagent_type: "olympus:eris",
+              prompt: "You are Eris in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+                IMMEDIATE TASK: Challenge this wonder analysis with fallacy-catalog.md:
+                === METIS WONDER ===
+                {metis_wonder}
+                Output your challenges as your final response.")
+
+        → Write gen-{n}/wonder.md from metis_wonder + eris_reflect dialogue
         olympus_log_collaboration(pipeline_id, "metis", "eris", "Gen {n} wonder/reflect dialogue")
 
      c. Seed: Update ontology + spec from wonder + reflect dialogue
@@ -302,27 +281,25 @@ Multi-perspective analysis with MANDATORY cross-reference between analysts.
 ```
 1. MCP: olympus_next_phase(pipeline_id) → confirm "pantheon" is valid
 
-2. SPAWN helios with IMMEDIATE TASK (first — generates perspectives):
+2. SPAWN helios with IMMEDIATE TASK (first — generates perspectives, FOREGROUND):
 
-   Agent(name: "helios", team_name: ${TEAM},
+   helios_result = Agent(name: "helios", team_name: ${TEAM},
          subagent_type: "olympus:helios",
-         run_in_background: true,
          prompt: "You are Helios in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
            IMMEDIATE TASK: Generate analysis perspectives.
            DO NOT write files — you are read-only.
            Read ${ARTIFACT_DIR}/spec.md and codebase-context.md.
            Evaluate 6 complexity dimensions. Derive 3-6 orthogonal perspectives.
            Map analyst agents to perspectives.
-           When done: SendMessage(to: 'leader', summary: '관점 생성 완료', '{perspectives}')
-           Then STAY AVAILABLE.")
+           Output your full results as your final response.")
    olympus_register_agent_spawn(pipeline_id, "helios")
-   WAIT → leader writes perspectives.md
+   → Write perspectives.md from helios_result
 
 3. Perspective approval:
    AskUserQuestion with generated perspectives
    → Confirmed perspectives saved to perspectives.md (immutable)
 
-4. SPAWN ares + poseidon IN PARALLEL with IMMEDIATE TASKS + CROSS-REFERENCE:
+4. SPAWN ares + poseidon IN PARALLEL with CROSS-REFERENCE (BACKGROUND):
 
    Agent(name: "ares", team_name: ${TEAM},
          subagent_type: "olympus:ares",
@@ -338,9 +315,7 @@ Multi-perspective analysis with MANDATORY cross-reference between analysts.
                 1. Do any of these have security implications?
                 2. Are there security concerns I should factor into priority?')
            Wait for poseidon's response. Incorporate security feedback into final report.
-           When done: SendMessage(to: 'leader', summary: '코드 품질 분석 완료',
-             '{findings + poseidon consultation log}')
-           Then STAY AVAILABLE for Tribunal.")
+           Output your full results as your final response.")
    olympus_register_agent_spawn(pipeline_id, "ares")
 
    Agent(name: "poseidon", team_name: ${TEAM},
@@ -357,24 +332,25 @@ Multi-perspective analysis with MANDATORY cross-reference between analysts.
                 1. Do the code quality issues you found compound these risks?
                 2. Any refactoring that could inadvertently fix/worsen security?')
            Wait for ares's response. Incorporate quality feedback into final report.
-           When done: SendMessage(to: 'leader', summary: '보안 분석 완료',
-             '{findings + ares consultation log}')
-           Then STAY AVAILABLE.")
+           Output your full results as your final response.")
    olympus_register_agent_spawn(pipeline_id, "poseidon")
 
    Note: ares and poseidon run IN PARALLEL. Both do initial analysis, then CROSS-REFERENCE.
-   The cross-reference exchange happens directly between them — leader only receives final results.
+   The cross-reference exchange happens directly between them via SendMessage.
+   Results come via background completion notifications.
    olympus_log_collaboration(pipeline_id, "ares", "poseidon", "코드품질↔보안 크로스레퍼런스")
 
-   WAIT for both → leader aggregates into analyst-findings.md
+   WAIT for both completion notifications → leader aggregates into analyst-findings.md
 
-5. Eris DA challenge (reuse from Oracle/Genesis):
-   SendMessage(to: "eris", summary: "DA 챌린지",
-     "Read ${ARTIFACT_DIR}/analyst-findings.md.
-      Challenge findings using fallacy-catalog.md. Max 2 rounds.
-      Focus on: logical gaps, unsupported claims, overlooked risks.
-      Report evaluation to leader with specific rebuttals.")
-   WAIT → leader writes da-evaluation.md
+5. Eris DA challenge (FOREGROUND):
+   eris_da = Agent(name: "eris", team_name: ${TEAM},
+     subagent_type: "olympus:eris",
+     prompt: "You are Eris. Artifact directory: ${ARTIFACT_DIR}/
+       IMMEDIATE TASK: Read ${ARTIFACT_DIR}/analyst-findings.md.
+       Challenge findings using fallacy-catalog.md. Max 2 rounds.
+       Focus on: logical gaps, unsupported claims, overlooked risks.
+       Output your evaluation as your final response.")
+   → Write da-evaluation.md from eris_da
 
 6. Consensus check + synthesis → analysis.md
 
@@ -396,28 +372,22 @@ Create implementation plan with independent critique. Zeus consults hermes; Them
 2. MCP plan validation:
    olympus_validate_plan(pipeline_id, "odyssey", "execution", "prometheus", estimated_calls)
 
-3. SPAWN zeus with IMMEDIATE TASK:
+3. SPAWN zeus with IMMEDIATE TASK (FOREGROUND):
 
-   Agent(name: "zeus", team_name: ${TEAM},
+   zeus_result = Agent(name: "zeus", team_name: ${TEAM},
          subagent_type: "olympus:zeus",
-         run_in_background: true,
          prompt: "You are Zeus in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
            IMMEDIATE TASK: Create implementation plan.
            Read ${ARTIFACT_DIR}/spec.md and analysis.md.
-           CONSULTATION: Query 'hermes' for codebase structure clarifications:
-             SendMessage(to: 'hermes', summary: '구조 확인', '{question}')
            Create task breakdown with Critical Files for Implementation.
-           When done: SendMessage(to: 'leader', summary: '계획 수립 완료',
-             '{plan + hermes consultation log}')
-           Then STAY AVAILABLE for revision feedback from Themis.")
+           Output your full results as your final response.")
    olympus_register_agent_spawn(pipeline_id, "zeus")
-   WAIT → leader writes plan.md
+   → Write plan.md from zeus_result
 
-4. SPAWN themis with IMMEDIATE TASK (after plan.md exists):
+4. SPAWN themis with IMMEDIATE TASK (after plan.md exists, FOREGROUND):
 
-   Agent(name: "themis", team_name: ${TEAM},
+   themis_result = Agent(name: "themis", team_name: ${TEAM},
          subagent_type: "olympus:themis",
-         run_in_background: true,
          prompt: "You are Themis in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
            IMMEDIATE TASK: Critique implementation plan.
            DO NOT write files — you are read-only.
@@ -425,21 +395,26 @@ Create implementation plan with independent critique. Zeus consults hermes; Them
            Verify completeness, feasibility, risk coverage.
            IMPORTANT: You are INDEPENDENT — do not consult zeus about the plan you're critiquing.
            Verdict: APPROVE / REVISE / REJECT with specific reasons and evidence.
-           When done: SendMessage(to: 'leader', summary: '계획 비평 완료 — {verdict}', '{critique}')
-           Then STAY AVAILABLE for re-review.")
+           Output your full results as your final response.")
    olympus_register_agent_spawn(pipeline_id, "themis")
-   WAIT → receive verdict
+   → Extract verdict from themis_result
 
 5. Verdict loop (max 3 iterations):
    → APPROVE: proceed to Step 6
-   → REVISE: SendMessage(to: "zeus", summary: "Themis 피드백 반영",
-       "Themis critique: {specific feedback}. Revise plan.
-        You REMEMBER the original plan — fix precisely.
-        Query 'hermes' again if needed for verification.")
-     WAIT for zeus → leader updates plan.md
-     SendMessage(to: "themis", summary: "수정된 계획 재검토",
-       "plan.md has been revised. Re-read and re-evaluate.")
-     WAIT for themis → re-check verdict
+   → REVISE: Re-spawn zeus (FOREGROUND) with Themis feedback:
+       zeus_revised = Agent(name: "zeus", team_name: ${TEAM},
+           subagent_type: "olympus:zeus",
+           prompt: "You are Zeus. Artifact directory: ${ARTIFACT_DIR}/
+             Themis critique: {specific feedback}. Revise plan.md.
+             Read ${ARTIFACT_DIR}/plan.md and fix precisely what Themis flagged.
+             Output your revised plan as your final response.")
+     → Update plan.md from zeus_revised
+     Re-spawn themis (FOREGROUND) for re-review:
+       themis_recheck = Agent(name: "themis", team_name: ${TEAM},
+           subagent_type: "olympus:themis",
+           prompt: "You are Themis. Re-review revised ${ARTIFACT_DIR}/plan.md against spec.md.
+             Output verdict as your final response.")
+     → Re-check verdict
    → 2 consecutive REVISE: trigger Agora debate
      (ares, zeus, eris structured debate → forward to zeus → Themis re-review)
    → REJECT: AskUserQuestion (Return to Oracle / Pantheon / Exit)
@@ -458,75 +433,38 @@ Implement the approved plan. **Teammate mode shines here — agents collaborate 
 ```
 1. MCP: olympus_next_phase(pipeline_id) → confirm "execution" is valid
 
-2. SPAWN artemis + hephaestus first (support agents, ready for queries):
+2. SPAWN prometheus with IMMEDIATE TASK (main implementer, FOREGROUND):
 
-   Agent(name: "artemis", team_name: ${TEAM},
-         subagent_type: "olympus:artemis",
-         run_in_background: true,
-         prompt: "You are Artemis in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-           ROLE: Debugging support agent. Respond to requests from 'prometheus' or leader.
-           When 'prometheus' sends you an error/issue:
-             1. Analyze root cause with file:line evidence
-             2. SendMessage(to: 'prometheus', summary: '근본 원인: {cause}', '{analysis + fix direction}')
-           When leader sends you a task: investigate and report back.
-           STAY AVAILABLE throughout Execution phase.")
-   olympus_register_agent_spawn(pipeline_id, "artemis")
-
-   Agent(name: "hephaestus", team_name: ${TEAM},
-         subagent_type: "olympus:hephaestus",
-         run_in_background: true,
-         prompt: "You are Hephaestus in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-           ROLE: Build/test verification agent. Run build/lint/test/type-check on request.
-           When 'prometheus' or leader sends you a verification request:
-             1. Run the requested checks
-             2. Report results to the REQUESTER (not just leader)
-           STAY AVAILABLE throughout Execution and Tribunal phases.")
-   olympus_register_agent_spawn(pipeline_id, "hephaestus")
-
-3. SPAWN prometheus with IMMEDIATE TASK (main implementer):
-
-   Agent(name: "prometheus", team_name: ${TEAM},
+   prometheus_result = Agent(name: "prometheus", team_name: ${TEAM},
          subagent_type: "olympus:prometheus",
-         run_in_background: true,
          prompt: "You are Prometheus in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
            IMMEDIATE TASK: Implement ${ARTIFACT_DIR}/plan.md.
            You CAN write files directly.
-           ACTIVE COLLABORATION — use your teammates:
-             - 'hermes': SendMessage for codebase structure questions
-             - 'artemis': SendMessage for debugging when you hit errors
-             - 'hephaestus': SendMessage for quick build verification during implementation
-           Do NOT work in isolation. Query teammates when uncertain.
-           When done: SendMessage(to: 'leader', summary: '구현 완료',
-             '{implementation report + teammate consultation log}')
-           Then STAY AVAILABLE for debug cycles.")
+           Do NOT work in isolation — use Glob/Grep/Read for codebase context.
+           Output your implementation report as your final response.")
    olympus_register_agent_spawn(pipeline_id, "prometheus")
 
-   WAIT for prometheus completion
    olympus_record_execution(pipeline_id, "execution", "prometheus", ...)
 
-4. Build verification:
-   SendMessage(to: "hephaestus", summary: "전체 빌드/테스트 실행",
-     "Run full build, lint, test, and type-check.
-      Report results to leader AND to 'prometheus'.")
-   WAIT for hephaestus result
+4. Build verification (FOREGROUND):
+   heph_result = Agent(name: "hephaestus", team_name: ${TEAM},
+     subagent_type: "olympus:hephaestus",
+     prompt: "IMMEDIATE TASK: Run full build, lint, test, and type-check.
+       Output results as your final response.")
+   olympus_register_agent_spawn(pipeline_id, "hephaestus")
 
 5. Debug cycle (if build fails, max 3 cycles):
 
-   IF hephaestus reports FAIL:
+   IF heph_result indicates FAIL:
      retryTracking.consecutiveDebugFailures++
 
-     SendMessage(to: "prometheus", summary: "테스트 실패 수정",
-       "Build/test failed. Hephaestus results: {summary}.
-        COLLABORATE: Ask 'artemis' for root cause analysis.
-        SendMessage(to: 'artemis', summary: '에러 분석 요청', '{error details}')
-        Wait for artemis's diagnosis, then fix.
-        You REMEMBER your previous implementation — fix precisely.
-        After fix, ask 'hephaestus' for quick verification before reporting.")
-     ← Prometheus retains full context of what it built!
-     ← Real-time prometheus → artemis → prometheus dialogue
-     ← prometheus → hephaestus quick check before reporting
+     debug_result = Agent(name: "prometheus", team_name: ${TEAM},
+       subagent_type: "olympus:prometheus",
+       prompt: "Build/test failed: {heph_result summary}.
+         Fix the failures. You CAN write files directly.
+         Output your fix report as your final response.")
 
-     WAIT for prometheus → leader sends to hephaestus for full verification
+     → Re-run hephaestus verification (FOREGROUND)
 
      IF consecutiveDebugFailures >= 3:
        → Circuit breaker: proceed to Step 7 with current state
@@ -546,46 +484,26 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
 ```
 1. MCP: olympus_next_phase(pipeline_id) → confirm "tribunal" is valid
 
-2. SPAWN athena + hera (hephaestus, ares, eris already in team):
+2. Tribunal agents are spawned on-demand per stage (FOREGROUND):
 
-   Agent(name: "athena", team_name: ${TEAM},
-         subagent_type: "olympus:athena",
-         run_in_background: true,
-         prompt: "You are Athena in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-           ROLE: Semantic evaluator for Tribunal.
-           DO NOT write files — you are read-only.
-           You will be asked to evaluate AC compliance.
-           You may query 'hephaestus' for test evidence:
-             SendMessage(to: 'hephaestus', summary: '증거 확인', '{what to verify}')
-           STAY AVAILABLE for evaluation tasks.")
-   olympus_register_agent_spawn(pipeline_id, "athena")
-
-   Agent(name: "hera", team_name: ${TEAM},
-         subagent_type: "olympus:hera",
-         run_in_background: true,
-         prompt: "You are Hera in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-           ROLE: Final judge for Tribunal Stage 3.
-           You will receive debate transcripts from ares and eris.
-           You may query 'hephaestus' for test evidence to settle disputes.
-           STAY AVAILABLE for verdict task.")
-   olympus_register_agent_spawn(pipeline_id, "hera")
-
-3. Stage 1 — Hephaestus mechanical verification (reuse):
-   SendMessage(to: "hephaestus", summary: "기계적 검증",
-     "Run build, lint, test, type-check.
-      Report to leader AND save mechanical-result.json.")
-   WAIT → leader writes mechanical-result.json
+3. Stage 1 — Hephaestus mechanical verification (FOREGROUND):
+   mech_result = Agent(name: "hephaestus", team_name: ${TEAM},
+     subagent_type: "olympus:hephaestus",
+     prompt: "IMMEDIATE TASK: Run build, lint, test, type-check.
+       Output mechanical-result.json content as your final response.")
+   → Write mechanical-result.json from mech_result
    → FAIL: BLOCKED verdict → exit
    → PASS: Stage 2
 
-4. Stage 2 — Athena semantic evaluation:
-   SendMessage(to: "athena", summary: "의미적 평가",
-     "Read ${ARTIFACT_DIR}/spec.md and mechanical-result.json.
-      Evaluate each AC with file:line evidence.
-      CONSULTATION: For any AC where evidence is ambiguous,
-        query 'hephaestus': SendMessage(to: 'hephaestus', summary: 'AC 증거 확인', '{specific test}')
-      Report semantic-matrix.md to leader with consultation log.")
-   WAIT → leader writes semantic-matrix.md
+4. Stage 2 — Athena semantic evaluation (FOREGROUND):
+   athena_result = Agent(name: "athena", team_name: ${TEAM},
+     subagent_type: "olympus:athena",
+     prompt: "You are Athena. Artifact directory: ${ARTIFACT_DIR}/
+       IMMEDIATE TASK: Evaluate AC compliance.
+       Read ${ARTIFACT_DIR}/spec.md and mechanical-result.json.
+       Evaluate each AC with file:line evidence.
+       Output semantic-matrix.md content as your final response.")
+   → Write semantic-matrix.md from athena_result
    → AC compliance < 100% OR score < 0.8: INCOMPLETE → exit
    → PASS: check Stage 3 trigger
 
@@ -594,41 +512,42 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
 
    THIS IS A REAL DEBATE — each agent RESPONDS to the previous arguments.
 
-   a. Ares opens (reuse):
-      SendMessage(to: "ares", summary: "토론 개시",
-        "Read semantic-matrix.md. Argue for APPROVE or REJECT from quality perspective.
+   a. Ares opens (FOREGROUND):
+      ares_position = Agent(name: "ares", team_name: ${TEAM},
+        subagent_type: "olympus:ares",
+        prompt: "Read ${ARTIFACT_DIR}/semantic-matrix.md. Argue for APPROVE or REJECT from quality perspective.
          Include file:line evidence for every claim.
-         This will be shared with Eris for counter-argument.")
-      WAIT → receive ares_position
+         Output your full position as your final response.")
       olympus_log_collaboration(pipeline_id, "ares", "eris", "Tribunal debate: ares opening")
 
-   b. Eris challenges (reuse) — SEES ares's full argument:
-      SendMessage(to: "eris", summary: "반박",
-        "ARES ARGUES: {ares_full_position}.
+   b. Eris challenges — SEES ares's full argument (FOREGROUND):
+      eris_counter = Agent(name: "eris", team_name: ${TEAM},
+        subagent_type: "olympus:eris",
+        prompt: "ARES ARGUES: {ares_position}.
          Your job: find logical fallacies, unsupported claims, overlooked evidence.
          Use fallacy-catalog.md. Include file:line counter-evidence.
          IMPORTANT: Respond SPECIFICALLY to ares's points — do not make independent arguments.
-         This is a dialogue, not parallel monologues.")
-      WAIT → receive eris_counter
+         Output your full rebuttal as your final response.")
       olympus_log_collaboration(pipeline_id, "eris", "ares", "Tribunal debate: eris rebuttal")
 
-   c. OPTIONAL: Ares rebuttal (if eris raised substantive new points):
-      SendMessage(to: "ares", summary: "재반박",
-        "ERIS COUNTERS: {eris_full_counter}.
+   c. OPTIONAL: Ares rebuttal (if eris raised substantive new points, FOREGROUND):
+      ares_rebuttal = Agent(name: "ares", team_name: ${TEAM},
+        subagent_type: "olympus:ares",
+        prompt: "ERIS COUNTERS: {eris_counter}.
          Respond ONLY to new points eris raised. Do not repeat your opening.
-         Concede where eris is right. Defend where you have stronger evidence.")
-      WAIT → receive ares_rebuttal (if applicable)
+         Concede where eris is right. Defend where you have stronger evidence.
+         Output your rebuttal as your final response.")
 
-   d. Hera synthesizes — SEES the full debate transcript:
-      SendMessage(to: "hera", summary: "종합 판정",
-        "DEBATE TRANSCRIPT:
+   d. Hera synthesizes — SEES the full debate transcript (FOREGROUND):
+      hera_verdict = Agent(name: "hera", team_name: ${TEAM},
+        subagent_type: "olympus:hera",
+        prompt: "DEBATE TRANSCRIPT:
          === ARES OPENING === {ares_position}
          === ERIS REBUTTAL === {eris_counter}
          === ARES REBUTTAL === {ares_rebuttal or 'N/A'}
          Synthesize the debate. Where ares and eris disagree, determine who has stronger evidence.
-         You may query 'hephaestus' for test evidence to settle factual disputes.
-         Produce final verdict: APPROVE / REJECT with reasoned synthesis.")
-      WAIT → receive hera_verdict
+         Produce final verdict: APPROVE / REJECT with reasoned synthesis.
+         Output your verdict as your final response.")
 
    Tally votes: supermajority >= 66%
    Save consensus-record.json
@@ -651,12 +570,7 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
 ## Step 8: Team Teardown
 
 ```
-1. Send shutdown to all active teammates:
-   FOR each active teammate:
-     SendMessage(to: "{name}", message: { type: "shutdown_request", reason: "Pipeline complete" })
-     WAIT for shutdown_response
-
-2. TeamDelete(team_name: ${TEAM})
+1. TeamDelete(team_name: ${TEAM})
 
 3. Generate final report:
    - Phases executed

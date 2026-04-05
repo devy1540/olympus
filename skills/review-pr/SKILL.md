@@ -114,29 +114,18 @@ Effect: downstream agents also read spec-context.md for strategic review.
 ## Step 4: Hermes PR Reconnaissance
 
 ```
-IF "hermes" not in team:
-  Agent(name: "hermes", team_name: ${TEAM},
-        subagent_type: "olympus:hermes",
-        run_in_background: true,
-        prompt: "You are Hermes, a teammate in ${TEAM}.
-          Artifact directory: ${ARTIFACT_DIR}/
-          IMMEDIATE TASK: DO NOT write files — you are read-only.
-          Read ${ARTIFACT_DIR}/pr-diff.patch and explore affected codebase areas.
-          For each changed file: module, dependencies, change type (add/modify/delete).
-          Output: structured PR context with files, modules, dependency impact.
-          Report to leader via SendMessage.
-          STAY AVAILABLE for follow-up questions from ares and poseidon.")
-  olympus_register_agent_spawn(pipeline_id, "hermes")
+hermes_result = Agent(name: "hermes", team_name: ${TEAM},
+      subagent_type: "olympus:hermes",
+      prompt: "You are Hermes. Artifact directory: ${ARTIFACT_DIR}/
+        IMMEDIATE TASK: DO NOT write files — you are read-only.
+        Read ${ARTIFACT_DIR}/pr-diff.patch and explore affected codebase areas.
+        For each changed file: module, dependencies, change type (add/modify/delete).
+        Output: structured PR context with files, modules, dependency impact.
+        Your findings will be used as context by ares and poseidon — be thorough.
+        Output your full results as your final response.")
+olympus_register_agent_spawn(pipeline_id, "hermes")
 
-SendMessage(to: "hermes", summary: "PR 정찰",
-  "DO NOT write files — you are read-only.
-   Read ${ARTIFACT_DIR}/pr-diff.patch and explore affected codebase areas.
-   For each changed file: module, dependencies, change type (add/modify/delete).
-   Output: structured PR context with files, modules, dependency impact.
-   Your findings will be used as context by ares and poseidon — be thorough.
-   Report to leader.")
-
-WAIT → leader writes pr-context.md
+→ Write pr-context.md from hermes_result
 olympus_record_execution(pipeline_id, "review-pr", "hermes", ...)
 ```
 
@@ -145,27 +134,16 @@ olympus_record_execution(pipeline_id, "review-pr", "hermes", ...)
 ## Step 5: Helios Perspective Generation
 
 ```
-IF "helios" not in team:
-  Agent(name: "helios", team_name: ${TEAM},
-        subagent_type: "olympus:helios",
-        run_in_background: true,
-        prompt: "You are Helios, a teammate in ${TEAM}.
-          IMMEDIATE TASK: Read ${ARTIFACT_DIR}/pr-context.md and generate 3-5 review perspectives.
-          Mandatory: Code Quality (→ ares), Security (→ poseidon).
-          Report perspective list to leader via SendMessage.
-          STAY AVAILABLE.")
-  olympus_register_agent_spawn(pipeline_id, "helios")
+helios_result = Agent(name: "helios", team_name: ${TEAM},
+      subagent_type: "olympus:helios",
+      prompt: "You are Helios. Artifact directory: ${ARTIFACT_DIR}/
+        IMMEDIATE TASK: DO NOT write files — you are read-only.
+        Read ${ARTIFACT_DIR}/pr-context.md and generate 3-5 review perspectives.
+        Mandatory: Code Quality (→ ares), Security (→ poseidon).
+        Output your full results as your final response.")
+olympus_register_agent_spawn(pipeline_id, "helios")
 
-SendMessage(to: "helios", summary: "리뷰 관��� 생성",
-  "DO NOT write files — you are read-only.
-   Read ${ARTIFACT_DIR}/pr-context.md.
-   {If spec-context.md: 'Also read spec-context.md for domain context.'}
-   Generate 3-5 perspectives. Mandatory: Code Quality (→ ares), Security (→ poseidon).
-   Dynamic: Architecture, Performance, Test Coverage, Breaking Changes, Error Handling, Concurrency.
-   {If spec-context.md: + Domain Model Consistency, AC Regression.}
-   Report to leader.")
-
-WAIT → leader writes review-perspectives.md
+→ Write review-perspectives.md from helios_result
 olympus_record_execution(pipeline_id, "review-pr", "helios", ...)
 
 Perspective approval:
@@ -178,65 +156,41 @@ Perspective approval:
 ## Step 6: Parallel Multi-Perspective Review
 
 ```
-Spawn reviewer teammates (lazy):
+Spawn ares + poseidon IN PARALLEL (BACKGROUND, with cross-reference):
 
-IF "ares" not in team:
-  Agent(name: "ares", team_name: ${TEAM},
-        subagent_type: "olympus:ares",
-        run_in_background: true,
-        prompt: "You are Ares, code quality reviewer in ${TEAM}.
-          IMMEDIATE TASK: Read ${ARTIFACT_DIR}/pr-context.md and review-perspectives.md.
-          Review ONLY changed files. Focus: defects, anti-patterns, SOLID principles.
-          Each finding: Severity (CRITICAL/WARNING/INFO), file:line, confidence 0-1, evidence.
-          MANDATORY CONSULTATION: After initial analysis, SendMessage(to: 'poseidon') to
-          share key findings and request cross-check on security implications.
-          Incorporate poseidon's feedback, then report FINAL findings to leader.
-          STAY AVAILABLE for poseidon's consultation requests.")
-  olympus_register_agent_spawn(pipeline_id, "ares")
+Agent(name: "ares", team_name: ${TEAM},
+      subagent_type: "olympus:ares",
+      run_in_background: true,
+      prompt: "You are Ares, code quality reviewer. Artifact directory: ${ARTIFACT_DIR}/
+        IMMEDIATE TASK: DO NOT write files — you are read-only.
+        Read ${ARTIFACT_DIR}/pr-context.md, review-perspectives.md.
+        {If spec-context.md: 'Read spec-context.md for domain invariants.'}
+        Review ONLY changed files. Focus: defects, anti-patterns, SOLID.
+        Each finding: Severity (CRITICAL/WARNING/INFO), file:line, confidence 0-1, evidence.
+        MANDATORY CROSS-REFERENCE: After initial analysis, SendMessage(to: 'poseidon')
+        with your key findings and ask for security perspective.
+        Wait for poseidon's response, incorporate their feedback.
+        Output your full results as your final response.")
+olympus_register_agent_spawn(pipeline_id, "ares")
 
-IF "poseidon" not in team:
-  Agent(name: "poseidon", team_name: ${TEAM},
-        subagent_type: "olympus:poseidon",
-        run_in_background: true,
-        prompt: "You are Poseidon, security reviewer in ${TEAM}.
-          IMMEDIATE TASK: Read ${ARTIFACT_DIR}/pr-context.md.
-          Review ONLY changed files. Focus: OWASP Top 10, vulnerabilities, secrets, input validation.
-          Each finding: Severity, CWE, file:line, confidence 0-1, remediation.
-          MANDATORY CONSULTATION: After initial analysis, SendMessage(to: 'ares') to
-          share key security findings and request cross-check on code quality implications.
-          Incorporate ares's feedback, then report FINAL findings to leader.
-          STAY AVAILABLE for ares's consultation requests.")
-  olympus_register_agent_spawn(pipeline_id, "poseidon")
+Agent(name: "poseidon", team_name: ${TEAM},
+      subagent_type: "olympus:poseidon",
+      run_in_background: true,
+      prompt: "You are Poseidon, security reviewer. Artifact directory: ${ARTIFACT_DIR}/
+        IMMEDIATE TASK: DO NOT write files — you are read-only.
+        Read ${ARTIFACT_DIR}/pr-context.md.
+        {If spec-context.md: 'Read spec-context.md for security requirements.'}
+        Review ONLY changed files. Focus: OWASP Top 10, vulnerabilities, secrets, input validation.
+        Each finding: Severity, CWE, file:line, confidence 0-1, remediation.
+        MANDATORY CROSS-REFERENCE: After initial analysis, SendMessage(to: 'ares')
+        with your key security findings and ask for code quality perspective.
+        Wait for ares's response, incorporate their feedback.
+        Output your full results as your final response.")
+olympus_register_agent_spawn(pipeline_id, "poseidon")
 
-Send ALL review tasks in PARALLEL (hermes context already available):
+olympus_log_collaboration(pipeline_id, "ares", "poseidon", "코드품질↔보안 크로스레퍼런스")
 
-SendMessage(to: "ares", summary: "코드 품질 리뷰",
-  "DO NOT write files — you are read-only.
-   Context from hermes reconnaissance: ${ARTIFACT_DIR}/pr-context.md is ready.
-   Read pr-context.md, review-perspectives.md.
-   {If spec-context.md: 'Read spec-context.md for domain invariants.'}
-   Review ONLY changed files. Focus: defects, anti-patterns, SOLID.
-   Each finding: Severity (CRITICAL/WARNING/INFO), file:line, confidence 0-1, evidence.
-   MANDATORY CROSS-REFERENCE (§7): After initial analysis, SendMessage(to: 'poseidon')
-   with your key findings and ask for security perspective on same code areas.
-   Wait for poseidon's response, incorporate their feedback.
-   Report FINAL findings (with consultation evidence) to leader via SendMessage.")
-
-SendMessage(to: "poseidon", summary: "보안 리뷰",
-  "DO NOT write files — you are read-only.
-   Context from hermes reconnaissance: ${ARTIFACT_DIR}/pr-context.md is ready.
-   Read pr-context.md.
-   {If spec-context.md: 'Read spec-context.md for security requirements.'}
-   Review ONLY changed files. Focus: OWASP Top 10, vulnerabilities, secrets, input validation.
-   Each finding: Severity, CWE, file:line, confidence 0-1, remediation.
-   MANDATORY CROSS-REFERENCE (§7): After initial analysis, SendMessage(to: 'ares')
-   with your key security findings and ask for code quality perspective on same code areas.
-   Wait for ares's response, incorporate their feedback.
-   Report FINAL findings (with consultation evidence) to leader via SendMessage.")
-
-For dynamic perspectives: spawn general-purpose agents or reuse existing teammates.
-
-WAIT for ALL reviewers → leader aggregates into review-findings.md
+WAIT for ALL completion notifications → leader aggregates into review-findings.md
 olympus_record_execution for each reviewer
 ```
 
@@ -245,33 +199,24 @@ olympus_record_execution for each reviewer
 ## Step 7: Eris Adversarial Challenge
 
 ```
-IF "eris" not in team:
-  Agent(name: "eris", team_name: ${TEAM},
-        subagent_type: "olympus:eris",
-        run_in_background: true,
-        prompt: "You are Eris, adversarial challenger in ${TEAM}.
-          IMMEDIATE TASK: Read ${ARTIFACT_DIR}/review-findings.md and docs/shared/fallacy-catalog.md.
-          Challenge all findings for false positives, missing context, logical fallacies,
-          severity miscalibration, and cross-reviewer contradictions.
-          Report da-evaluation results to leader via SendMessage.
-          STAY AVAILABLE.")
-  olympus_register_agent_spawn(pipeline_id, "eris")
+eris_result = Agent(name: "eris", team_name: ${TEAM},
+      subagent_type: "olympus:eris",
+      prompt: "You are Eris. Artifact directory: ${ARTIFACT_DIR}/
+        IMMEDIATE TASK: DO NOT write files — you are read-only.
+        Read ${ARTIFACT_DIR}/review-findings.md.
+        Read docs/shared/fallacy-catalog.md.
+        {If spec-context.md: 'Read spec-context.md — challenge spec alignment.'}
+        Challenge findings:
+          - False positive detection
+          - Missing context (framework protections, existing mitigations)
+          - Logical fallacies
+          - Severity calibration
+          - Cross-reviewer contradictions
+        Max 2 rounds. Flag BLOCKING_QUESTIONs.
+        Output your full results as your final response.")
+olympus_register_agent_spawn(pipeline_id, "eris")
 
-SendMessage(to: "eris", summary: "DA 챌린지",
-  "DO NOT write files — you are read-only.
-   Read ${ARTIFACT_DIR}/review-findings.md.
-   Read docs/shared/fallacy-catalog.md.
-   {If spec-context.md: 'Read spec-context.md — challenge spec alignment.'}
-   Challenge findings:
-     - False positive detection
-     - Missing context (framework protections, existing mitigations)
-     - Logical fallacies
-     - Severity calibration
-     - Cross-reviewer contradictions
-   Max 2 rounds. Flag BLOCKING_QUESTIONs.
-   Report to leader.")
-
-WAIT → leader writes da-evaluation.md
+→ Write da-evaluation.md from eris_result
 olympus_record_execution(pipeline_id, "review-pr", "eris", ...)
 
 BLOCKING_QUESTION resolution:
@@ -285,36 +230,27 @@ BLOCKING_QUESTION resolution:
 ## Step 8: Nemesis Synthesis & Verdict
 
 ```
-IF "nemesis" not in team:
-  Agent(name: "nemesis", team_name: ${TEAM},
-        subagent_type: "olympus:nemesis",
-        run_in_background: true,
-        prompt: "You are Nemesis, cross-perspective synthesizer in ${TEAM}.
-          IMMEDIATE TASK: Read all artifacts in ${ARTIFACT_DIR}/:
-          pr-context.md (hermes), review-findings.md (ares + poseidon),
-          da-evaluation.md (eris). Synthesize a final verdict.
-          Report verdict to leader via SendMessage.
-          STAY AVAILABLE.")
-  olympus_register_agent_spawn(pipeline_id, "nemesis")
+nemesis_result = Agent(name: "nemesis", team_name: ${TEAM},
+      subagent_type: "olympus:nemesis",
+      prompt: "You are Nemesis. Artifact directory: ${ARTIFACT_DIR}/
+        IMMEDIATE TASK: DO NOT write files — you are read-only.
+        Read ALL agent results:
+        - pr-context.md (hermes reconnaissance)
+        - review-findings.md (ares code quality + poseidon security, with cross-reference evidence)
+        - da-evaluation.md (eris adversarial challenge)
+        {If spec-context.md: 'Read spec-context.md.'}
+        Synthesize (reference each agent's contribution explicitly):
+          1. Incorporate DA results (downgrade false positives, boost confirmed)
+          2. Deduplicate (file:line proximity within 5 lines)
+          3. Cross-perspective patterns (same issue by ares + poseidon cross-reference)
+          4. Blind spots (changed files with zero findings)
+          5. Confidence calibration per finding
+        Verdict: APPROVE / REQUEST_CHANGES / COMMENT_ONLY.
+        Include consultation evidence from ares-poseidon cross-reference in verdict rationale.
+        Output your full results as your final response.")
+olympus_register_agent_spawn(pipeline_id, "nemesis")
 
-SendMessage(to: "nemesis", summary: "종합 판정",
-  "DO NOT write files — you are read-only.
-   Read ALL agent results:
-   - pr-context.md (hermes reconnaissance)
-   - review-findings.md (ares code quality + poseidon security, with cross-reference evidence)
-   - da-evaluation.md (eris adversarial challenge)
-   {If spec-context.md: 'Read spec-context.md.'}
-   Synthesize (reference each agent's contribution explicitly):
-     1. Incorporate DA results (downgrade false positives, boost confirmed)
-     2. Deduplicate (file:line proximity within 5 lines)
-     3. Cross-perspective patterns (same issue by ares + poseidon cross-reference)
-     4. Blind spots (changed files with zero findings)
-     5. Confidence calibration per finding
-   Verdict: APPROVE / REQUEST_CHANGES / COMMENT_ONLY.
-   Include consultation evidence from ares-poseidon cross-reference in verdict rationale.
-   Report to leader.")
-
-WAIT → leader writes verdict.md
+→ Write verdict.md from nemesis_result
 olympus_record_execution(pipeline_id, "review-pr", "nemesis", ...)
 
 Gate check:

@@ -91,23 +91,20 @@ When activated:
 ## Step 3: Helios Perspective Generation
 
 ```
-IF "helios" not in team:
-  Agent(name: "helios", team_name: ${TEAM},
-        subagent_type: "olympus:helios",
-        run_in_background: true,
-        prompt: "You are Helios in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-          IMMEDIATE TASK: Generate analysis perspectives.
-          DO NOT write files — you are read-only.
-          Read ${ARTIFACT_DIR}/spec.md. Read codebase-context.md if present.
-          Read source-catalog.md if present.
-          Evaluate 6 complexity dimensions: Domain, Technical, Risk, Stakeholders, Timeline, Novelty.
-          Derive 3-6 orthogonal perspectives. Apply quality gate (overlap < 20%).
-          Map analyst agents: Code quality → ares, Security → poseidon, Architecture → zeus.
-          When done: SendMessage(to: 'leader', summary: '관점 생성 완료', '{perspectives}')
-          Then STAY AVAILABLE.")
-  olympus_register_agent_spawn(pipeline_id, "helios")
+helios_result = Agent(name: "helios", team_name: ${TEAM},
+      subagent_type: "olympus:helios",
+      prompt: "You are Helios in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        IMMEDIATE TASK: Generate analysis perspectives.
+        DO NOT write files — you are read-only.
+        Read ${ARTIFACT_DIR}/spec.md. Read codebase-context.md if present.
+        Read source-catalog.md if present.
+        Evaluate 6 complexity dimensions: Domain, Technical, Risk, Stakeholders, Timeline, Novelty.
+        Derive 3-6 orthogonal perspectives. Apply quality gate (overlap < 20%).
+        Map analyst agents: Code quality → ares, Security → poseidon, Architecture → zeus.
+        Output your full results as your final response.")
+olympus_register_agent_spawn(pipeline_id, "helios")
 
-WAIT → leader writes perspectives.md
+→ Write perspectives.md from helios_result
 olympus_record_execution(pipeline_id, "pantheon", "helios", ...)
 ```
 
@@ -131,73 +128,59 @@ Generate context.md: spec + perspectives + ontology synthesis
 ```
 Spawn analyst teammates (lazy — skip if already in team):
 
-IF "ares" not in team:
-  Agent(name: "ares", team_name: ${TEAM},
-        subagent_type: "olympus:ares",
-        run_in_background: true,
-        prompt: "You are Ares in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-          IMMEDIATE TASK: Analyze from Code Quality perspective.
-          DO NOT write files — you are read-only.
-          Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
-          Read source-scope-analyst.md if present.
-          Include file:line evidence for all findings.
-          MANDATORY CROSS-REFERENCE: After your initial analysis, share key findings with 'poseidon':
-            SendMessage(to: 'poseidon', summary: '코드품질→보안 크로스레퍼런스',
-              'My key findings: {top 3 issues}. Questions:
-               1. Do any of these have security implications?
-               2. Are there security concerns I should factor into priority?')
-          Wait for poseidon's response. Incorporate security feedback into final report.
-          When done: SendMessage(to: 'leader', summary: '코드 품질 분석 완료',
-            '{findings + poseidon consultation log}')
-          Then STAY AVAILABLE for Tribunal.")
-  olympus_register_agent_spawn(pipeline_id, "ares")
+Spawn ares + poseidon IN PARALLEL (BACKGROUND, with cross-reference):
 
-IF "poseidon" not in team:
-  Agent(name: "poseidon", team_name: ${TEAM},
-        subagent_type: "olympus:poseidon",
-        run_in_background: true,
-        prompt: "You are Poseidon in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-          IMMEDIATE TASK: Analyze from Security perspective.
-          DO NOT write files — you are read-only.
-          Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
-          OWASP Top 10 + project-specific security scan. Include file:line evidence.
-          MANDATORY CROSS-REFERENCE: After your initial analysis, share key findings with 'ares':
-            SendMessage(to: 'ares', summary: '보안→코드품질 크로스레퍼런스',
-              'My security findings: {top concerns}. Questions:
-               1. Do the code quality issues you found compound these risks?
-               2. Any refactoring that could inadvertently fix/worsen security?')
-          Wait for ares's response. Incorporate quality feedback into final report.
-          When done: SendMessage(to: 'leader', summary: '보안 분석 완료',
-            '{findings + ares consultation log}')
-          Then STAY AVAILABLE.")
-  olympus_register_agent_spawn(pipeline_id, "poseidon")
+Agent(name: "ares", team_name: ${TEAM},
+      subagent_type: "olympus:ares",
+      run_in_background: true,
+      prompt: "You are Ares in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        IMMEDIATE TASK: Analyze from Code Quality perspective.
+        DO NOT write files — you are read-only.
+        Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
+        Read source-scope-analyst.md if present.
+        Include file:line evidence for all findings.
+        MANDATORY CROSS-REFERENCE: After your initial analysis, share key findings with 'poseidon':
+          SendMessage(to: 'poseidon', summary: '코드품질→보안 크로스레퍼런스',
+            'My key findings: {top 3 issues}. Questions:
+             1. Do any of these have security implications?
+             2. Are there security concerns I should factor into priority?')
+        Wait for poseidon's response. Incorporate security feedback into final report.
+        Output your full results as your final response.")
+olympus_register_agent_spawn(pipeline_id, "ares")
 
-IF architecture perspective AND "zeus" not in team:
-  Agent(name: "zeus", team_name: ${TEAM},
+Agent(name: "poseidon", team_name: ${TEAM},
+      subagent_type: "olympus:poseidon",
+      run_in_background: true,
+      prompt: "You are Poseidon in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        IMMEDIATE TASK: Analyze from Security perspective.
+        DO NOT write files — you are read-only.
+        Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
+        OWASP Top 10 + project-specific security scan. Include file:line evidence.
+        MANDATORY CROSS-REFERENCE: After your initial analysis, share key findings with 'ares':
+          SendMessage(to: 'ares', summary: '보안→코드품질 크로스레퍼런스',
+            'My security findings: {top concerns}. Questions:
+             1. Do the code quality issues you found compound these risks?
+             2. Any refactoring that could inadvertently fix/worsen security?')
+        Wait for ares's response. Incorporate quality feedback into final report.
+        Output your full results as your final response.")
+olympus_register_agent_spawn(pipeline_id, "poseidon")
+
+IF architecture perspective:
+  zeus_result = Agent(name: "zeus", team_name: ${TEAM},
         subagent_type: "olympus:zeus",
-        run_in_background: true,
         prompt: "You are Zeus in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
           IMMEDIATE TASK: Analyze from Architecture perspective.
           DO NOT write files — you are read-only.
           Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
           Analyze from Architecture perspective (Analysis_Mode, not Planning).
-          CROSS-REFERENCE: Share architectural concerns with 'ares' and 'poseidon':
-            SendMessage(to: 'ares', summary: '아키텍처→코드품질 크로스레퍼런스', '{concerns}')
-            SendMessage(to: 'poseidon', summary: '아키텍처→보안 크로스레퍼런스', '{concerns}')
-          Incorporate their feedback, then report FINAL findings to leader.
-          When done: SendMessage(to: 'leader', summary: '아키텍처 분석 완료',
-            '{findings + consultation log}')
-          Then STAY AVAILABLE.")
+          Output your full results as your final response.")
   olympus_register_agent_spawn(pipeline_id, "zeus")
 
-Note: ares and poseidon run IN PARALLEL. Both do initial analysis, then CROSS-REFERENCE.
-The cross-reference exchange happens directly between them — leader only receives final results.
+Note: ares and poseidon run IN PARALLEL with CROSS-REFERENCE via SendMessage.
+Results come via background completion notifications.
 olympus_log_collaboration(pipeline_id, "ares", "poseidon", "코드품질↔보안 크로스레퍼런스")
 
-For dynamic perspectives from Helios (already-spawned agents):
-  SendMessage(to: appropriate analyst, ...)
-
-WAIT for ALL analysts → leader aggregates into analyst-findings.md
+WAIT for ALL completion notifications → leader aggregates into analyst-findings.md
 olympus_record_execution for each analyst
 ```
 
@@ -206,26 +189,22 @@ olympus_record_execution for each analyst
 ## Step 6: Eris DA Challenge
 
 ```
-IF "eris" not in team:
-  Agent(name: "eris", team_name: ${TEAM},
-        subagent_type: "olympus:eris",
-        run_in_background: true,
-        prompt: "You are Eris in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-          IMMEDIATE TASK: Challenge all analyst findings with DA methodology.
-          DO NOT write files — you are read-only.
-          Read ${ARTIFACT_DIR}/analyst-findings.md.
-          Read docs/shared/fallacy-catalog.md.
-          Read source-scope-da.md if present.
-          Challenge all findings: detect fallacies, false positives, missing evidence.
-          Max 2 challenge-response rounds.
-          BLOCKING_QUESTIONs: tool-solvable → resolve, user-only → flag.
-          Verdict: SUFFICIENT / NOT_SUFFICIENT / NEEDS_TRIBUNAL.
-          When done: SendMessage(to: 'leader', summary: 'DA 챌린지 완료 — {verdict}',
-            '{evaluation + challenge log}')
-          Then STAY AVAILABLE.")
-  olympus_register_agent_spawn(pipeline_id, "eris")
+eris_result = Agent(name: "eris", team_name: ${TEAM},
+      subagent_type: "olympus:eris",
+      prompt: "You are Eris in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        IMMEDIATE TASK: Challenge all analyst findings with DA methodology.
+        DO NOT write files — you are read-only.
+        Read ${ARTIFACT_DIR}/analyst-findings.md.
+        Read docs/shared/fallacy-catalog.md.
+        Read source-scope-da.md if present.
+        Challenge all findings: detect fallacies, false positives, missing evidence.
+        Max 2 challenge-response rounds.
+        BLOCKING_QUESTIONs: tool-solvable → resolve, user-only → flag.
+        Verdict: SUFFICIENT / NOT_SUFFICIENT / NEEDS_TRIBUNAL.
+        Output your full results as your final response.")
+olympus_register_agent_spawn(pipeline_id, "eris")
 
-WAIT → leader writes da-evaluation.md
+→ Write da-evaluation.md from eris_result
 olympus_record_execution(pipeline_id, "pantheon", "eris", ...)
 ```
 

@@ -159,11 +159,12 @@ maxTurns: 25
 
   <Teammate_Protocol>
     You operate as a **teammate** in team "${TEAM}".
-    You can write files directly AND communicate via SendMessage.
+    You can write files directly AND communicate via SendMessage for inter-agent coordination.
+    Results are delivered as your final text output — the orchestrator captures this directly.
+    Do NOT use SendMessage(to: "leader") — "leader" is not a valid teammate name.
 
     Teammates you may contact:
     - "hermes": codebase exploration — CONSULT before making architectural assumptions
-    - "leader": submit plan for review
 
     CONSULTATION PROTOCOL:
     Before finalizing the plan, query hermes for codebase structure verification:
@@ -172,8 +173,9 @@ maxTurns: 25
     Do NOT explore the codebase yourself when hermes is available — delegate.
 
     When your task is complete:
-      → SendMessage(to: "leader", summary: "구현 계획 수립 완료",
-          "{plan summary + hermes consultation log}")
+      → Output your full results as your final response:
+          "{plan summary + hermes consultation log}"
+      → The orchestrator captures your output directly.
 
     When receiving Themis REVISE feedback:
       → You REMEMBER the original plan — fix precisely what Themis flagged
