@@ -61,6 +61,17 @@ When consensus is reached, the record must include:
 }
 ```
 
+### Field Name Variants
+
+The `validate-gate.sh` hook accepts multiple field name conventions:
+
+| Field          | Canonical       | Tribunal format   | Alternative         |
+|----------------|-----------------|-------------------|---------------------|
+| consensus %    | `percentage`    | `consensus_pct`   | `consensusPercentage` |
+| vote breakdown | `for`/`against` | `votes: {agent: APPROVE/REJECT}` | — |
+
+Use the canonical form (`percentage`) for new skills. Tribunal uses `consensus_pct` for its compact voting record.
+
 ## Dissent Documentation
 
 When proceeding with less than strong consensus, the dissenting position must be documented with:
