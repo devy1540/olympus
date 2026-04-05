@@ -161,7 +161,7 @@ Situations requiring user intervention:
 |-----------|---------|-------------|
 | Repeated gate failure | Max retries exceeded | Override / Rewind / Abort |
 | No consensus reached | Consensus < 60% twice in a row | Decide / Add perspectives / Abort |
-| Repeated Themis rejection | REVISE twice consecutively | Agora debate / Override / Abort |
+| Repeated Themis rejection | REVISE 3 times consecutively | Agora debate / Override / Abort |
 | Repeated evaluation failure | evaluationPass >= 3 | Genesis rewind / Override / Abort |
 | Stagnation detected | Spinning/Oscillation/Diminishing | Persona switch / Change benchmark / Abort |
 
@@ -290,18 +290,18 @@ structured dialog. The distinction: dialog agents always have an active task (in
 just need user input relayed by the leader to continue. Spawn Apollo with the initial interview task;
 subsequent rounds are driven by leader SendMessage with user answers.
 
-**CRITICAL: Leader name must be injected at spawn time.**
+**Leader name: always "team-lead" (literal).**
 
-The leader's name varies by CC version ("team-lead", "main", etc.). Hard-coding any name will break.
-At skill start, read the leader name from team config and inject it into every agent spawn prompt.
+The leader's name in CC's team system is always "team-lead". All agents use this literal value.
+No dynamic lookup needed — "team-lead" is universal.
 
 ```
 # Step 1: Read leader name after TeamCreate
-LEADER_NAME = Read ~/.claude/teams/${TEAM}/config.json → members[0].name
+LEADER_NAME = "team-lead"  # literal, no config read needed
 ```
 
 **CRITICAL: `SendMessage(to: "leader")` is BANNED.**
-"leader" is not a valid teammate name. Use `SendMessage(to: "${LEADER_NAME}")` instead.
+"leader" is not a valid teammate name. Use `SendMessage(to: "team-lead")` instead.
 
 **Proactive Spawn Pattern** (mandatory for all SKILL.md):
 ```
@@ -309,18 +309,18 @@ LEADER_NAME = Read ~/.claude/teams/${TEAM}/config.json → members[0].name
 Agent(name: "{agent}", team_name: "${TEAM}", subagent_type: "olympus:{agent}",
       run_in_background: true,
       prompt: "You are {Agent} in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-        LEADER_NAME: ${LEADER_NAME}
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: {concrete task description with all context}.
-        When done: SendMessage(to: '${LEADER_NAME}', summary: '{완료 요약}', '{결과}')
+        When done: SendMessage(to: 'team-lead', summary: '{완료 요약}', '{결과}')
         For inter-agent queries: SendMessage(to: '{peer_name}', ...)")
 olympus_register_agent_spawn(pipeline_id, "{agent}")
 → WAIT for SendMessage in leader inbox → Write artifact
 
 # PARALLEL SPAWN — same pattern, multiple agents
 Agent(name: "{agent_a}", ..., run_in_background: true,
-      prompt: "... LEADER_NAME: ${LEADER_NAME}
+      prompt: "... LEADER_NAME: team-lead
         IMMEDIATE TASK: {task}. Cross-reference with '{agent_b}' via SendMessage.
-        When done: SendMessage(to: '${LEADER_NAME}', ...)")
+        When done: SendMessage(to: 'team-lead', ...)")
 Agent(name: "{agent_b}", ..., run_in_background: true, ...)
 → WAIT for both SendMessages in leader inbox → aggregate results
 ```
@@ -329,7 +329,7 @@ Agent(name: "{agent_b}", ..., run_in_background: true, ...)
 Teammates CANNOT use AskUserQuestion — only the leader can interact with the user.
 For agents like Apollo (interviewer):
 ```
-Apollo: generates questions → SendMessage(to: '${LEADER_NAME}', "Ask user: {questions}")
+Apollo: generates questions → SendMessage(to: 'team-lead', "Ask user: {questions}")
 Leader: AskUserQuestion({questions from apollo})
 User: answers
 Leader: SendMessage(to: "apollo", "User answered: {answers}")
@@ -340,7 +340,7 @@ Apollo: processes answers → next question or completion
 | Aspect | Old (BANNED) | New (Proactive + SendMessage) |
 |:-------|:-------------|:-----------------------------|
 | Spawn prompt | "Wait for messages" | Concrete task + LEADER_NAME injection |
-| Result delivery | `SendMessage(to: "leader")` ❌ | `SendMessage(to: "${LEADER_NAME}")` ✅ |
+| Result delivery | `SendMessage(to: "leader")` ❌ | `SendMessage(to: "team-lead")` ✅ |
 | Leader name | Hard-coded | Read from team config at runtime |
 | User interaction | Agent uses AskUserQuestion ❌ | Leader proxies AskUserQuestion ✅ |
 | Inter-agent | SendMessage(to: "{peer}") | Same ✅ |
