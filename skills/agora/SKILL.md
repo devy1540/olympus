@@ -172,7 +172,11 @@ FOR each round (max 3):
          Present: preferred option from UX perspective + evidence.
          Output your position as your final response.")
 
+     olympus_register_agent_spawn(pipeline_id, "zeus-r{n}")
+     olympus_register_agent_spawn(pipeline_id, "ares-r{n}")
+     olympus_register_agent_spawn(pipeline_id, "ux-r{n}")
      WAIT for all completion notifications → leader collects positions
+     → Write committee-positions.md (aggregate all round positions)
 
      Round {n > 1} — REACTIVE positions (include prior round context in prompt):
      Same pattern but prompt includes: "Prior round positions: {summary}
@@ -182,11 +186,18 @@ FOR each round (max 3):
      Compare each member's preference. Articulate points of disagreement.
 
   3. Cross-questioning (if disagreements — FOREGROUND sequential):
-     ares_rebuttal = Agent(name: "ares-cross", subagent_type: "olympus:ares",
-       prompt: "Zeus argues: {zeus_position_verbatim}. Counter-argue with specific technical evidence.")
+     ares_rebuttal = Agent(name: "ares-cross", team_name: ${TEAM}, subagent_type: "olympus:ares",
+       prompt: "LEADER_NAME: team-lead
+         DO NOT write files — you are read-only.
+         Zeus argues: {zeus_position_verbatim}. Counter-argue with specific technical evidence.
+         Output your rebuttal as your final response.")
+     olympus_register_agent_spawn(pipeline_id, "ares-cross")
 
-     zeus_rebuttal = Agent(name: "zeus-cross", subagent_type: "olympus:zeus",
-       prompt: "Ares argues: {ares_position_verbatim}. Respond to ares's specific objections.")
+     zeus_rebuttal = Agent(name: "zeus-cross", team_name: ${TEAM}, subagent_type: "olympus:zeus",
+       prompt: "LEADER_NAME: team-lead
+         Ares argues: {ares_position_verbatim}. Respond to ares's specific objections.
+         Output your rebuttal as your final response.")
+     olympus_register_agent_spawn(pipeline_id, "zeus-cross")
 
   4. Measure consensus (per consensus-levels.md):
      - Strong (3/3): unanimous → exit
@@ -217,15 +228,18 @@ olympus_register_agent_spawn(pipeline_id, "eris")
 olympus_record_execution(pipeline_id, "agora", "eris", ...)
 
 Committee response (MANDATORY — FOREGROUND sequential):
-  zeus_response = Agent(name: "zeus-resp", subagent_type: "olympus:zeus",
+  zeus_response = Agent(name: "zeus-resp", team_name: ${TEAM}, subagent_type: "olympus:zeus",
     prompt: "LEADER_NAME: team-lead
       Eris challenged your position: {eris_challenge}. Respond specifically.
       Output your response as your final response.")
-  ares_response = Agent(name: "ares-resp", subagent_type: "olympus:ares",
+  olympus_register_agent_spawn(pipeline_id, "zeus-resp")
+  ares_response = Agent(name: "ares-resp", team_name: ${TEAM}, subagent_type: "olympus:ares",
     prompt: "LEADER_NAME: team-lead
       DO NOT write files — you are read-only.
       Eris challenged your position: {eris_challenge}. Respond specifically.
       Output your response as your final response.")
+  olympus_register_agent_spawn(pipeline_id, "ares-resp")
+  → Write da-challenges.md from eris_challenge + committee responses
   → Re-measure consensus if changed
 ```
 

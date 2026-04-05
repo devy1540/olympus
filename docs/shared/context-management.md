@@ -132,6 +132,14 @@ AFTER pruning:
 | gen-{n} → gen-{n+1} | Drop gen-{n-2} and older from active context (on-disk only) |
 | Stagnation → Persona | Summarize last 3 generations' mutations to a diff |
 
+### Review-PR
+| Transition | Compaction Action |
+|-----------|-------------------|
+| Hermes → Helios | pr-context.md is already compact; carry as-is |
+| Helios → Reviewers | review-perspectives.md is small; carry as-is |
+| Reviewers → Eris | Summarize review-findings.md to top-N findings per severity (drop low-confidence) |
+| Eris → Nemesis | Carry da-evaluation.md full; reviewers' raw findings already in review-findings.md |
+
 ---
 
 ## 4. Orchestrator Responsibility
