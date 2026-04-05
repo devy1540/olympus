@@ -214,29 +214,43 @@ RESULT=$(run_hook "$SCRIPT_DIR/validate-state.sh" \
   "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"pantheon","gates":{"ambiguityScore":0.35}}')
 check_result "Odyssey: pantheon with ambiguity 0.35 > 0.2 → deny" "$RESULT" "deny"
 
+# Gate precondition: planning phase with low consensus → deny
+echo '{"phase":"pantheon"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.006.json"
+echo "  [odyssey] pantheon→planning with insufficient consensus"
+RESULT=$(run_hook "$SCRIPT_DIR/validate-state.sh" \
+  "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"planning","gates":{"consensusLevel":0.5}}')
+check_result "Odyssey: planning with consensusLevel 0.5 < 0.66 → deny" "$RESULT" "deny"
+
+# Gate precondition: planning phase with sufficient consensus (2/3) → allow
+echo '{"phase":"pantheon"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.007.json"
+echo "  [odyssey] pantheon→planning with 2/3 consensus"
+RESULT=$(run_hook "$SCRIPT_DIR/validate-state.sh" \
+  "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"planning","gates":{"consensusLevel":0.6667}}')
+check_result "Odyssey: planning with consensusLevel 0.6667 (2/3) → allow" "$RESULT" "allow"
+
 # Gate precondition: execution phase with themisVerdict=APPROVE → allow
-echo '{"phase":"planning"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.006.json"
+echo '{"phase":"planning"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.008.json"
 echo "  [odyssey] planning→execution with APPROVE themisVerdict"
 RESULT=$(run_hook "$SCRIPT_DIR/validate-state.sh" \
   "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"execution","gates":{"themisVerdict":"APPROVE"}}')
 check_result "Odyssey: execution with APPROVE themisVerdict → allow" "$RESULT" "allow"
 
 # Gate precondition: execution phase with themisVerdict=REVISE → deny
-echo '{"phase":"planning"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.007.json"
+echo '{"phase":"planning"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.009.json"
 echo "  [odyssey] planning→execution with REVISE themisVerdict"
 RESULT=$(run_hook "$SCRIPT_DIR/validate-state.sh" \
   "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"execution","gates":{"themisVerdict":"REVISE"}}')
 check_result "Odyssey: execution with REVISE themisVerdict → deny" "$RESULT" "deny"
 
 # Rewind transition: tribunal→oracle via returnToPhase (REJECTED_SPEC)
-echo '{"phase":"tribunal"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.008.json"
+echo '{"phase":"tribunal"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.010.json"
 echo "  [odyssey] tribunal→oracle rewind (REJECTED_SPEC via returnToPhase)"
 RESULT=$(run_hook "$SCRIPT_DIR/validate-state.sh" \
   "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"oracle","transition":{"status":"terminal","reason":"rejected","returnToPhase":"oracle"}}')
 check_result "Odyssey: tribunal→oracle rewind (returnToPhase) → allow" "$RESULT" "allow"
 
 # Gate precondition: completed phase with mechanicalPass=false → deny
-echo '{"phase":"tribunal"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.009.json"
+echo '{"phase":"tribunal"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.011.json"
 echo "  [odyssey] tribunal→completed without mechanical pass"
 RESULT=$(run_hook "$SCRIPT_DIR/validate-state.sh" \
   "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"completed","gates":{"mechanicalPass":false}}')
