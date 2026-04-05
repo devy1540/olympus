@@ -261,7 +261,13 @@ if [[ "$FILENAME" == "odyssey-state.json" ]]; then
         fi
         ;;
       completed)
-        BUILD_PASS=$(echo "$CONTENT" | jq -r '.gates.mechanicalPass // .gates.buildPass // empty' 2>/dev/null || true)
+        # Use explicit null-check instead of // to handle JSON false correctly
+        # (jq // treats false as falsy and skips to next alternative)
+        BUILD_PASS=$(echo "$CONTENT" | jq -r '
+          if (.gates.mechanicalPass != null) then (.gates.mechanicalPass | tostring)
+          elif (.gates.buildPass != null) then (.gates.buildPass | tostring)
+          else empty end
+        ' 2>/dev/null || true)
         if [[ -n "$BUILD_PASS" && "$BUILD_PASS" != "true" ]]; then
           emit_deny \
             "STATE VIOLATION: completed phase requires gates.mechanicalPass = true, got ${BUILD_PASS}. Pass the mechanical gate first." \

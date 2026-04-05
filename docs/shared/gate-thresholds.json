@@ -10,9 +10,9 @@
     "description": "Ontology convergence similarity must be ≥ 0.95 to pass Genesis gate"
   },
   "consensus": {
-    "threshold": 0.67,
+    "threshold": 0.66,
     "operator": ">=",
-    "description": "Consensus percentage must be ≥ 67% to pass Pantheon/Tribunal gate"
+    "description": "Consensus percentage must be ≥ 66% (supermajority) to pass Pantheon/Tribunal gate. Set to 0.66 because 2/3 = 0.6667 must pass and float comparison is exact."
   },
   "semantic": {
     "threshold": 0.8,
