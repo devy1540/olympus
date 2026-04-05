@@ -368,6 +368,7 @@ Multi-perspective analysis with MANDATORY cross-reference between analysts.
    Note: ares and poseidon run IN PARALLEL. Both do initial analysis, then CROSS-REFERENCE.
    The cross-reference exchange happens directly between them via SendMessage.
    Results come via background completion notifications.
+   olympus_pipeline_status(pipeline_id)  # verify ares + poseidon are registered before waiting
    olympus_log_collaboration(pipeline_id, "ares", "poseidon", "코드품질↔보안 크로스레퍼런스")
 
    WAIT for both completion notifications → leader aggregates into analyst-findings.md
