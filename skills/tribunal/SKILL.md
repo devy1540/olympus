@@ -257,6 +257,7 @@ ELSE:
   MCP Tools:
   - olympus_start_pipeline: Step 1 (MUST)
   - olympus_register_agent_spawn: after each spawn (MUST)
+  - olympus_gate_check: Stage 3 consensus voting (MUST)
   - olympus_record_execution: after each agent (SHOULD)
   - olympus_log_collaboration: Stage 3 debate exchanges (SHOULD)
   - olympus_next_action: verdict failure recovery (SHOULD)

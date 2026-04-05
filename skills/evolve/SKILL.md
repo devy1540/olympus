@@ -214,6 +214,8 @@ Update evolve-state.json:
   { iteration, scores, changes, audit result }
 
 Convergence:
+  olympus_gate_check(pipeline_id, "semantic", overall_score)
+  # Also verify per-dimension minimums (gate-thresholds.json → evolve_dimension_minimum)
   IF overall >= 0.8 AND all 5 dimensions >= 0.6: converged → generate final report
   ELIF overall >= 0.8 BUT any dimension < 0.6: not converged — address weak dimension explicitly
   ELIF iteration >= maxIterations (5): AskUserQuestion [Continue, Accept, Reset]
@@ -240,6 +242,7 @@ Shutdown all teammates → TeamDelete
   MCP Tools:
   - olympus_start_pipeline: Step 1 (MUST)
   - olympus_register_agent_spawn: after each spawn (MUST)
+  - olympus_gate_check: Step 8 convergence check (MUST)
   - olympus_record_execution: after each agent (SHOULD)
 
   Team Tools:

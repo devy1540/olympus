@@ -108,6 +108,7 @@ Ported from Claude Code's pattern where subagents use `SendMessage` as their onl
 2. **Workers cannot modify orchestrator state** — no writing to odyssey-state.json, evolve-state.json, etc.
 3. **Workers communicate only via SendMessage** — results, errors, and BLOCKING_QUESTIONs all go through this channel.
 4. **Workers can Read any artifact in their directory** — but should only Read what's listed in their task.
+5. **Proactive Spawn (§6.3)** — Every agent receives its IMMEDIATE TASK in the spawn prompt and begins working immediately. "Wait for messages — do not act until prompted" is banned. SendMessage is only for follow-up collaboration, not initial task assignment.
 
 ---
 
