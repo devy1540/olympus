@@ -26,6 +26,7 @@ claude plugin install olympus@olympus-marketplace
 /olympus:evolve      # 플러그인 자가개선
 /olympus:setup       # 설치 검증 및 환경 체크
 /olympus:hestia      # 프로젝트 온보딩 및 가이드
+/olympus:review-pr   # 다관점 PR 리뷰 (Nemesis 종합)
 
 # 검증/테스트 (hooks/ 디렉토리의 셸 스크립트)
 bash hooks/validate-agents.sh    # 에이전트 정의 스키마 검증

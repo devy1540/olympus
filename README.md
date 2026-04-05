@@ -250,7 +250,7 @@ Benchmark → Dogfood → Evaluate (5 dims) → Diagnose → Refine → Audit �
 
 ---
 
-## The Fourteen Gods
+## The Fifteen Gods
 
 | Agent | Role | Model | Permissions |
 |:------|:-----|:-----:|:------------|
@@ -268,6 +268,7 @@ Benchmark → Dogfood → Evaluate (5 dims) → Diagnose → Refine → Audit �
 | **Hephaestus** | Mechanical Evaluator — build, lint, test, typecheck | sonnet | full |
 | **Eris** | Devil's Advocate — fallacy detection and challenges | opus | read-only |
 | **Helios** | Perspective Generator — orthogonal viewpoints | opus | read-only |
+| **Nemesis** | PR Review Synthesizer — finding deduplication and verdict | opus | read-only |
 
 ### The Delegation Pattern
 
