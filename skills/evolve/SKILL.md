@@ -162,6 +162,7 @@ Agent(name: "eris", team_name: ${TEAM},
         via SendMessage(to: 'metis').
         Output your full results as your final response.")
 olympus_register_agent_spawn(pipeline_id, "eris")
+olympus_pipeline_status(pipeline_id)  # verify metis + eris are registered before waiting
 
 DEADLOCK FALLBACK: metis sends draft to eris; eris challenges back. If 5 minutes elapse without both completing:
   → SendMessage(to: "metis", "Cross-verification timeout. Finalize diagnosis without eris response. Note 'eris consultation pending'.")
@@ -253,6 +254,7 @@ Shutdown all teammates → TeamDelete
   - olympus_register_agent_spawn: after each spawn (MUST)
   - olympus_gate_check: Step 8 convergence check (MUST)
   - olympus_next_action: Step 8 stagnation/retry recovery (SHOULD)
+  - olympus_pipeline_status: Step 5 after parallel spawn (SHOULD)
   - olympus_log_collaboration: Step 5 metis↔eris cross-verification (SHOULD)
   - olympus_record_execution: after each agent (SHOULD)
 
