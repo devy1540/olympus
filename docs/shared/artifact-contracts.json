@@ -3,6 +3,7 @@
     "codebase-context.md": {
       "phase": 1,
       "writer": "hermes",
+      "required_spawn": "hermes",
       "readers": ["apollo", "metis"],
       "writerRequires": ["Write"]
     },
@@ -10,6 +11,7 @@
       "phase": 2,
       "writer": "orchestrator",
       "source": "apollo",
+      "required_spawn": "apollo",
       "readers": ["metis"],
       "note": "Apollo는 SendMessage로 결과 전달, 오케스트레이터가 저장"
     },
@@ -17,6 +19,7 @@
       "phase": 2,
       "writer": "orchestrator",
       "source": "apollo",
+      "required_spawn": "apollo",
       "readers": ["gate-check"],
       "note": "Apollo는 SendMessage로 점수 전달, 오케스트레이터가 저장"
     },
@@ -24,6 +27,7 @@
       "phase": 4,
       "writer": "orchestrator",
       "source": "metis",
+      "required_spawn": "metis",
       "readers": ["zeus", "helios"],
       "note": "Metis는 SendMessage로 결과 전달, 오케스트레이터가 저장"
     },
@@ -53,6 +57,7 @@
       "phase": 2,
       "writer": "orchestrator",
       "source": "helios",
+      "required_spawn": "helios",
       "readers": ["all-agents"],
       "note": "Helios는 SendMessage로 결과 전달, 오케스트레이터가 저장"
     },
@@ -65,6 +70,7 @@
       "phase": 3,
       "writer": "orchestrator",
       "source": ["ares", "poseidon", "zeus"],
+      "required_spawn": ["ares", "poseidon"],
       "readers": ["eris"],
       "note": "분석 에이전트들은 SendMessage로 결과 전달, 오케스트레이터가 합산 저장"
     },
@@ -90,6 +96,7 @@
     "mechanical-result.json": {
       "phase": 1,
       "writer": "hephaestus",
+      "required_spawn": "hephaestus",
       "readers": ["athena"],
       "writerRequires": ["Write", "Bash"]
     },
@@ -97,6 +104,7 @@
       "phase": 2,
       "writer": "orchestrator",
       "source": "athena",
+      "required_spawn": "athena",
       "readers": ["stage-3"],
       "note": "Athena는 SendMessage로 결과 전달, 오케스트레이터가 저장"
     },
@@ -182,6 +190,7 @@
     "plan.md": {
       "phase": 4,
       "writer": "zeus",
+      "required_spawn": "zeus",
       "readers": ["themis", "prometheus"],
       "writerRequires": ["Write"]
     },

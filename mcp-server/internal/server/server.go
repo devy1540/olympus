@@ -175,20 +175,22 @@ func nextPhaseHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHandler
 			return mcpgo.NewToolResultError(fmt.Sprintf("다음 페이즈 조회 실패: %v", err)), nil
 		}
 
-		// Check spawn requirements before advancing
+		// Check spawn requirements before advancing — BLOCKING if missing
 		p, _ := st.GetPipeline(pipelineID)
 		spawnReport, _ := gate.CheckRequiredSpawns(st, cfg, pipelineID, p.Skill)
 
-		result := map[string]any{
-			"next_phase":   next,
-			"alternatives": alternatives,
-		}
 		if spawnReport != nil && !spawnReport.AllSpawned {
-			result["spawn_warning"] = fmt.Sprintf("미스폰 에이전트: %v", spawnReport.Missing)
-			result["missing_spawns"] = spawnReport.Missing
+			return mcpgo.NewToolResultError(fmt.Sprintf(
+				"페이즈 전환 차단: 필수 에이전트 미스폰 %v. "+
+					"olympus_register_agent_spawn으로 스폰 등록 후 다시 호출하세요. "+
+					"§0: 에이전트 스폰 없이 직접 작업하면 안 됩니다.",
+				spawnReport.Missing)), nil
 		}
 
-		return toResult(result)
+		return toResult(map[string]any{
+			"next_phase":   next,
+			"alternatives": alternatives,
+		})
 	}
 }
 
