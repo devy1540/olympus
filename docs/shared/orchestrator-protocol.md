@@ -283,37 +283,60 @@ The old pattern (`Agent(prompt: "Wait for messages")` → later `SendMessage(tas
 - Task delivery failures when SendMessage doesn't reach the idle agent
 - Leader falling back to direct execution (§0 violation)
 
-**CRITICAL: `SendMessage(to: "leader")` is BANNED.**
+**CRITICAL: Leader name must be injected at spawn time.**
 
-"leader" is not a valid teammate name — the orchestrator is the parent process, not a named teammate. Agent results are delivered via the Agent tool's return value, not via SendMessage.
+The leader's name varies by CC version ("team-lead", "main", etc.). Hard-coding any name will break.
+At skill start, read the leader name from team config and inject it into every agent spawn prompt.
+
+```
+# Step 1: Read leader name after TeamCreate
+LEADER_NAME = Read ~/.claude/teams/${TEAM}/config.json → members[0].name
+```
+
+**CRITICAL: `SendMessage(to: "leader")` is BANNED.**
+"leader" is not a valid teammate name. Use `SendMessage(to: "${LEADER_NAME}")` instead.
 
 **Proactive Spawn Pattern** (mandatory for all SKILL.md):
 ```
-# SEQUENTIAL SPAWN (FOREGROUND) — result captured directly
-result = Agent(name: "{agent}", team_name: "${TEAM}", subagent_type: "olympus:{agent}",
-      prompt: "You are {Agent} in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-        IMMEDIATE TASK: {concrete task description with all context}.
-        Output your full results as your final response.")
-olympus_register_agent_spawn(pipeline_id, "{agent}")
-→ Write artifact from result
-
-# PARALLEL SPAWN (BACKGROUND) — result via completion notification
-Agent(name: "{agent_a}", team_name: "${TEAM}", subagent_type: "olympus:{agent_a}",
+# SEQUENTIAL SPAWN — agent sends result via SendMessage, leader reads from inbox
+Agent(name: "{agent}", team_name: "${TEAM}", subagent_type: "olympus:{agent}",
       run_in_background: true,
-      prompt: "IMMEDIATE TASK: {task}. Cross-reference with '{agent_b}' via SendMessage.
-        Output your full results as your final response.")
+      prompt: "You are {Agent} in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        LEADER_NAME: ${LEADER_NAME}
+        IMMEDIATE TASK: {concrete task description with all context}.
+        When done: SendMessage(to: '${LEADER_NAME}', summary: '{완료 요약}', '{결과}')
+        For inter-agent queries: SendMessage(to: '{peer_name}', ...)")
+olympus_register_agent_spawn(pipeline_id, "{agent}")
+→ WAIT for SendMessage in leader inbox → Write artifact
+
+# PARALLEL SPAWN — same pattern, multiple agents
+Agent(name: "{agent_a}", ..., run_in_background: true,
+      prompt: "... LEADER_NAME: ${LEADER_NAME}
+        IMMEDIATE TASK: {task}. Cross-reference with '{agent_b}' via SendMessage.
+        When done: SendMessage(to: '${LEADER_NAME}', ...)")
 Agent(name: "{agent_b}", ..., run_in_background: true, ...)
-→ WAIT for both completion notifications → aggregate results
+→ WAIT for both SendMessages in leader inbox → aggregate results
+```
+
+**User-facing tools (AskUserQuestion):**
+Teammates CANNOT use AskUserQuestion — only the leader can interact with the user.
+For agents like Apollo (interviewer):
+```
+Apollo: generates questions → SendMessage(to: '${LEADER_NAME}', "Ask user: {questions}")
+Leader: AskUserQuestion({questions from apollo})
+User: answers
+Leader: SendMessage(to: "apollo", "User answered: {answers}")
+Apollo: processes answers → next question or completion
 ```
 
 **Key differences from old pattern:**
-| Aspect | Old (BANNED) | New (Proactive + Direct Result) |
-|:-------|:-------------|:-------------------------------|
-| Spawn prompt | "Wait for messages" | Concrete task + context |
-| Result delivery | `SendMessage(to: "leader")` ❌ | Agent return value ✅ |
-| Sequential steps | `run_in_background: true` + WAIT | Foreground (no background) |
-| Parallel steps | Background + `SendMessage(to: "leader")` | Background + completion notification |
-| After first task | "Stay available" (agent never finishes) | Agent finishes, re-spawn if needed |
+| Aspect | Old (BANNED) | New (Proactive + SendMessage) |
+|:-------|:-------------|:-----------------------------|
+| Spawn prompt | "Wait for messages" | Concrete task + LEADER_NAME injection |
+| Result delivery | `SendMessage(to: "leader")` ❌ | `SendMessage(to: "${LEADER_NAME}")` ✅ |
+| Leader name | Hard-coded | Read from team config at runtime |
+| User interaction | Agent uses AskUserQuestion ❌ | Leader proxies AskUserQuestion ✅ |
+| Inter-agent | SendMessage(to: "{peer}") | Same ✅ |
 
 **Sequential spawn within a phase:**
 Agents with dependencies are spawned SEQUENTIALLY in FOREGROUND:

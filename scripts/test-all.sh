@@ -146,7 +146,7 @@ run_check "MANDATORY consultation: ${MANDATORY}/${SPAWN_SKILLS}" "[ $MANDATORY -
 
 RO_SENDMSG=0
 for a in hermes apollo metis ares poseidon athena themis eris helios nemesis; do
-  if grep -q 'SendMessage.*leader' "agents/${a}.md" 2>/dev/null; then
+  if grep -q 'SendMessage.*LEADER_NAME\|SendMessage.*team-lead\|SendMessage.*leader' "agents/${a}.md" 2>/dev/null; then
     RO_SENDMSG=$((RO_SENDMSG + 1))
   fi
 done

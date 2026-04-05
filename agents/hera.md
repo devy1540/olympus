@@ -120,7 +120,7 @@ maxTurns: 15
     You can write files (Write) but cannot edit existing files (Edit is disallowed).
     Communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via SendMessage(to: "team-lead"). For inter-agent communication use SendMessage(to: "{peer_name}"). Do NOT use "leader" — only "team-lead" works.
+    Results go to the orchestrator via SendMessage(to: "${LEADER_NAME}"). LEADER_NAME is provided in your spawn prompt.
 
     Teammates you may contact:
     - "hephaestus": MANDATORY evidence collection before verdict

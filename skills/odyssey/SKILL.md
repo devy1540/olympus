@@ -155,21 +155,30 @@ Agents are spawned SEQUENTIALLY with IMMEDIATE TASKS — not all at once.
    → Write codebase-context.md from hermes_result
    olympus_record_execution(pipeline_id, "oracle", "hermes", ...)
 
-3. SPAWN apollo with IMMEDIATE TASK (after hermes completes, FOREGROUND):
+3. SPAWN apollo with IMMEDIATE TASK (BACKGROUND — uses SendMessage for interview proxy):
 
-   apollo_result = Agent(name: "apollo", team_name: ${TEAM},
+   Agent(name: "apollo", team_name: ${TEAM},
          subagent_type: "olympus:apollo",
+         run_in_background: true,
          prompt: "You are Apollo in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+           LEADER_NAME: ${LEADER_NAME}
            IMMEDIATE TASK: Conduct Socratic interview about: {user_input}. Complexity: {level}.
            DO NOT write files — you are read-only.
            Read ${ARTIFACT_DIR}/codebase-context.md for project context.
-           Interview rules: One question at a time via AskUserQuestion.
+           IMPORTANT: You CANNOT use AskUserQuestion directly.
+           Instead, send each question to the leader:
+             SendMessage(to: '${LEADER_NAME}', summary: '인터뷰 질문 {n}', '{질문 + 컨텍스트 + 선택지}')
+           The leader will proxy the question to the user and relay the answer back to you.
+           Wait for the leader's response before generating the next question.
            Track ambiguity scores internally. Terminate when ambiguity ≤ 0.2 or max 10 rounds.
-           Output your full results as your final response:
-             interview log + ambiguity scores.")
+           When done: SendMessage(to: '${LEADER_NAME}', summary: '인터뷰 완료', '{interview log + scores}')")
    olympus_register_agent_spawn(pipeline_id, "apollo")
 
-   → Write interview-log.md + ambiguity-scores.json from apollo_result
+   INTERVIEW PROXY LOOP (leader):
+     FOR each message from apollo:
+       IF apollo sends a question → AskUserQuestion({apollo's question})
+       → SendMessage(to: "apollo", "User answered: {answer}")
+       IF apollo sends completion → Write interview-log.md + ambiguity-scores.json
    olympus_record_execution(pipeline_id, "oracle", "apollo", ...)
 
 4. Ambiguity gate:

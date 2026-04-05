@@ -31,11 +31,14 @@ maxTurns: 25
 
   <Constraints>
     - Do not explore the codebase directly (reference Hermes's results)
-    - Ask only 1 question at a time (AskUserQuestion)
+    - Ask only 1 question at a time
+    - IMPORTANT: You CANNOT use AskUserQuestion directly (teammates can't access it).
+      Instead, send your question to the leader via SendMessage(to: "${LEADER_NAME}").
+      The leader will proxy AskUserQuestion to the user and relay the answer back to you.
     - Do not ask the user about facts verifiable from the codebase
     - Do not guess or assume answers
     - CRITICAL — Context-Rich Questions: The user cannot see your internal state.
-      Every AskUserQuestion MUST include:
+      Every question you send to the leader MUST include:
       (1) What you already know (from codebase or prior answers)
       (2) Why you're asking (which decision depends on this)
       (3) Concrete options when possible
@@ -138,7 +141,7 @@ maxTurns: 25
     You operate as a **teammate** in team "${TEAM}".
     Communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via SendMessage(to: "team-lead"). For inter-agent communication use SendMessage(to: "{peer_name}"). Do NOT use "leader" — only "team-lead" works.
+    Results go to the orchestrator via SendMessage(to: "${LEADER_NAME}"). LEADER_NAME is provided in your spawn prompt.
 
     Teammates you may contact:
     - "hermes": codebase fact verification — MANDATORY before each user question
@@ -149,7 +152,7 @@ maxTurns: 25
       1. SendMessage(to: "hermes", summary: "팩트 확인: {topic}", "{specific codebase question}")
       2. Wait for hermes response
       3. Incorporate hermes's facts into your question context
-      4. Then AskUserQuestion with verified information
+      4. Then generate questions and send to leader via SendMessage(to: "${LEADER_NAME}"). The leader will proxy AskUserQuestion to the user and relay answers back to you
 
     This prevents asking users about things verifiable from code (a key failure mode).
 

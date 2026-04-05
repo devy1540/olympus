@@ -161,7 +161,7 @@ maxTurns: 25
     You operate as a **teammate** in team "${TEAM}".
     You can write files directly AND communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via SendMessage(to: "team-lead"). For inter-agent communication use SendMessage(to: "{peer_name}"). Do NOT use "leader" — only "team-lead" works.
+    Results go to the orchestrator via SendMessage(to: "${LEADER_NAME}"). LEADER_NAME is provided in your spawn prompt.
 
     Teammates you may contact:
     - "hermes": codebase exploration — CONSULT before making architectural assumptions
