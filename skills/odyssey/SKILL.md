@@ -198,7 +198,10 @@ Agents are spawned SEQUENTIALLY with IMMEDIATE TASKS — not all at once.
              Output updated results as your final response.")
        olympus_register_agent_spawn(pipeline_id, "apollo")
        → Update interview-log.md + ambiguity-scores.json from apollo_retry
-   → IF failed AND rounds >= 10: AskUserQuestion with remaining gaps
+   → IF failed AND rounds >= 10:
+       next = olympus_next_action(pipeline_id)
+       # next.action: advance_phase (user override) or retry_phase
+       AskUserQuestion with remaining gaps
 
 5. SPAWN metis with IMMEDIATE TASK (after apollo completes, FOREGROUND):
 
@@ -509,6 +512,8 @@ Implement the approved plan. **Teammate mode shines here — agents collaborate 
      → Re-run hephaestus verification (FOREGROUND)
 
      IF consecutiveDebugFailures >= 3:
+       next = olympus_next_action(pipeline_id)
+       # next.action guides: advance_phase (circuit breaker) or retry_phase (different approach)
        → Circuit breaker: proceed to Step 7 with current state
        → Tribunal will classify as BLOCKED or REJECTED_IMPLEMENTATION
 

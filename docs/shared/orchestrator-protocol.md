@@ -387,7 +387,10 @@ Teammates communicate via SendMessage. The leader does NOT need to relay every m
 
 **Communication rules:**
 1. Inter-agent messages use `SendMessage(to: "{teammate_name}", summary: "{5-10 words}", "{content}")`
-2. Agents deliver results as their final text output (NOT via `SendMessage(to: "leader")` — "leader" is not a valid teammate name)
+2. Result delivery depends on spawn mode:
+   - **FOREGROUND** (no `run_in_background`): result captured from Agent tool return value directly
+   - **BACKGROUND** (`run_in_background: true`): result delivered via `SendMessage(to: "team-lead")` — final text output of background agents generates only an idle notification (no content). Always use SendMessage in background mode.
+   - `SendMessage(to: "leader")` is **BANNED** — "leader" is not a valid teammate name (messages are silently lost)
 3. Agents MUST NOT bypass the leader for phase transitions or gate checks
 4. Agents MUST NOT spawn other teammates (only the leader can spawn)
 5. Message order is NOT strictly guaranteed — do not rely on ordering for correctness
@@ -477,9 +480,13 @@ Leader calls:
   olympus_next_phase(pipeline_id)                    → Phase transition
   olympus_gate_check(pipeline_id, gate, score)       → Gate evaluation
   olympus_register_agent_spawn(pipeline_id, agent)   → Record teammate spawn
+  olympus_pipeline_status(pipeline_id)               → Query pipeline state (spawned agents, phase, status)
+  olympus_calculate_ambiguity(pipeline_id, file)     → Mechanical ambiguity scoring of interview log
+  olympus_validate_plan(pipeline_id, plan_file)      → Plan validation before execution
+  olympus_next_action(pipeline_id)                   → Leader: strategic next action (spawn/retry/advance/complete)
 
-Teammate calls (new):
-  olympus_next_action(pipeline_id, agent: "{name}")  → "What should I do next?"
+Teammate calls:
+  olympus_next_action(pipeline_id, agent: "{name}")  → Agent: tactical guidance (check_with_leader/report_status)
   olympus_log_collaboration(pipeline_id, from, to, summary) → Record inter-agent exchange
 
 Both:
