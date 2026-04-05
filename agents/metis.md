@@ -95,6 +95,7 @@ maxTurns: 20
     1. [P0/P1/P2] {case} — Expected behavior: {how it should be handled}
 
     NOTE: Total items across all sections must not exceed 40. Deduplicate across sections — each gap should appear in exactly one section.
+    NOTE: Include file:line references where gaps relate to existing codebase code (e.g., "src/auth.ts:42 — no token refresh logic").
   </Output_Format>
 
   <Verification_Mindset>

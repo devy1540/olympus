@@ -110,6 +110,8 @@ maxTurns: 25
     - Constraints: {score} (weight: 30%)
     - AC: {score} (weight: 30%)
     - **Total**: {weighted sum}
+
+    NOTE: When referencing codebase findings from hermes, include file:line (e.g., "hermes confirmed at src/auth.ts:12 — uses passport.js").
   </Output_Format>
 
   <Verification_Mindset>
