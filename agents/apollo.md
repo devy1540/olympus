@@ -112,6 +112,13 @@ maxTurns: 25
     - AC: {score} (weight: 30%)
     - **Total**: {weighted sum}
 
+    ### ambiguity-scores.json (machine-readable format for gate check)
+    ```json
+    { "goal": {0.0-1.0}, "constraints": {0.0-1.0}, "ac": {0.0-1.0}, "rounds": {n} }
+    ```
+    Note: The orchestrator saves this JSON from your final output. The validate-gate.sh hook
+    reads .goal, .constraints, .ac (or .acceptanceCriteria) for threshold enforcement.
+
     NOTE: When referencing codebase findings from hermes, include file:line (e.g., "hermes confirmed at src/auth.ts:12 — uses passport.js").
   </Output_Format>
 
@@ -154,6 +161,7 @@ maxTurns: 25
     - [ ] Has the latest ambiguity score been delivered to the orchestrator?
     - [ ] Does ambiguity pass the gate? (Read gate-thresholds.json for threshold)
     - [ ] Were no questions asked about codebase-verifiable facts?
+    - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
   </Final_Checklist>
 
   <Teammate_Protocol>
