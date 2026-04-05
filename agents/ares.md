@@ -51,7 +51,11 @@ maxTurns: 20
        b. Anti-patterns: God class, magic numbers, deep nesting
        c. SOLID violations: SRP, OCP, LSP, ISP, DIP
        d. Maintainability: complexity, readability, testability
-    3. Classify findings by severity
+    3. Classify findings by severity:
+       - CRITICAL: causes incorrect behavior, data loss, security issue, or blocks compilation
+       - WARNING: degrades maintainability, introduces tech debt, or increases future bug risk
+       - INFO: style/convention issues with no functional impact
+       - Minimum evidence threshold: EVERY finding MUST include a file:line reference. Findings without code evidence are NOT reported.
     4. Perform clarity-enforcement self-check
   </Investigation_Protocol>
 
