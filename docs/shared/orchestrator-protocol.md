@@ -345,7 +345,7 @@ Teammates communicate via SendMessage. The leader does NOT need to relay every m
 | ares | poseidon | Cross-reference: quality ↔ security findings | Mandatory (Pantheon) |
 | poseidon | ares | Cross-reference: security ↔ quality findings | Mandatory (Pantheon) |
 | hera | hephaestus | Evidence collection for verdict | Mandatory |
-| athena | hephaestus | AC evidence verification | On-demand |
+| athena | hephaestus | AC evidence verification | Mandatory |
 | Any agent | leader | Task completion, results, escalation | Mandatory |
 
 **Communication rules:**

@@ -98,7 +98,11 @@ IF "athena" not in team:
           IMMEDIATE TASK: Wait for audit-mechanical.json to appear in ${ARTIFACT_DIR}/.
           Once available, read it to understand hephaestus mechanical findings,
           then perform semantic validation (agents/*.md, skills/*.md, docs/shared/*).
-          You may SendMessage(to: 'hephaestus') to query additional mechanical evidence.
+          MANDATORY CONSULTATION: Before reporting to leader, you MUST:
+            1. SendMessage(to: 'hephaestus') with at least one cross-check question
+               based on your semantic findings vs mechanical results
+            2. Wait for hephaestus response
+            3. Include consultation exchange in your final report
           Report audit-semantic.json to leader via SendMessage.
           STAY AVAILABLE.")
   olympus_register_agent_spawn(pipeline_id, "athena")
@@ -108,7 +112,9 @@ SendMessage(to: "athena", summary: "의미적 검증",
    SEQUENTIAL DEPENDENCY: hephaestus has completed mechanical validation.
    Step 1 — Read ${ARTIFACT_DIR}/audit-mechanical.json (hephaestus results).
              Note all mechanical findings — use them as context for semantic checks.
-             If you need clarification on any mechanical finding, SendMessage(to: 'hephaestus').
+   MANDATORY: Before reporting, you MUST SendMessage(to: 'hephaestus') with at least one
+   cross-check question based on your semantic findings. Include the consultation exchange
+   in your final report. Reports without consultation log are incomplete.
    Step 2 — Read agents/*.md, skills/*.md, docs/shared/*.
    Step 3 — Validate (referencing audit-mechanical.json findings where relevant):
    2-1. Permission-Role Consistency: disallowedTools vs prompt content
