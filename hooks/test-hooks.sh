@@ -94,6 +94,14 @@ test_hook "verify-art" "$SCRIPT_DIR/verify-artifacts.sh" \
   "allow" "Pantheon analysis.md without da-evaluation.md → DA warning"
 rm -rf "$(dirname "$(dirname "$(dirname "$PANTHEON_DIR")")")"
 
+# Test: DA mandatory — review-pr verdict.md without da-evaluation.md → warning
+REVIEW_PR_DIR=$(mktemp -d)/.olympus/review-pr-20260404-test
+mkdir -p "$REVIEW_PR_DIR"
+test_hook "verify-art" "$SCRIPT_DIR/verify-artifacts.sh" \
+  "{\"tool_input\":{\"file_path\":\"${REVIEW_PR_DIR}/verdict.md\",\"content\":\"# Verdict\"}}" \
+  "allow" "review-pr verdict.md without da-evaluation.md → DA warning"
+rm -rf "$(dirname "$REVIEW_PR_DIR")" 
+
 # ============================================================
 echo "--- enforce-spawn-gate.sh ---"
 # ============================================================
@@ -160,6 +168,11 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/mechanical-result.json\",\"content\":\"{\\\"results\\\":{\\\"build\\\":{\\\"status\\\":\\\"FAIL\\\",\\\"stage\\\":\\\"build\\\"}},\\\"overall\\\":\\\"FAIL\\\"}\"}}" \
   "deny" "Mechanical result FAIL → deny"
+
+# Test: mechanical-result.json ENV_UNAVAILABLE → allow (no build system is valid)
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/mechanical-result.json\",\"content\":\"{\\\"overall\\\":\\\"ENV_UNAVAILABLE\\\",\\\"results\\\":{\\\"build\\\":{\\\"status\\\":\\\"SKIP\\\"},\\\"test\\\":{\\\"status\\\":\\\"SKIP\\\"}}}\"}}" \
+  "allow" "Mechanical result ENV_UNAVAILABLE → allow"
 
 # Test: non-gate file → silent
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
