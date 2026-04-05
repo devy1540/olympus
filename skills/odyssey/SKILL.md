@@ -146,6 +146,7 @@ Agents are spawned SEQUENTIALLY with IMMEDIATE TASKS — not all at once.
    hermes_result = Agent(name: "hermes", team_name: ${TEAM},
          subagent_type: "olympus:hermes",
          prompt: "You are Hermes in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+           LEADER_NAME: ${LEADER_NAME}
            IMMEDIATE TASK: Explore codebase related to: {user_input}.
            DO NOT write files — you are read-only.
            Gather: project structure, relevant modules, existing patterns, dependencies.
@@ -201,6 +202,7 @@ Agents are spawned SEQUENTIALLY with IMMEDIATE TASKS — not all at once.
    metis_result = Agent(name: "metis", team_name: ${TEAM},
          subagent_type: "olympus:metis",
          prompt: "You are Metis in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+           LEADER_NAME: ${LEADER_NAME}
            IMMEDIATE TASK: Perform gap analysis on interview results.
            DO NOT write files — you are read-only.
            Read ${ARTIFACT_DIR}/interview-log.md and ${ARTIFACT_DIR}/codebase-context.md.
@@ -249,6 +251,7 @@ When enabled:
         metis_wonder = Agent(name: "metis-gen{n}", team_name: ${TEAM},
               subagent_type: "olympus:metis",
               prompt: "You are Metis in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+           LEADER_NAME: ${LEADER_NAME}
                 IMMEDIATE TASK: Genesis wonder for generation {n}.
                 Read ${ARTIFACT_DIR}/gen-{n}/spec.md and ontology.json.
                 Answer 4 questions: Essence, Root Cause, Preconditions, Hidden Assumptions.
@@ -258,6 +261,7 @@ When enabled:
         eris_reflect = Agent(name: "eris-gen{n}", team_name: ${TEAM},
               subagent_type: "olympus:eris",
               prompt: "You are Eris in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+           LEADER_NAME: ${LEADER_NAME}
                 IMMEDIATE TASK: Challenge this wonder analysis with fallacy-catalog.md:
                 === METIS WONDER ===
                 {metis_wonder}
@@ -295,6 +299,7 @@ Multi-perspective analysis with MANDATORY cross-reference between analysts.
    helios_result = Agent(name: "helios", team_name: ${TEAM},
          subagent_type: "olympus:helios",
          prompt: "You are Helios in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+           LEADER_NAME: ${LEADER_NAME}
            IMMEDIATE TASK: Generate analysis perspectives.
            DO NOT write files — you are read-only.
            Read ${ARTIFACT_DIR}/spec.md and codebase-context.md.
@@ -314,6 +319,7 @@ Multi-perspective analysis with MANDATORY cross-reference between analysts.
          subagent_type: "olympus:ares",
          run_in_background: true,
          prompt: "You are Ares in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+           LEADER_NAME: ${LEADER_NAME}
            IMMEDIATE TASK: Analyze from Code Quality perspective.
            DO NOT write files — you are read-only.
            Read ${ARTIFACT_DIR}/spec.md, codebase-context.md, perspectives.md.
@@ -331,6 +337,7 @@ Multi-perspective analysis with MANDATORY cross-reference between analysts.
          subagent_type: "olympus:poseidon",
          run_in_background: true,
          prompt: "You are Poseidon in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+           LEADER_NAME: ${LEADER_NAME}
            IMMEDIATE TASK: Analyze from Security perspective.
            DO NOT write files — you are read-only.
            Read ${ARTIFACT_DIR}/spec.md, codebase-context.md, perspectives.md.
@@ -386,6 +393,7 @@ Create implementation plan with independent critique. Zeus consults hermes; Them
    zeus_result = Agent(name: "zeus", team_name: ${TEAM},
          subagent_type: "olympus:zeus",
          prompt: "You are Zeus in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+           LEADER_NAME: ${LEADER_NAME}
            IMMEDIATE TASK: Create implementation plan.
            Read ${ARTIFACT_DIR}/spec.md and analysis.md.
            Create task breakdown with Critical Files for Implementation.
@@ -398,6 +406,7 @@ Create implementation plan with independent critique. Zeus consults hermes; Them
    themis_result = Agent(name: "themis", team_name: ${TEAM},
          subagent_type: "olympus:themis",
          prompt: "You are Themis in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+           LEADER_NAME: ${LEADER_NAME}
            IMMEDIATE TASK: Critique implementation plan.
            DO NOT write files — you are read-only.
            Read ${ARTIFACT_DIR}/plan.md and spec.md.
@@ -447,6 +456,7 @@ Implement the approved plan. **Teammate mode shines here — agents collaborate 
    prometheus_result = Agent(name: "prometheus", team_name: ${TEAM},
          subagent_type: "olympus:prometheus",
          prompt: "You are Prometheus in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+           LEADER_NAME: ${LEADER_NAME}
            IMMEDIATE TASK: Implement ${ARTIFACT_DIR}/plan.md.
            You CAN write files directly.
            Do NOT work in isolation — use Glob/Grep/Read for codebase context.
@@ -458,7 +468,8 @@ Implement the approved plan. **Teammate mode shines here — agents collaborate 
 4. Build verification (FOREGROUND):
    heph_result = Agent(name: "hephaestus", team_name: ${TEAM},
      subagent_type: "olympus:hephaestus",
-     prompt: "IMMEDIATE TASK: Run full build, lint, test, and type-check.
+     prompt: "LEADER_NAME: ${LEADER_NAME}
+       IMMEDIATE TASK: Run full build, lint, test, and type-check.
        Output results as your final response.")
    olympus_register_agent_spawn(pipeline_id, "hephaestus")
 
@@ -498,7 +509,8 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
 3. Stage 1 — Hephaestus mechanical verification (FOREGROUND):
    mech_result = Agent(name: "hephaestus", team_name: ${TEAM},
      subagent_type: "olympus:hephaestus",
-     prompt: "IMMEDIATE TASK: Run build, lint, test, type-check.
+     prompt: "LEADER_NAME: ${LEADER_NAME}
+       IMMEDIATE TASK: Run build, lint, test, type-check.
        Output mechanical-result.json content as your final response.")
    → Write mechanical-result.json from mech_result
    → FAIL: BLOCKED verdict → exit
@@ -507,7 +519,8 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
 4. Stage 2 — Athena semantic evaluation (FOREGROUND):
    athena_result = Agent(name: "athena", team_name: ${TEAM},
      subagent_type: "olympus:athena",
-     prompt: "You are Athena. Artifact directory: ${ARTIFACT_DIR}/
+     prompt: "LEADER_NAME: ${LEADER_NAME}
+       You are Athena. Artifact directory: ${ARTIFACT_DIR}/
        IMMEDIATE TASK: Evaluate AC compliance.
        Read ${ARTIFACT_DIR}/spec.md and mechanical-result.json.
        Evaluate each AC with file:line evidence.
@@ -524,7 +537,8 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
    a. Ares opens (FOREGROUND):
       ares_position = Agent(name: "ares", team_name: ${TEAM},
         subagent_type: "olympus:ares",
-        prompt: "Read ${ARTIFACT_DIR}/semantic-matrix.md. Argue for APPROVE or REJECT from quality perspective.
+        prompt: "LEADER_NAME: ${LEADER_NAME}
+         Read ${ARTIFACT_DIR}/semantic-matrix.md. Argue for APPROVE or REJECT from quality perspective.
          Include file:line evidence for every claim.
          Output your full position as your final response.")
       olympus_log_collaboration(pipeline_id, "ares", "eris", "Tribunal debate: ares opening")
@@ -532,7 +546,8 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
    b. Eris challenges — SEES ares's full argument (FOREGROUND):
       eris_counter = Agent(name: "eris", team_name: ${TEAM},
         subagent_type: "olympus:eris",
-        prompt: "ARES ARGUES: {ares_position}.
+        prompt: "LEADER_NAME: ${LEADER_NAME}
+         ARES ARGUES: {ares_position}.
          Your job: find logical fallacies, unsupported claims, overlooked evidence.
          Use fallacy-catalog.md. Include file:line counter-evidence.
          IMPORTANT: Respond SPECIFICALLY to ares's points — do not make independent arguments.
@@ -542,7 +557,8 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
    c. OPTIONAL: Ares rebuttal (if eris raised substantive new points, FOREGROUND):
       ares_rebuttal = Agent(name: "ares", team_name: ${TEAM},
         subagent_type: "olympus:ares",
-        prompt: "ERIS COUNTERS: {eris_counter}.
+        prompt: "LEADER_NAME: ${LEADER_NAME}
+         ERIS COUNTERS: {eris_counter}.
          Respond ONLY to new points eris raised. Do not repeat your opening.
          Concede where eris is right. Defend where you have stronger evidence.
          Output your rebuttal as your final response.")
@@ -550,7 +566,8 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
    d. Hera synthesizes — SEES the full debate transcript (FOREGROUND):
       hera_verdict = Agent(name: "hera", team_name: ${TEAM},
         subagent_type: "olympus:hera",
-        prompt: "DEBATE TRANSCRIPT:
+        prompt: "LEADER_NAME: ${LEADER_NAME}
+         DEBATE TRANSCRIPT:
          === ARES OPENING === {ares_position}
          === ERIS REBUTTAL === {eris_counter}
          === ARES REBUTTAL === {ares_rebuttal or 'N/A'}
