@@ -269,6 +269,41 @@ else
 fi
 
 # ============================================================
+echo ""
+echo "--- Phase 5: Review-PR Pipeline (artifact creation order) ---"
+# ============================================================
+
+REVIEWPR_DIR="${TEST_DIR}/.olympus/review-pr-20260401-inttest5"
+mkdir -p "$REVIEWPR_DIR/.checkpoints"
+
+# Step 1: pr-diff.patch (orchestrator, no source)
+echo "  [review-pr] Orchestrator → pr-diff.patch"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${REVIEWPR_DIR}/pr-diff.patch" "diff --git a/src/auth.ts b/src/auth.ts")
+check_result "Review-PR: pr-diff.patch (orchestrator writes)" "$RESULT" "allow"
+
+# Step 2: pr-context.md (from hermes)
+echo "  [review-pr] Hermes → pr-context.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${REVIEWPR_DIR}/pr-context.md" "# PR Context\n## Changed Files\n- src/auth.ts: modified")
+check_result "Review-PR: pr-context.md (hermes source)" "$RESULT" "allow"
+
+# Step 3: review-findings.md (from ares+poseidon)
+echo "  [review-pr] Ares+Poseidon → review-findings.md"
+echo "# PR Context" > "${REVIEWPR_DIR}/pr-context.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${REVIEWPR_DIR}/review-findings.md" "# Review Findings\n## Ares\nCRITICAL: Race condition src/auth.ts:42")
+check_result "Review-PR: review-findings.md (ares+poseidon)" "$RESULT" "allow"
+
+# Step 4: verdict.md (from nemesis)
+echo "  [review-pr] Nemesis → verdict.md"
+echo "# Findings" > "${REVIEWPR_DIR}/review-findings.md"
+echo "# DA Eval" > "${REVIEWPR_DIR}/da-evaluation.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${REVIEWPR_DIR}/verdict.md" "# PR Review Verdict\n## Verdict: REQUEST_CHANGES")
+check_result "Review-PR: verdict.md (nemesis synthesis)" "$RESULT" "allow"
+
+# ============================================================
 # Cleanup
 rm -rf "$TEST_DIR"
 
