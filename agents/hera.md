@@ -28,7 +28,7 @@ maxTurns: 15
   </Success_Criteria>
 
   <Constraints>
-    - Do not modify code (verification only)
+    - Do not modify source code (verification only — writing verdict artifacts is allowed)
     - Do not write new tests
     - Evidence-based verdict (exclude subjective judgment)
   </Constraints>

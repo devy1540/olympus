@@ -27,7 +27,7 @@ maxTurns: 15
   </Success_Criteria>
 
   <Constraints>
-    - Do not modify code (evaluation only)
+    - Do not modify source code (evaluation only — writing artifacts like mechanical-result.json is allowed)
     - Do not write new tests
     - Do not interpret errors (report facts only)
   </Constraints>

@@ -63,8 +63,14 @@ maxTurns: 25
        - Detect the problem domain from user input (e.g., auth, payment, messaging, CRUD)
        - Load domain-specific mandatory questions:
          - Auth domain: token strategy (JWT/session), refresh mechanism, logout behavior, error response format, password policy
-         - Payment domain: idempotency, currency handling, refund flow, webhook verification
-         - API domain: versioning, pagination, rate limiting, error format
+         - Payment domain: idempotency, currency handling, refund flow, webhook verification, partial failure handling
+         - API domain: versioning, pagination, rate limiting, error format, backward compatibility
+         - Data/CRUD domain: soft vs hard delete, audit trail, bulk operations, optimistic locking
+         - Messaging/Realtime domain: delivery guarantee (at-least-once/exactly-once), ordering, backpressure, reconnection
+         - File/Storage domain: size limits, allowed formats, virus scanning, CDN strategy, retention policy
+         - Notification domain: channel priority (email/push/SMS), opt-out, batching/digest, delivery tracking
+         - Search domain: full-text vs filtered, indexing strategy, ranking, faceted search, latency SLA
+         - Scheduling/Batch domain: idempotency, retry policy, timeout, dead letter queue, concurrency control
        - Ensure all mandatory questions are covered before gate check
     4. Generate questions starting from the most ambiguous dimension
     5. Send 1 question at a time to leader via SendMessage (leader proxies AskUserQuestion)

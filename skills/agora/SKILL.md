@@ -156,16 +156,14 @@ FOR each round (max 3):
 
      Agent(name: "ares-r{n}", team_name: ${TEAM}, subagent_type: "olympus:ares",
        run_in_background: true,
-       prompt: "LEADER_NAME: team-lead
-         DO NOT write files — you are read-only.
+       prompt: "DO NOT write files — you are read-only.
          Read ${ARTIFACT_DIR}/debate-frame.json.
          Present: preferred option from technical perspective + evidence.
          Output your position as your final response.")
 
      Agent(name: "ux-r{n}", team_name: ${TEAM},
        run_in_background: true,
-       prompt: "LEADER_NAME: team-lead
-         DO NOT write files — you are read-only.
+       prompt: "DO NOT write files — you are read-only.
          Read ${ARTIFACT_DIR}/debate-frame.json.
          Present: preferred option from UX perspective + evidence.
          Output your position as your final response.")
@@ -181,12 +179,10 @@ FOR each round (max 3):
 
   3. Cross-questioning (if disagreements — FOREGROUND sequential):
      ares_rebuttal = Agent(name: "ares-cross", subagent_type: "olympus:ares",
-       prompt: "LEADER_NAME: team-lead
-         Zeus argues: {zeus_position_verbatim}. Counter-argue with specific technical evidence.")
+       prompt: "Zeus argues: {zeus_position_verbatim}. Counter-argue with specific technical evidence.")
 
      zeus_rebuttal = Agent(name: "zeus-cross", subagent_type: "olympus:zeus",
-       prompt: "LEADER_NAME: team-lead
-         Ares argues: {ares_position_verbatim}. Respond to ares's specific objections.")
+       prompt: "Ares argues: {ares_position_verbatim}. Respond to ares's specific objections.")
 
   4. Measure consensus (per consensus-levels.md):
      - Strong (3/3): unanimous → exit
@@ -204,8 +200,7 @@ FOR each round (max 3):
 ```
 eris_challenge = Agent(name: "eris-da", team_name: ${TEAM},
     subagent_type: "olympus:eris",
-    prompt: "LEADER_NAME: team-lead
-      DO NOT write files — you are read-only.
+    prompt: "DO NOT write files — you are read-only.
       Read all committee positions from previous rounds.
       Challenge each claim by name — do not issue abstract challenges.
       Challenge areas:
