@@ -373,6 +373,41 @@ RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
 check_result "Genesis: convergence.json (convergence check)" "$RESULT" "allow"
 
 # ============================================================
+echo ""
+echo "--- Phase 8: Pantheon Pipeline (multi-perspective analysis) ---"
+# ============================================================
+
+PANTHEON_TEST_DIR="${TEST_DIR}/.olympus/pantheon-20260401-inttest8"
+mkdir -p "$PANTHEON_TEST_DIR/.checkpoints"
+
+# Step 1: perspectives.md (from helios)
+echo "  [pantheon] Helios → perspectives.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${PANTHEON_TEST_DIR}/perspectives.md" "## Perspectives\n### P1: Code Quality\nAssigned: ares")
+check_result "Pantheon: perspectives.md (helios source)" "$RESULT" "allow"
+
+# Step 2: analyst-findings.md (from ares+poseidon)
+echo "  [pantheon] Ares+Poseidon → analyst-findings.md"
+echo "## Perspectives" > "${PANTHEON_TEST_DIR}/perspectives.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${PANTHEON_TEST_DIR}/analyst-findings.md" "## Analyst Findings\n### Ares\nCRITICAL: God class")
+check_result "Pantheon: analyst-findings.md (ares+poseidon)" "$RESULT" "allow"
+
+# Step 3: da-evaluation.md (from eris)
+echo "  [pantheon] Eris → da-evaluation.md"
+echo "## Findings" > "${PANTHEON_TEST_DIR}/analyst-findings.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${PANTHEON_TEST_DIR}/da-evaluation.md" "## DA Evaluation\n### Verdict: SUFFICIENT")
+check_result "Pantheon: da-evaluation.md (eris challenge)" "$RESULT" "allow"
+
+# Step 4: analysis.md (orchestrator synthesis)
+echo "  [pantheon] Orchestrator → analysis.md"
+echo "## DA" > "${PANTHEON_TEST_DIR}/da-evaluation.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${PANTHEON_TEST_DIR}/analysis.md" "## Cross-Perspective Analysis\n### Recommendations")
+check_result "Pantheon: analysis.md (final synthesis)" "$RESULT" "allow"
+
+# ============================================================
 # Cleanup
 rm -rf "$TEST_DIR"
 
