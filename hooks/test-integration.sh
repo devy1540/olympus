@@ -442,6 +442,49 @@ RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
 check_result "Agora: decision.md (final decision)" "$RESULT" "allow"
 
 # ============================================================
+echo ""
+echo "--- Phase 10: Review-PR Pipeline (PR review) ---"
+# ============================================================
+
+REVIEW_PR_TEST_DIR="${TEST_DIR}/.olympus/review-pr-20260401-inttest10"
+mkdir -p "$REVIEW_PR_TEST_DIR/.checkpoints"
+
+# Step 1: pr-context.md (from hermes)
+echo "  [review-pr] Hermes → pr-context.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${REVIEW_PR_TEST_DIR}/pr-context.md" "## PR Context\n### Files Changed\n- src/auth.ts")
+check_result "Review-PR: pr-context.md (hermes)" "$RESULT" "allow"
+
+# Step 2: review-findings.md (from ares+poseidon)
+echo "  [review-pr] Ares+Poseidon → review-findings.md"
+echo "## Context" > "${REVIEW_PR_TEST_DIR}/pr-context.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${REVIEW_PR_TEST_DIR}/review-findings.md" "## Review Findings\n### Ares\nCRITICAL: SQL injection")
+check_result "Review-PR: review-findings.md (ares+poseidon)" "$RESULT" "allow"
+
+# Step 3: da-evaluation.md (from eris)
+echo "  [review-pr] Eris → da-evaluation.md"
+echo "## Findings" > "${REVIEW_PR_TEST_DIR}/review-findings.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${REVIEW_PR_TEST_DIR}/da-evaluation.md" "## DA Evaluation\n### Challenge 1: False Positive confirmed — remove finding X")
+check_result "Review-PR: da-evaluation.md (eris DA)" "$RESULT" "allow"
+
+# Step 4: verdict.md WITH da-evaluation.md → allow
+echo "  [review-pr] Nemesis → verdict.md (with DA present)"
+echo "## DA with actual content exceeding 100 bytes to pass size check. This is the DA evaluation content from Eris." > "${REVIEW_PR_TEST_DIR}/da-evaluation.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${REVIEW_PR_TEST_DIR}/verdict.md" "## Verdict\n### Decision: REQUEST_CHANGES\n### Rationale: 2 CRITICAL findings confirmed by Eris")
+check_result "Review-PR: verdict.md with da-evaluation.md → allow" "$RESULT" "allow"
+
+# Step 5: verdict.md WITHOUT da-evaluation.md → DA warning (allow with context)
+echo "  [review-pr] Nemesis → verdict.md (without DA — warn)"
+REVIEW_PR_NODA_DIR="${TEST_DIR}/.olympus/review-pr-20260401-inttest11"
+mkdir -p "$REVIEW_PR_NODA_DIR/.checkpoints"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${REVIEW_PR_NODA_DIR}/verdict.md" "## Verdict\n### Decision: APPROVE")
+check_result "Review-PR: verdict.md without da-evaluation.md → DA warning" "$RESULT" "allow"
+
+# ============================================================
 # Cleanup
 rm -rf "$TEST_DIR"
 
