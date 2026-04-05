@@ -97,6 +97,7 @@ Gate evaluation compares numeric values stored in artifacts against thresholds d
 | Consensus (≥ 67%) | Phase 3-4 feedback loop | 2 (normal) | User escalation |
 | Semantic (≥ 0.8) | Re-enter Phase 5 (implementation) | 3 (evaluationPass) | Genesis rewind + user decision |
 | Mechanical (PASS) | Enter Phase 5 (debugging) | 3 | BLOCKED verdict and exit |
+| Evolve Dim Min (≥ 0.6) | Targeted refinement of weak dimension | Per iteration | Notify user, focus next iteration |
 
 ### 2.3 Cross-Validation
 
@@ -105,6 +106,8 @@ Gate values may be self-scored by the LLM. The following cross-validation checks
 - **Ambiguity**: Verify that the round count in `ambiguity-scores.json` matches the actual number of rounds in `interview-log.md`
 - **Semantic**: Verify that `file:line` references in `semantic-matrix.md` point to files that actually exist
 - **Mechanical**: Verify that `mechanical-result.json` reflects actual build/test execution results (run via Bash)
+- **Convergence**: Verify that ontology similarity score in `convergence.json` is recalculated from actual gen-{n} ontology diffs, not self-reported
+- **Consensus**: Verify that consensus percentage in DA evaluation reflects the surviving-findings ratio from `da-evaluation.md`, not an uncalculated estimate
 
 These checks are performed automatically by the `validate-gate.sh` hook.
 
@@ -160,7 +163,7 @@ Situations requiring user intervention:
 | Situation | Trigger | User Options |
 |-----------|---------|-------------|
 | Repeated gate failure | Max retries exceeded | Override / Rewind / Abort |
-| No consensus reached | Consensus < 60% twice in a row | Decide / Add perspectives / Abort |
+| No consensus reached | Consensus gate fails (< 67%) twice in a row | Decide / Add perspectives / Abort |
 | Repeated Themis rejection | REVISE 3 times consecutively | Agora debate / Override / Abort |
 | Repeated evaluation failure | evaluationPass >= 3 | Genesis rewind / Override / Abort |
 | Stagnation detected | Spinning/Oscillation/Diminishing | Persona switch / Change benchmark / Abort |
