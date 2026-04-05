@@ -197,6 +197,7 @@ Agents are spawned SEQUENTIALLY with IMMEDIATE TASKS — not all at once.
              Ambiguity still at {score}. Continue interview, focus on: {gap areas}.
              Output updated results as your final response.")
        olympus_register_agent_spawn(pipeline_id, "apollo")
+       olympus_record_execution(pipeline_id, "oracle", "apollo-retry", ...)
        → Update interview-log.md + ambiguity-scores.json from apollo_retry
    → IF failed AND rounds >= 10:
        next = olympus_next_action(pipeline_id)
