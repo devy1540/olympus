@@ -174,7 +174,6 @@ maxTurns: 25
   <Teammate_Protocol>
     You operate as a **teammate** in the current team.
     You can write files directly AND communicate via SendMessage for inter-agent coordination.
-    Results are delivered as your final text output — the orchestrator captures this directly.
     Results go to the orchestrator via SendMessage(to: "team-lead").
 
     Teammates you may contact:

@@ -20,7 +20,7 @@ Metis and Eris operate as persistent teammates who remember previous generations
 - MANDATORY DIALOGUE: Each generation spawns metis (wonder) then eris (reflect) sequentially.
   Eris receives metis's wonder in its spawn prompt and challenges it.
   Both deliver results as final text output — orchestrator writes artifacts.
-- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
+- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly — this violates §0.
 - RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
   Orchestrator writes artifacts from these results. Write-capable agents write files directly.
 - SEQUENTIAL SPAWN: metis (wonder) first → eris (reflect) after metis completes, per generation.

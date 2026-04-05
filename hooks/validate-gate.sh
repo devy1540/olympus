@@ -55,10 +55,16 @@ fi
 
 FILENAME=$(basename "$FILE_PATH")
 
+# Extract content once: Write context provides .tool_input.content; Edit context does not.
+# For Edit (PostToolUse), read the file directly since the edit has already been applied.
+CONTENT=$(echo "$INPUT" | jq -r '.tool_input.content // empty')
+if [[ -z "$CONTENT" && -f "$FILE_PATH" ]]; then
+  CONTENT=$(cat "$FILE_PATH" 2>/dev/null || true)
+fi
+
 case "$FILENAME" in
   ambiguity-scores.json)
     # Ambiguity: 1 - (goal*0.4 + constraints*0.3 + ac*0.3) <= threshold
-    CONTENT=$(echo "$INPUT" | jq -r '.tool_input.content // empty')
     if [[ -z "$CONTENT" ]]; then
       exit 0
     fi
@@ -156,7 +162,6 @@ case "$FILENAME" in
 
   convergence.json)
     # Convergence: similarity >= threshold
-    CONTENT=$(echo "$INPUT" | jq -r '.tool_input.content // empty')
     if [[ -z "$CONTENT" ]]; then
       exit 0
     fi
@@ -175,7 +180,6 @@ case "$FILENAME" in
 
   consensus-record.json)
     # Consensus: percentage >= threshold
-    CONTENT=$(echo "$INPUT" | jq -r '.tool_input.content // empty')
     if [[ -z "$CONTENT" ]]; then
       exit 0
     fi
@@ -194,7 +198,6 @@ case "$FILENAME" in
 
   mechanical-result.json)
     # Mechanical: all stages must be PASS (or overall=ENV_UNAVAILABLE when no build system)
-    CONTENT=$(echo "$INPUT" | jq -r '.tool_input.content // empty')
     if [[ -z "$CONTENT" ]]; then
       exit 0
     fi
@@ -220,7 +223,6 @@ case "$FILENAME" in
 
   evolve-state.json)
     # Evolve: overall quality >= semantic threshold AND each dimension >= evolve_dimension_minimum
-    CONTENT=$(echo "$INPUT" | jq -r '.tool_input.content // empty')
     if [[ -z "$CONTENT" ]]; then
       exit 0
     fi

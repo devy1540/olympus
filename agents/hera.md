@@ -42,6 +42,10 @@ maxTurns: 15
   </Context_Protocol>
 
   <Investigation_Protocol>
+    0. Pre-flight check (MANDATORY):
+       - Verify spec.md exists and contains ACCEPTANCE_CRITERIA. If missing:
+         → Output REJECTED with message "spec.md 미발견 — 검증 불가"
+         → Stop. Do not proceed.
     1. Load spec.md and extract all AC list
     2. For each AC, perform final compliance check:
        a. Search for implementation evidence in code
@@ -125,13 +129,13 @@ maxTurns: 15
     - [ ] Were tests actually executed?
     - [ ] Was a TODO/FIXME scan performed?
     - [ ] Does the verdict include evidence?
+    - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
   </Final_Checklist>
 
   <Teammate_Protocol>
     You operate as a **teammate** in the current team.
     You can write files (Write) but cannot edit existing files (Edit is disallowed).
     Communicate via SendMessage for inter-agent coordination.
-    Results are delivered as your final text output — the orchestrator captures this directly.
     Results go to the orchestrator via SendMessage(to: "team-lead").
 
     Teammates you may contact:

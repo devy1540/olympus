@@ -79,6 +79,7 @@
       "phase": 4,
       "writer": "orchestrator",
       "source": "eris",
+      "required_spawn": "eris",
       "readers": ["consensus-stage"],
       "note": "Eris는 SendMessage로 결과 전달, 오케스트레이터가 저장"
     },
@@ -202,6 +203,7 @@
     "implementation-report.md": {
       "phase": 5,
       "writer": "prometheus",
+      "required_spawn": "prometheus",
       "readers": ["hephaestus", "tribunal"],
       "writerRequires": ["Write"]
     }

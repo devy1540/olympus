@@ -22,7 +22,7 @@ Supports interactive and fully automated (--auto) modes.
   NEVER use "Wait for messages — do not act until prompted."
 - MANDATORY CONSULTATION (§7): Agents with peer paths must exchange at least one consultation
   round before reporting to leader. Reports without consultation evidence are incomplete.
-- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
+- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly — this violates §0.
 - RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
   Orchestrator writes artifacts from these results. Write-capable agents write files directly.
 - SEQUENTIAL SPAWN: hermes first → helios after hermes → ares+poseidon parallel → eris DA → nemesis synthesis.

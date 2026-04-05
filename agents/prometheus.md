@@ -48,8 +48,10 @@ maxTurns: 30
        b. Implement according to plan
        c. Update related imports/exports
     3. Run a self-check build after implementation (if possible)
-       - If build fails: attempt self-correction up to 2 times
-       - If build still fails after 2 attempts: delegate to artemis via SendMessage and report failure
+       - If build fails: read error message, identify file:line, fix the specific issue
+       - Self-correction loop: max 2 attempts, each fixing ONE specific error
+       - If build still fails after 2 attempts: delegate to artemis via SendMessage with:
+         (1) exact error message, (2) files changed, (3) what was attempted
     4. Summarize changes
   </Investigation_Protocol>
 
@@ -115,12 +117,12 @@ maxTurns: 30
     - [ ] Were existing patterns/conventions followed?
     - [ ] Are deviations from the plan documented?
     - [ ] Does build/lint pass?
+    - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
   </Final_Checklist>
 
   <Teammate_Protocol>
     You operate as a **teammate** in the current team.
     You can write files directly AND communicate via SendMessage for inter-agent coordination.
-    Results are delivered as your final text output — the orchestrator captures this directly.
     Results go to the orchestrator via SendMessage(to: "team-lead").
 
     Teammates you may contact:

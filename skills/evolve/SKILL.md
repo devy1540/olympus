@@ -22,7 +22,7 @@ All agents operate as teammates for iterative evaluation and refinement with con
 - MANDATORY CONSULTATION (§7): metis and eris MUST cross-verify during diagnosis (Step 5).
   metis sends gap analysis to eris; eris challenges it; metis revises before reporting to leader.
   Reports without evidence of cross-verification are incomplete.
-- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
+- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly — this violates §0.
 - RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
   Orchestrator writes artifacts from these results. Write-capable agents write files directly.
 - SEQUENTIAL SPAWN: athena (Step 4) first → metis+eris parallel (Step 5) → prometheus after diagnosis (Step 6).

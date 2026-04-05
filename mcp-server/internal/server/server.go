@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/devy1540/olympus/mcp-server/internal/config"
 	"github.com/devy1540/olympus/mcp-server/internal/gate"
@@ -47,7 +48,7 @@ func NewServer(st *store.Store, cfg *config.Config) *mcpserver.MCPServer {
 			mcpgo.WithString("pipeline_id", mcpgo.Required(), mcpgo.Description("파이프라인 ID")),
 			mcpgo.WithString("agent_name", mcpgo.Required(), mcpgo.Description("에이전트 이름")),
 		),
-		registerSpawnHandler(st),
+		registerSpawnHandler(st, cfg),
 	)
 
 	s.AddTool(
@@ -194,7 +195,7 @@ func nextPhaseHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHandler
 	}
 }
 
-func registerSpawnHandler(st *store.Store) mcpserver.ToolHandlerFunc {
+func registerSpawnHandler(st *store.Store, cfg *config.Config) mcpserver.ToolHandlerFunc {
 	return func(ctx context.Context, req mcpgo.CallToolRequest) (*mcpgo.CallToolResult, error) {
 		pipelineID, err := req.RequireString("pipeline_id")
 		if err != nil {
@@ -203,6 +204,19 @@ func registerSpawnHandler(st *store.Store) mcpserver.ToolHandlerFunc {
 		agentName, err := req.RequireString("agent_name")
 		if err != nil {
 			return mcpgo.NewToolResultError(err.Error()), nil
+		}
+
+		// Validate agent name against registry (supports dynamic suffixes like "ares-r1", "zeus-cross")
+		if len(cfg.Agents.Registry) > 0 {
+			if _, ok := cfg.Agents.Registry[agentName]; !ok {
+				baseName := agentName
+				if idx := strings.IndexByte(agentName, '-'); idx > 0 {
+					baseName = agentName[:idx]
+				}
+				if _, ok := cfg.Agents.Registry[baseName]; !ok {
+					return mcpgo.NewToolResultError(fmt.Sprintf("미등록 에이전트: %s (base: %s). agent-schema.json 레지스트리를 확인하세요.", agentName, baseName)), nil
+				}
+			}
 		}
 
 		p, err := st.GetPipeline(pipelineID)

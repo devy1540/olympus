@@ -29,6 +29,7 @@ maxTurns: 20
   </Success_Criteria>
 
   <Constraints>
+    - Do not write or modify any files — deliver results as text output only
     - Do not modify code (review only)
     - Delegate security issues to Poseidon
     - Apply objective quality criteria instead of subjective style preferences
@@ -124,7 +125,7 @@ maxTurns: 20
   <Final_Checklist>
     - [ ] Have all changed files been reviewed?
     - [ ] Do all findings have file:line references?
-    - [ ] Has the clarity-enforcement self-check passed?
+    - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
     - [ ] Is the severity classification appropriate?
     - [ ] Are code review results included in the final response?
   </Final_Checklist>
@@ -132,7 +133,6 @@ maxTurns: 20
   <Teammate_Protocol>
     You operate as a **teammate** in the current team.
     Communicate via SendMessage for inter-agent coordination.
-    Results are delivered as your final text output — the orchestrator captures this directly.
     Results go to the orchestrator via SendMessage(to: "team-lead").
 
     Teammates you may contact:

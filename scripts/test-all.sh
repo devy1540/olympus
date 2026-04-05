@@ -155,11 +155,15 @@ run_check "RESPONSE RULE: ${RESPONSE_RULE}/${SPAWN_SKILLS}" "[ $RESPONSE_RULE -g
 
 RO_SENDMSG=0
 for a in hermes apollo metis ares poseidon athena themis eris helios nemesis; do
-  if grep -q 'SendMessage.*LEADER_NAME\|SendMessage.*team-lead\|SendMessage.*leader' "agents/${a}.md" 2>/dev/null; then
+  if grep -q 'SendMessage.*team-lead' "agents/${a}.md" 2>/dev/null; then
     RO_SENDMSG=$((RO_SENDMSG + 1))
   fi
 done
 run_check "Read-only agents SendMessage: ${RO_SENDMSG}/10" "[ $RO_SENDMSG -eq 10 ]"
+
+# Verify no agent uses banned SendMessage(to: "leader") pattern
+BANNED_LEADER=$({ grep -rl 'SendMessage(to: "leader")' agents/*.md 2>/dev/null || true; } | wc -l | tr -d ' ')
+run_check "No banned SendMessage(to: \"leader\")" "[ $BANNED_LEADER -eq 0 ]"
 
 VMINDSET=$(grep -rl "Verification_Mindset" agents/*.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
 run_check "Verification_Mindset: ${VMINDSET}/15" "[ $VMINDSET -eq 15 ]"
@@ -167,6 +171,20 @@ run_check "Verification_Mindset: ${VMINDSET}/15" "[ $VMINDSET -eq 15 ]"
 XREF_ARES=$(grep -c "poseidon\|CROSS-REFERENCE" agents/ares.md 2>/dev/null || echo 0)
 XREF_POSEIDON=$(grep -c "ares\|CROSS-REFERENCE" agents/poseidon.md 2>/dev/null || echo 0)
 run_check "ares↔poseidon cross-ref" "[ $XREF_ARES -ge 2 ] && [ $XREF_POSEIDON -ge 2 ]"
+
+CLARITY=$(grep -rl "clarity-enforcement" agents/*.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+run_check "clarity-enforcement: ${CLARITY}/15" "[ $CLARITY -eq 15 ]"
+
+RO_CONSTRAINTS=0
+for a in hermes apollo metis ares poseidon athena themis eris helios nemesis; do
+  if grep -q 'Do not write or modify' "agents/${a}.md" 2>/dev/null; then
+    RO_CONSTRAINTS=$((RO_CONSTRAINTS + 1))
+  fi
+done
+run_check "Read-only file constraint: ${RO_CONSTRAINTS}/10" "[ $RO_CONSTRAINTS -eq 10 ]"
+
+PREFLIGHT=$(grep -rl "Pre-flight check" agents/*.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+run_check "Pre-flight checks (athena+hera+nemesis): ${PREFLIGHT}/3" "[ $PREFLIGHT -ge 3 ]"
 
 GATE_AMB=$(python3 -c "import json;t=json.load(open('docs/shared/gate-thresholds.json'));print(t['ambiguity']['threshold'])" 2>/dev/null || echo "?")
 GATE_CON=$(python3 -c "import json;t=json.load(open('docs/shared/gate-thresholds.json'));print(t['consensus']['threshold'])" 2>/dev/null || echo "?")

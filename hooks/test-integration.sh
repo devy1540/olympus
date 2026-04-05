@@ -646,9 +646,29 @@ check_result "Audit: audit-report.md with all predecessors → allow" "$RESULT" 
 echo "  [audit] Spawn gate: audit-mechanical.json before hephaestus spawn → deny"
 AUDIT_SPAWN_DIR="${TEST_DIR}/.olympus/audit-20260401-inttest14"
 mkdir -p "$AUDIT_SPAWN_DIR/.checkpoints"
+# Reset denial tracking before sequential spawn gate tests to prevent escalation interference
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
 RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
   "${AUDIT_SPAWN_DIR}/audit-mechanical.json" '{"status":"PASS"}')
 check_result "Audit: audit-mechanical.json spawn gate (hephaestus not spawned) → deny" "$RESULT" "deny"
+
+# Step 6: spawn gate — odyssey/implementation-report.md without prometheus registered → deny
+echo "  [odyssey] Spawn gate: implementation-report.md before prometheus spawn → deny"
+ODYSSEY_SPAWN_DIR="${TEST_DIR}/.olympus/odyssey-20260401-inttest15"
+mkdir -p "$ODYSSEY_SPAWN_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${ODYSSEY_SPAWN_DIR}/implementation-report.md" '## Implementation Report')
+check_result "Odyssey: implementation-report.md spawn gate (prometheus not spawned) → deny" "$RESULT" "deny"
+
+# Step 7: spawn gate — pantheon/da-evaluation.md without eris registered → deny
+echo "  [pantheon] Spawn gate: da-evaluation.md before eris spawn → deny"
+PANTHEON_SPAWN_DIR="${TEST_DIR}/.olympus/pantheon-20260401-inttest16"
+mkdir -p "$PANTHEON_SPAWN_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${PANTHEON_SPAWN_DIR}/da-evaluation.md" '## DA Evaluation\n### Verdict: SUFFICIENT')
+check_result "Pantheon: da-evaluation.md spawn gate (eris not spawned) → deny" "$RESULT" "deny"
 
 # ============================================================
 # Cleanup

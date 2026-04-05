@@ -169,16 +169,20 @@ IF passed (ambiguity ≤ 0.2):
 ELSE IF rounds < 10:
   next = olympus_next_action(pipeline_id)
   # next.action: retry_phase — re-interview with focus on gap areas
-  → Re-spawn apollo (FOREGROUND) with follow-up task:
-    apollo_retry = Agent(name: "apollo", team_name: ${TEAM},
+  → Re-spawn apollo (BACKGROUND — dialog agent, same pattern as initial spawn):
+    Agent(name: "apollo", team_name: ${TEAM},
         subagent_type: "olympus:apollo",
-        prompt: "You are Apollo. Artifact directory: ${ARTIFACT_DIR}/
+        run_in_background: true,
+        prompt: "You are Apollo in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
           LEADER_NAME: team-lead
-          Read ${ARTIFACT_DIR}/interview-log.md for previous rounds.
+          Read ${ARTIFACT_DIR}/interview-log.md for context from previous rounds.
           Ambiguity still at {score}. Continue interview, focus on: {gap areas}.
-          Output updated results as your final response.")
+          IMPORTANT: Use SendMessage(to: 'team-lead') for each question (interview proxy pattern).
+          When done: SendMessage(to: 'team-lead', summary: '인터뷰 완료', '{updated log + scores}')")
     olympus_register_agent_spawn(pipeline_id, "apollo")
     olympus_record_execution(pipeline_id, "oracle", "apollo-retry", ...)
+  → Continue APOLLO INTERVIEW PROXY LOOP (same as Step 4)
+  → Update interview-log.md + ambiguity-scores.json from retry completion
   → re-check gate after completion
 
 ELSE (rounds >= 10):

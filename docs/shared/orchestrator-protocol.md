@@ -6,6 +6,8 @@ The orchestrator is the execution host for skills. It runs the pipeline defined 
 
 This document specifies the orchestrator's decision logic, artifact management rules, error recovery procedures, and escalation paths.
 
+**CC Source Lineage**: Ported from `query.ts` full execution loop — gate decision (lines 204-217), error recovery (try-catch-retry pattern), state machine (Terminal/Continue types). Permission model from `permissions.ts:174-324`.
+
 ---
 
 ## 0. Mandatory Agent Spawn Rule
@@ -445,18 +447,7 @@ This prevents infinite waiting while preserving evidence that consultation was a
 4. **Gate enforcement stays with leader**: Teammates report results, leader checks gates via MCP + artifact files
 5. **Permission inheritance**: Teammates inherit their agent definition's permissions. Read-only agents (Write/Edit in disallowedTools) remain read-only as teammates — they SendMessage results to the leader who writes files
 6. **Cross-phase persistence**: Teammates survive across phase boundaries within the same skill execution. This is a key advantage — Prometheus remembers what it implemented when asked to fix tests
-7. **Teardown at skill end**: Robust shutdown sequence:
-   ```
-   a. SendMessage(to: each_teammate, { type: "shutdown_request" })
-   b. Wait up to 30 seconds for shutdown_response from each
-   c. If any teammate still active after timeout:
-      - Send plain text "Shut down now — all work is complete"
-      - Retry shutdown_request once
-   d. TeamDelete — if fails with "active members":
-      - Log warning: "Force-deleting team with {n} active members"
-      - Retry TeamDelete after 5 seconds (teammate may be mid-shutdown)
-   e. Final safety: git checkout -- agents/ to restore any files modified by lingering teammates
-   ```
+7. **Teardown at skill end**: Call `TeamDelete(team_name: "${TEAM}")` after all agents have reported results and all artifacts have been written. If `TeamDelete` fails, retry once; if still failing, log the error but proceed — cleanup failure does not invalidate results. See `docs/shared/team-teardown.md` for full teardown protocol and Odyssey sub-skill exceptions.
 8. **No cross-skill persistence**: When Odyssey's sub-skills complete, the team persists. But standalone skill teams are torn down when the skill ends
 
 ### 6.6 Leader Responsibilities

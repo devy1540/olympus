@@ -24,6 +24,10 @@ case "$FILENAME" in
 esac
 
 CONTENT=$(echo "$INPUT" | jq -r '.tool_input.content // empty')
+# PostToolUse: for Edit operations, content is empty — read file directly (already applied)
+if [[ -z "$CONTENT" && -f "$FILE_PATH" ]]; then
+  CONTENT=$(cat "$FILE_PATH" 2>/dev/null || true)
+fi
 if [[ -z "$CONTENT" ]]; then
   exit 0
 fi
@@ -34,11 +38,13 @@ CHECKPOINT_DIR="${DIR}/.checkpoints"
 # .checkpoints 디렉토리 생성
 mkdir -p "$CHECKPOINT_DIR"
 
-# 기존 파일과 새 내용 비교
-if [[ -f "$FILE_PATH" ]]; then
-  EXISTING=$(cat "$FILE_PATH" 2>/dev/null || true)
-  # 내용이 동일하면 백업 불필요
-  if [[ "$EXISTING" == "$CONTENT" ]]; then
+# Compare with LATEST CHECKPOINT (not the current file, since PostToolUse fires after write).
+# If no prior checkpoint exists OR content differs from latest checkpoint, create a new one.
+LATEST_CHECKPOINT=$(ls -1 "${CHECKPOINT_DIR}/${FILENAME}".*.json 2>/dev/null | sort -t. -k2 -n | tail -1 || true)
+if [[ -n "$LATEST_CHECKPOINT" && -f "$LATEST_CHECKPOINT" ]]; then
+  LAST_CONTENT=$(cat "$LATEST_CHECKPOINT" 2>/dev/null || true)
+  # 최신 체크포인트와 내용이 동일하면 백업 불필요 (중복 방지)
+  if [[ "$LAST_CONTENT" == "$CONTENT" ]]; then
     exit 0
   fi
 fi
@@ -51,13 +57,8 @@ fi
 NEXT_NUM=$((LAST_NUM + 1))
 PADDED_NUM=$(printf "%03d" "$NEXT_NUM")
 
-# 체크포인트 저장 (기존 파일 내용을 백업)
-if [[ -f "$FILE_PATH" ]]; then
-  cp "$FILE_PATH" "${CHECKPOINT_DIR}/${FILENAME}.${PADDED_NUM}.json"
-else
-  # 기존 파일이 없으면 새 내용을 첫 체크포인트로 저장
-  echo "$CONTENT" > "${CHECKPOINT_DIR}/${FILENAME}.${PADDED_NUM}.json"
-fi
+# 체크포인트 저장: $CONTENT를 직접 저장 (PostToolUse이므로 현재 파일 = 새 내용)
+echo "$CONTENT" > "${CHECKPOINT_DIR}/${FILENAME}.${PADDED_NUM}.json"
 
 # 최대 개수 초과 시 가장 오래된 체크포인트 삭제
 CHECKPOINT_COUNT=$(ls -1 "${CHECKPOINT_DIR}/${FILENAME}".*.json 2>/dev/null | wc -l | tr -d ' ')

@@ -111,12 +111,12 @@ maxTurns: 15
     - [ ] Have all executable checks been performed?
     - [ ] Has mechanical-result.json been saved in the correct format?
     - [ ] On FAIL, are specific error locations included?
+    - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
   </Final_Checklist>
 
   <Teammate_Protocol>
     You operate as a **teammate** in the current team.
     You can write files directly AND communicate via SendMessage for inter-agent coordination.
-    Results are delivered as your final text output — the orchestrator captures this directly.
     Results go to the orchestrator via SendMessage(to: "team-lead").
 
     Teammates you may contact:

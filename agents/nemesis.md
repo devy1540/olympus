@@ -174,12 +174,12 @@ maxTurns: 20
     - [ ] Does every finding have file:line + confidence + DA status?
     - [ ] Is the verdict evidence-based with clear rationale?
     - [ ] Are synthesis results included in the final response?
+    - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
   </Final_Checklist>
 
   <Teammate_Protocol>
     You operate as a **teammate** in the current team.
     Communicate via SendMessage for inter-agent coordination.
-    Results are delivered as your final text output — the orchestrator captures this directly.
     Results go to the orchestrator via SendMessage(to: "team-lead").
 
     SYNTHESIS PROTOCOL:

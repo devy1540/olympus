@@ -48,6 +48,10 @@ if [[ "$FILE_PATH" != */agents/*.md ]]; then
 fi
 
 CONTENT=$(echo "$INPUT" | jq -r '.tool_input.content // empty')
+# PostToolUse: for Edit operations, content is empty — read the file directly (already applied)
+if [[ -z "$CONTENT" && -f "$FILE_PATH" ]]; then
+  CONTENT=$(cat "$FILE_PATH" 2>/dev/null || true)
+fi
 if [[ -z "$CONTENT" ]]; then
   echo '{ "behavior": "allow" }'
   exit 0
@@ -103,6 +107,10 @@ fi
 if [[ -z "$MODEL" ]]; then
   VIOLATIONS="${VIOLATIONS}\n  - Missing required field: model"
 fi
+# disallowedTools key must be present (even if empty array []). Agent without it may run unrestricted.
+if ! echo "$FRONTMATTER" | grep -q "^disallowedTools:"; then
+  VIOLATIONS="${VIOLATIONS}\n  - Missing required field: disallowedTools (use [] for full-permission agents)"
+fi
 
 # --- 2. Name pattern: lowercase only ---
 if [[ -n "$NAME" && ! "$NAME" =~ ^[a-z]+$ ]]; then
@@ -147,11 +155,11 @@ if [[ -n "$NAME" ]]; then
     if [[ "$REGISTRY_PERMISSION" == "write" ]]; then
       HAS_EDIT=$(echo "$DISALLOWED_TOOLS" | grep -c "Edit" || echo "0")
       if [[ "$HAS_EDIT" == "0" ]]; then
-        WARNINGS="${WARNINGS}\n  - Agent '${NAME}' is registered as write-only but disallowedTools doesn't include Edit"
+        WARNINGS="${WARNINGS}\n  - Agent '${NAME}' is registered as 'write' permission (can Write, cannot Edit) but disallowedTools doesn't include Edit"
       fi
       HAS_WRITE=$(echo "$DISALLOWED_TOOLS" | grep -c "Write" || echo "0")
       if [[ "$HAS_WRITE" -gt 0 ]]; then
-        WARNINGS="${WARNINGS}\n  - Agent '${NAME}' is registered as write-only but disallowedTools includes Write (should only disallow Edit)"
+        WARNINGS="${WARNINGS}\n  - Agent '${NAME}' is registered as 'write' permission but disallowedTools includes Write (should only disallow Edit)"
       fi
     fi
     # Check: if registry says full, disallowedTools should be empty

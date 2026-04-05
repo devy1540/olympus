@@ -21,17 +21,14 @@ All agents operate as teammates in a single persistent team for cross-phase cont
   in the prompt. NEVER use "Wait for messages — do not act until prompted."
   The agent starts working the moment it spawns. SendMessage is ONLY for inter-agent communication.
 
-- RESULT CAPTURE RULE: Agent results come via the Agent tool's return value, NOT via SendMessage.
-  - Sequential agents: spawn foreground (run_in_background omitted or false) → result returned directly.
-  - Parallel agents: spawn background (run_in_background: true) → result comes via completion notification.
-  - Use SendMessage(to: "team-lead") for agent→orchestrator results. Do NOT use "leader".
-  - Do NOT instruct agents to "STAY AVAILABLE" — agents finish after their task and are re-spawned if needed.
+- RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
+  Orchestrator writes artifacts from these results. Write-capable agents write files directly.
 
 - MANDATORY CONSULTATION (§7): Agents with peer consultation paths MUST exchange at least
   one round of inter-agent messages BEFORE reporting final results.
   Reports lacking consultation evidence are incomplete — send agent back to consult.
 
-- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
+- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly — this violates §0.
 
 - SEQUENTIAL SPAWN: Within each phase, spawn agents in dependency order, not all at once.
   Wait for prerequisite agent results before spawning dependent agents.
@@ -189,17 +186,20 @@ Agents are spawned SEQUENTIALLY with IMMEDIATE TASKS — not all at once.
    olympus_gate_check(pipeline_id, "ambiguity", ambiguityScore)
    → IF passed: proceed to step 5
    → IF failed AND rounds < 10:
-       Re-spawn apollo (FOREGROUND) with follow-up task:
-       apollo_retry = Agent(name: "apollo", team_name: ${TEAM},
+       Re-spawn apollo (BACKGROUND — dialog agent, same pattern as initial spawn):
+       Agent(name: "apollo", team_name: ${TEAM},
            subagent_type: "olympus:apollo",
-           prompt: "You are Apollo. Artifact directory: ${ARTIFACT_DIR}/
+           run_in_background: true,
+           prompt: "You are Apollo in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
              LEADER_NAME: team-lead
-             Read ${ARTIFACT_DIR}/interview-log.md for previous rounds.
+             Read ${ARTIFACT_DIR}/interview-log.md for context from previous rounds.
              Ambiguity still at {score}. Continue interview, focus on: {gap areas}.
-             Output updated results as your final response.")
+             IMPORTANT: Use SendMessage(to: 'team-lead') for each question (interview proxy pattern).
+             When done: SendMessage(to: 'team-lead', summary: '인터뷰 완료', '{updated log + scores}')")
        olympus_register_agent_spawn(pipeline_id, "apollo")
        olympus_record_execution(pipeline_id, "oracle", "apollo-retry", ...)
-       → Update interview-log.md + ambiguity-scores.json from apollo_retry
+       Continue INTERVIEW PROXY LOOP (same as Step 2, item 3)
+       → Update interview-log.md + ambiguity-scores.json from retry completion
    → IF failed AND rounds >= 10:
        next = olympus_next_action(pipeline_id)
        # next.action: advance_phase (user override) or retry_phase
@@ -500,7 +500,7 @@ Implement the approved plan. **Teammate mode shines here — agents collaborate 
 
    olympus_record_execution(pipeline_id, "execution", "prometheus", ...)
 
-4. Build verification (FOREGROUND):
+3. Build verification (FOREGROUND):
    heph_result = Agent(name: "hephaestus", team_name: ${TEAM},
      subagent_type: "olympus:hephaestus",
      prompt: "LEADER_NAME: team-lead
@@ -509,7 +509,7 @@ Implement the approved plan. **Teammate mode shines here — agents collaborate 
    olympus_register_agent_spawn(pipeline_id, "hephaestus")
    olympus_record_execution(pipeline_id, "execution", "hephaestus", ...)
 
-5. Debug cycle (if build fails, max 3 cycles):
+4. Debug cycle (if build fails, max 3 cycles):
 
    IF heph_result indicates FAIL:
      retryTracking.consecutiveDebugFailures++
@@ -531,7 +531,7 @@ Implement the approved plan. **Teammate mode shines here — agents collaborate 
        → Circuit breaker: proceed to Step 7 with current state
        → Tribunal will classify as BLOCKED or REJECTED_IMPLEMENTATION
 
-6. Update odyssey-state.json:
+5. Update odyssey-state.json:
    phase: "tribunal"
    gates.mechanicalPass: true (or false if circuit breaker)
 ```
@@ -652,13 +652,13 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
 ```
 1. TeamDelete(team_name: ${TEAM})
 
-3. Generate final report:
+2. Generate final report:
    - Phases executed
    - Gate results per phase
    - Total teammate spawns and reuses
    - Final artifact locations
 
-4. Update odyssey-state.json:
+3. Update odyssey-state.json:
    phase: "completed"
    transition: { status: "terminal", reason: "completed" }
 ```

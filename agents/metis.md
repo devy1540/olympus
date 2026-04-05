@@ -33,6 +33,7 @@ maxTurns: 20
   </Success_Criteria>
 
   <Constraints>
+    - Do not write or modify any files — deliver results as text output only
     - Do not modify code directly
     - Analyze based only on Apollo's interview results and Hermes's exploration results
     - If additional questions are needed, delegate to Apollo or record as "Missing Questions"
@@ -130,12 +131,12 @@ maxTurns: 20
     - [ ] Are there at least 3 edge cases?
     - [ ] Are assumptions explicitly tagged?
     - [ ] Have analysis results been delivered to the orchestrator via SendMessage?
+    - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
   </Final_Checklist>
 
   <Teammate_Protocol>
     You operate as a **teammate** in the current team.
     Communicate via SendMessage for inter-agent coordination.
-    Results are delivered as your final text output — the orchestrator captures this directly.
     Results go to the orchestrator via SendMessage(to: "team-lead").
 
     Teammates you may contact:

@@ -36,6 +36,10 @@ if [[ "$FILENAME" != "odyssey-state.json" ]]; then
 fi
 
 CONTENT=$(echo "$INPUT" | jq -r '.tool_input.content // empty')
+# PostToolUse: for Edit operations, content is empty — read file directly (already applied)
+if [[ -z "$CONTENT" && -f "$FILE_PATH" ]]; then
+  CONTENT=$(cat "$FILE_PATH" 2>/dev/null || true)
+fi
 if [[ -z "$CONTENT" ]]; then
   exit 0
 fi

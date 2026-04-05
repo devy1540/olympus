@@ -115,7 +115,11 @@ for gate_req in \
   '{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"convergence","score":0.96}}}' \
   '{"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"convergence","score":0.90}}}' \
   '{"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"consensus","score":0.75}}}' \
-  '{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"consensus","score":0.50}}}'; do
+  '{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"consensus","score":0.50}}}' \
+  '{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"semantic","score":0.85}}}' \
+  '{"jsonrpc":"2.0","id":15,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"semantic","score":0.60}}}' \
+  '{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"evolve_dimension_minimum","score":0.75}}}' \
+  '{"jsonrpc":"2.0","id":17,"method":"tools/call","params":{"name":"olympus_gate_check","arguments":{"pipeline_id":"e2e-001","gate_type":"evolve_dimension_minimum","score":0.45}}}'; do
   INIT_LINE='{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}'
   RESP=$(printf '%s\n%s\n' "$INIT_LINE" "$gate_req" | "$BIN" serve 2>/dev/null)
   GATE_OUTPUT="${GATE_OUTPUT}${RESP}"$'\n'
@@ -187,6 +191,14 @@ assert_eq "convergence 0.96 ≥ 0.95 → pass" "true" "$(jq_field "$R7" "passed"
 assert_eq "convergence 0.90 < 0.95 → fail" "false" "$(jq_field "$R8" "passed")"
 assert_eq "consensus 0.75 ≥ 0.66 → pass" "true" "$(jq_field "$R9" "passed")"
 assert_eq "consensus 0.50 < 0.66 → fail" "false" "$(jq_field "$R10" "passed")"
+R14=$(get_gate_result 14)
+R15=$(get_gate_result 15)
+R16=$(get_gate_result 16)
+R17=$(get_gate_result 17)
+assert_eq "semantic 0.85 ≥ 0.8 → pass" "true" "$(jq_field "$R14" "passed")"
+assert_eq "semantic 0.60 < 0.8 → fail" "false" "$(jq_field "$R15" "passed")"
+assert_eq "evolve_dim 0.75 ≥ 0.6 → pass" "true" "$(jq_field "$R16" "passed")"
+assert_eq "evolve_dim 0.45 < 0.6 → fail" "false" "$(jq_field "$R17" "passed")"
 
 # 11-12. Execution history
 R11=$(get_mcp_result 11)
@@ -504,7 +516,52 @@ for l in sys.stdin:
 " 2>/dev/null)
 assert_contains "flow: validate_plan" "realistic" "$F111"
 
-# Flow Step 6: final status
+# Flow Step 6: unregistered agent spawn (should fail)
+F_UNREG=$(printf '%s\n%s\n' "$INIT" '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_register_agent_spawn","arguments":{"pipeline_id":"flow-001","agent_name":"nonexistent-agent"}}}' | "$BIN" serve 2>/dev/null)
+F112=$(echo "$F_UNREG" | python3 -c "
+import sys,json
+for l in sys.stdin:
+    try:
+        m=json.loads(l.strip())
+        if m.get('id')==1:
+            for x in m.get('result',{}).get('content',[]):
+                if x.get('type')=='text': print(x['text']); break
+            break
+    except: pass
+" 2>/dev/null)
+assert_contains "flow: unregistered agent rejected" "미등록" "$F112"
+
+# Flow Step 6b: dynamic suffix agent spawn (base name registered → should succeed)
+F_DYN=$(printf '%s\n%s\n' "$INIT" '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_register_agent_spawn","arguments":{"pipeline_id":"flow-001","agent_name":"ares-r1"}}}' | "$BIN" serve 2>/dev/null)
+F113=$(echo "$F_DYN" | python3 -c "
+import sys,json
+for l in sys.stdin:
+    try:
+        m=json.loads(l.strip())
+        if m.get('id')==1:
+            for x in m.get('result',{}).get('content',[]):
+                if x.get('type')=='text': print(x['text']); break
+            break
+    except: pass
+" 2>/dev/null)
+assert_eq "flow: dynamic suffix ares-r1 accepted" "true" "$(jq_field "$F113" "registered")"
+
+# Flow Step 6c: unregistered base name (ux-critic → base "ux" not registered → rejected)
+F_UX=$(printf '%s\n%s\n' "$INIT" '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_register_agent_spawn","arguments":{"pipeline_id":"flow-001","agent_name":"ux-critic"}}}' | "$BIN" serve 2>/dev/null)
+F114=$(echo "$F_UX" | python3 -c "
+import sys,json
+for l in sys.stdin:
+    try:
+        m=json.loads(l.strip())
+        if m.get('id')==1:
+            for x in m.get('result',{}).get('content',[]):
+                if x.get('type')=='text': print(x['text']); break
+            break
+    except: pass
+" 2>/dev/null)
+assert_contains "flow: ux-critic base unregistered" "미등록" "$F114"
+
+# Flow Step 7: final status
 F_STATUS=$(printf '%s\n%s\n' "$INIT" '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_pipeline_status","arguments":{"pipeline_id":"flow-001"}}}' | "$BIN" serve 2>/dev/null)
 F110=$(echo "$F_STATUS" | python3 -c "
 import sys,json

@@ -340,6 +340,13 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/random.txt\",\"content\":\"hello\"}}" \
   "allow" "Non-gate file → allow"
 
+# Test: Edit context (no content field) — file has failing ambiguity → deny via file read
+echo '{"goal":0.5,"constraints":0.5,"ac":0.5}' > "${ARTIFACT_DIR}/ambiguity-scores.json"
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/ambiguity-scores.json\",\"old_string\":\"0.9\",\"new_string\":\"0.5\"}}" \
+  "deny" "Edit context (no content): reads file with failing ambiguity → deny"
+rm -f "${ARTIFACT_DIR}/ambiguity-scores.json"
+
 # ============================================================
 echo "--- validate-state.sh ---"
 # ============================================================
@@ -421,6 +428,13 @@ test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh"   "{\"tool_input\":{\
 # Test: execution phase with themisVerdict=REVISE → deny
 test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh"   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"execution\\\",\\\"gates\\\":{\\\"themisVerdict\\\":\\\"REVISE\\\"}}\"}}"  "deny" "execution phase with REVISE themisVerdict → deny"
 
+# Test: Edit context (no content field) — file has invalid phase → deny via file read
+echo '{"phase":"not_a_phase"}' > "${ARTIFACT_DIR}/odyssey-state.json"
+test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"old_string\":\"oracle\",\"new_string\":\"not_a_phase\"}}" \
+  "deny" "Edit context (no content): reads file with invalid phase → deny"
+rm -f "${ARTIFACT_DIR}/odyssey-state.json"
+
 # ============================================================
 echo "--- validate-agents.sh ---"
 # ============================================================
@@ -464,6 +478,27 @@ test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
 test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
   "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/agents/toomany.md\",\"content\":\"---\nname: toomany\ndescription: Too many turns\nmodel: haiku\ndisallowedTools: []\nmaxTurns: 100\n---\n# TooMany\"}}" \
   "deny" "maxTurns: 100 (exceeds maximum 50) → deny"
+
+# Test: missing disallowedTools key entirely → deny
+test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
+  "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/agents/nodisallow.md\",\"content\":\"---\nname: nodisallow\ndescription: Missing disallowedTools\nmodel: sonnet\n---\n# NoDis\"}}" \
+  "deny" "Missing disallowedTools key → deny"
+
+# Test: Edit context (no content field) — file exists with invalid model → deny via file read
+mkdir -p "${TEST_DIR}/agents"
+cat > "${TEST_DIR}/agents/editme.md" << 'EDITEOF'
+---
+name: editme
+description: Edited agent test
+model: badmodel
+disallowedTools: []
+---
+# EditMe
+EDITEOF
+test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
+  "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/agents/editme.md\",\"old_string\":\"model: opus\",\"new_string\":\"model: badmodel\"}}" \
+  "deny" "Edit context (no content field): reads file, invalid model → deny"
+rm -f "${TEST_DIR}/agents/editme.md"
 
 # Test: non-agent file → silent
 test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
@@ -519,6 +554,74 @@ test_hook "compact-ctx" "$SCRIPT_DIR/compact-context.sh" \
 test_hook "compact-ctx" "$SCRIPT_DIR/compact-context.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/spec.md\",\"content\":\"# Spec\"}}" \
   "allow" "Non-state file → allow"
+
+# Test: Edit context (no content field) → reads file directly, fires on transition
+echo '{"phase":"genesis"}' > "${ARTIFACT_DIR}/odyssey-state.json"
+echo '{"phase":"oracle"}' > "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.004.json"
+test_hook "compact-ctx" "$SCRIPT_DIR/compact-context.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"old_string\":\"oracle\",\"new_string\":\"genesis\"}}" \
+  "allow" "Edit context (no content) → reads file directly, fires transition"
+
+# ============================================================
+echo "--- checkpoint.sh ---"
+# ============================================================
+
+CKPT_DIR="${TEST_DIR}/.olympus/ckpt-test-20260406-abc"
+mkdir -p "$CKPT_DIR"
+CKPT_STATE="${CKPT_DIR}/odyssey-state.json"
+
+# Test 1: first write → checkpoint created
+echo '{"phase":"genesis"}' > "$CKPT_STATE"
+echo "{\"tool_input\":{\"file_path\":\"$CKPT_STATE\",\"content\":\"{\\\"phase\\\":\\\"genesis\\\"}\"}}" | bash "$SCRIPT_DIR/checkpoint.sh" > /dev/null 2>&1
+TOTAL=$((TOTAL + 1))
+CKPT_COUNT=$(ls "${CKPT_DIR}/.checkpoints/"*.json 2>/dev/null | wc -l | tr -d ' ')
+if [[ "$CKPT_COUNT" -eq 1 ]]; then
+  echo "  PASS  checkpoint: first state write creates checkpoint"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL  checkpoint: expected 1 checkpoint after first write, got ${CKPT_COUNT}"
+  FAIL=$((FAIL + 1))
+fi
+
+# Test 2: duplicate write → no new checkpoint
+echo "{\"tool_input\":{\"file_path\":\"$CKPT_STATE\",\"content\":\"{\\\"phase\\\":\\\"genesis\\\"}\"}}" | bash "$SCRIPT_DIR/checkpoint.sh" > /dev/null 2>&1
+TOTAL=$((TOTAL + 1))
+CKPT_COUNT=$(ls "${CKPT_DIR}/.checkpoints/"*.json 2>/dev/null | wc -l | tr -d ' ')
+if [[ "$CKPT_COUNT" -eq 1 ]]; then
+  echo "  PASS  checkpoint: duplicate write skips checkpoint (same content)"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL  checkpoint: expected 1 checkpoint (no duplicate), got ${CKPT_COUNT}"
+  FAIL=$((FAIL + 1))
+fi
+
+# Test 3: new content → second checkpoint
+echo '{"phase":"pantheon"}' > "$CKPT_STATE"
+echo "{\"tool_input\":{\"file_path\":\"$CKPT_STATE\",\"content\":\"{\\\"phase\\\":\\\"pantheon\\\"}\"}}" | bash "$SCRIPT_DIR/checkpoint.sh" > /dev/null 2>&1
+TOTAL=$((TOTAL + 1))
+CKPT_COUNT=$(ls "${CKPT_DIR}/.checkpoints/"*.json 2>/dev/null | wc -l | tr -d ' ')
+if [[ "$CKPT_COUNT" -eq 2 ]]; then
+  echo "  PASS  checkpoint: state change creates new checkpoint"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL  checkpoint: expected 2 checkpoints after state change, got ${CKPT_COUNT}"
+  FAIL=$((FAIL + 1))
+fi
+
+# Test 4: non-state file → no checkpoint created
+NON_STATE="${CKPT_DIR}/spec.md"
+echo "# Spec" > "$NON_STATE"
+echo "{\"tool_input\":{\"file_path\":\"$NON_STATE\",\"content\":\"# New Spec\"}}" | bash "$SCRIPT_DIR/checkpoint.sh" > /dev/null 2>&1
+TOTAL=$((TOTAL + 1))
+SPEC_CKPT_COUNT=$(find "${CKPT_DIR}/.checkpoints" -name "spec.md*.json" 2>/dev/null | wc -l | tr -d ' ')
+if [[ "$SPEC_CKPT_COUNT" -eq 0 ]]; then
+  echo "  PASS  checkpoint: non-state file skipped"
+  PASS=$((PASS + 1))
+else
+  echo "  FAIL  checkpoint: expected no checkpoint for spec.md, got ${SPEC_CKPT_COUNT}"
+  FAIL=$((FAIL + 1))
+fi
+rm -rf "$CKPT_DIR"
 
 # ============================================================
 echo "--- denial-tracking.sh ---"

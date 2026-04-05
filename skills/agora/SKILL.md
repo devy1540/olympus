@@ -21,7 +21,7 @@ Committee members operate as teammates for multi-round debate with context reten
 - MANDATORY CONSULTATION (§7): Debate members MUST react to each other's prior statements,
   not present independent opinions. Round 2+ responses MUST explicitly reference a prior speaker.
   A position that does not engage with any prior argument is incomplete.
-- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
+- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly — this violates §0.
 - RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
   Orchestrator writes artifacts from these results. Write-capable agents write files directly.
 - SEQUENTIAL SPAWN: committee members spawned in Step 3 → debate rounds sequential (Step 4).
