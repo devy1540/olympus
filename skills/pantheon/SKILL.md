@@ -186,6 +186,7 @@ IF architecture perspective:
 
 Note: ares and poseidon run IN PARALLEL with CROSS-REFERENCE via SendMessage.
 Results come via background completion notifications.
+olympus_pipeline_status(pipeline_id)  # verify ares + poseidon (+ zeus if applicable) are registered
 olympus_log_collaboration(pipeline_id, "ares", "poseidon", "코드품질↔보안 크로스레퍼런스")
 
 DEADLOCK FALLBACK: ares and poseidon each wait for the other's cross-reference response.

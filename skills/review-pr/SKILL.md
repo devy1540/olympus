@@ -196,6 +196,7 @@ Agent(name: "poseidon", team_name: ${TEAM},
         Output your full results as your final response.")
 olympus_register_agent_spawn(pipeline_id, "poseidon")
 
+olympus_pipeline_status(pipeline_id)  # verify ares + poseidon are registered as parallel reviewers
 olympus_log_collaboration(pipeline_id, "ares", "poseidon", "코드품질↔보안 크로스레퍼런스")
 
 DEADLOCK FALLBACK: If 3 minutes elapse without both completing:

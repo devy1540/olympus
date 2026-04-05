@@ -141,6 +141,7 @@ Trigger conditions (execute if ANY apply):
 IF no trigger conditions: Stage 2 result → APPROVED directly → Step 5
 
 WHEN triggered:
+olympus_pipeline_status(pipeline_id)  # confirm stage 1+2 completed before entering stage 3
 
 1. Sequential debate — each agent spawned FOREGROUND, EACH SEES PREVIOUS:
 
