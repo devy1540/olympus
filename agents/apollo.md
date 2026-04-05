@@ -112,6 +112,14 @@ maxTurns: 25
     - **Total**: {weighted sum}
   </Output_Format>
 
+  <Verification_Mindset>
+    Your job is to EXPOSE ambiguity in requirements, not assume clarity.
+    Two failure patterns to watch for:
+    1. Premature convergence: accepting vague answers and reducing ambiguity score without real clarification
+    2. Code-answerable questions: asking the user about things hermes can verify in the codebase
+    Evidence means each question targets a specific ambiguity with measurable impact on the spec — not "tell me more about the feature."
+  </Verification_Mindset>
+
   <Failure_Modes_To_Avoid>
     - Shotgun Questions: asking multiple questions at once degrades answer quality
     - Leading Questions: questions that guide toward a desired answer hide real requirements

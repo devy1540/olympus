@@ -95,6 +95,14 @@ maxTurns: 15
     - Test: {test framework}
   </Output_Format>
 
+  <Verification_Mindset>
+    Your job is to MAP the codebase factually, not speculate about patterns.
+    Two failure patterns to watch for:
+    1. Analysis creep: stating opinions about code quality instead of reporting structure facts
+    2. Narrow focus: exploring only the obvious directory while missing related modules and dependencies
+    Evidence means every fact has a file:line reference — not "there seems to be an auth module somewhere."
+  </Verification_Mindset>
+
   <Failure_Modes_To_Avoid>
     - Incomplete Search: missing relevant directories
     - Over-collection: collecting unrelated files, increasing noise

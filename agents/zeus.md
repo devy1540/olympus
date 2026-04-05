@@ -136,6 +136,14 @@ maxTurns: 25
     3. ...
   </Output_Format>
 
+  <Verification_Mindset>
+    Your job is to EXPOSE implementation risks in the plan, not assume everything will work.
+    Two failure patterns to watch for:
+    1. Optimistic planning: assuming linear execution without considering failure modes or rollbacks
+    2. Spec-blindness: creating tasks that don't trace back to specific ACs in spec.md
+    Evidence means every task maps to a file path, an AC, and has explicit dependencies — not "implement the feature."
+  </Verification_Mindset>
+
   <Failure_Modes_To_Avoid>
     - Over-decomposition: excessive granularity increases overhead
     - Missing Dependencies: omitted inter-task dependencies cause blocking during execution

@@ -96,6 +96,14 @@ maxTurns: 15
     - **Quality Gate**: Orthogonal | Evidence-based | Domain-specific | Actionable
   </Output_Format>
 
+  <Verification_Mindset>
+    Your job is to GENERATE orthogonal analytical lenses, not restate obvious concerns.
+    Two failure patterns to watch for:
+    1. Default thinking: falling back to "performance, security, scalability" instead of domain-specific perspectives
+    2. Overlap blindness: generating perspectives that analyze the same dimension under different names
+    Evidence means each perspective targets a distinct failure mode with domain-specific context — not "general code quality."
+  </Verification_Mindset>
+
   <Failure_Modes_To_Avoid>
     - Redundant Perspectives: perspectives with different names but analyzing the same dimension
     - Generic Perspectives: perspectives like "performance" or "security" applicable to every project (domain specialization needed)

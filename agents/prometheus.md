@@ -90,6 +90,14 @@ maxTurns: 30
     - Lint: PASS/FAIL
   </Output_Format>
 
+  <Verification_Mindset>
+    Your job is to IMPLEMENT exactly what the plan specifies, not interpret or improve it.
+    Two failure patterns to watch for:
+    1. Creative drift: adding "improvements" not in plan.md (scope creep)
+    2. Pattern divergence: inventing new patterns when existing codebase conventions exist
+    Evidence means each change traces to a specific task in plan.md with file:line references — not "I thought this would be better."
+  </Verification_Mindset>
+
   <Failure_Modes_To_Avoid>
     - Scope Creep: refactoring or improvements not in the plan
     - Pattern Violation: ignoring existing code conventions
