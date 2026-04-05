@@ -408,6 +408,40 @@ RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
 check_result "Pantheon: analysis.md (final synthesis)" "$RESULT" "allow"
 
 # ============================================================
+echo ""
+echo "--- Phase 9: Agora Pipeline (committee debate) ---"
+# ============================================================
+
+AGORA_DIR="${TEST_DIR}/.olympus/agora-20260401-inttest9"
+mkdir -p "$AGORA_DIR/.checkpoints"
+
+# Step 1: debate-frame.json (orchestrator)
+echo "  [agora] Orchestrator → debate-frame.json"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${AGORA_DIR}/debate-frame.json" '{"question":"REST vs GraphQL","options":[{"id":"A","title":"REST"},{"id":"B","title":"GraphQL"}]}')
+check_result "Agora: debate-frame.json (orchestrator)" "$RESULT" "allow"
+
+# Step 2: committee-positions.md (from zeus+ares+eris)
+echo "  [agora] Committee → committee-positions.md"
+echo '{}' > "${AGORA_DIR}/debate-frame.json"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${AGORA_DIR}/committee-positions.md" "## Committee Positions\n### Zeus: REST\n### Ares: GraphQL")
+check_result "Agora: committee-positions.md (committee)" "$RESULT" "allow"
+
+# Step 3: da-challenges.md (from eris)
+echo "  [agora] Eris → da-challenges.md"
+echo "## Positions" > "${AGORA_DIR}/committee-positions.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${AGORA_DIR}/da-challenges.md" "## DA Challenges\n### Challenge 1: Hasty Generalization")
+check_result "Agora: da-challenges.md (eris challenge)" "$RESULT" "allow"
+
+# Step 4: decision.md (orchestrator)
+echo "  [agora] Orchestrator → decision.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${AGORA_DIR}/decision.md" "## Committee Decision\n### Verdict: GraphQL\n### Consensus: 2/3")
+check_result "Agora: decision.md (final decision)" "$RESULT" "allow"
+
+# ============================================================
 # Cleanup
 rm -rf "$TEST_DIR"
 
