@@ -546,6 +546,12 @@ This produces higher-quality results because findings are cross-validated before
      summary: "코드 품질 → 보안 크로스레퍼런스")
    ```
 
+7. **Inter-agent message size cap.** SendMessage payloads between agents MUST NOT exceed 3000 characters. If your analysis exceeds this limit:
+   - Send a summary (≤3000 chars) with the key findings
+   - Reference the full artifact by path: "Full analysis in .olympus/{id}/analysis.md"
+   - The receiver reads the artifact directly if more detail is needed
+   This prevents token explosion in peer consultation rounds. Violation: silently truncated, causing silent information loss.
+
 ### 7.4 Phase-Specific Conversation Patterns
 
 **Oracle Phase:**

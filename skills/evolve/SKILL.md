@@ -206,11 +206,14 @@ Update evolve-state.json:
   { iteration, scores, changes, audit result }
 
 Convergence:
-  IF overall >= 0.8: converged → generate final report
+  IF overall >= 0.8 AND all 5 dimensions >= 0.6: converged → generate final report
+  ELIF overall >= 0.8 BUT any dimension < 0.6: not converged — address weak dimension explicitly
   ELIF iteration >= maxIterations (5): AskUserQuestion [Continue, Accept, Reset]
   ELIF score_delta < 0.02 for 2 iterations: stagnation → notify user
   ELSE: return to Step 3 (same benchmark)
     ← Teammates REMEMBER previous iterations — evaluation improves
+
+Note: per-dimension minimum (0.6) prevents a weak dimension being masked by high scores elsewhere.
 
 Generate final report: score progression, key improvements, remaining weaknesses
 ```
