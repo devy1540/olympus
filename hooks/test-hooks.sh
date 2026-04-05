@@ -279,6 +279,31 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/evolve-state.json\",\"content\":\"{\\\"overall\\\":0.85,\\\"scores\\\":{\\\"specificity\\\":0.8,\\\"evidence\\\":0.5,\\\"efficiency\\\":0.9}}\"}}" \
   "allow" "Evolve-state dim below 0.6 → warning allow"
 
+# Test: semantic-matrix.md without mechanical-result.json → evidence warning
+SEMANTIC_DIR=$(mktemp -d)/.olympus/tribunal-20260401-sem
+mkdir -p "$SEMANTIC_DIR"
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${SEMANTIC_DIR}/semantic-matrix.md\",\"content\":\"# Semantic Matrix\n## AC1: PASS\"}}" \
+  "allow" "semantic-matrix.md without mechanical-result.json → evidence warning (allow)"
+
+# Test: semantic-matrix.md with FAIL mechanical → deny precondition
+echo '{"overall":"FAIL","results":{"build":{"status":"FAIL"}}}' > "${SEMANTIC_DIR}/mechanical-result.json"
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${SEMANTIC_DIR}/semantic-matrix.md\",\"content\":\"# Semantic Matrix\n## AC1: PASS\"}}" \
+  "deny" "semantic-matrix.md with FAIL mechanical-result.json → deny precondition"
+
+# Test: semantic-matrix.md with PASS mechanical but no file:line refs → evidence warning
+echo '{"overall":"PASS","results":{"build":{"status":"PASS"}}}' > "${SEMANTIC_DIR}/mechanical-result.json"
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${SEMANTIC_DIR}/semantic-matrix.md\",\"content\":\"# Semantic Matrix\n## AC1: PASS — implementation verified\"}}" \
+  "allow" "semantic-matrix.md with PASS mechanical but no file:line refs → evidence warning (allow)"
+
+# Test: semantic-matrix.md with PASS mechanical and valid file:line refs → allow
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${SEMANTIC_DIR}/semantic-matrix.md\",\"content\":\"# Semantic Matrix\n## AC1: PASS — src/auth.ts:42 validates token\"}}" \
+  "allow" "semantic-matrix.md with PASS mechanical and file:line ref → allow"
+rm -rf "$(dirname "$SEMANTIC_DIR")"
+
 # Test: non-gate file → silent
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/random.txt\",\"content\":\"hello\"}}" \
