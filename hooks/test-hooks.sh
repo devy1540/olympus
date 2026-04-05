@@ -210,6 +210,13 @@ test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"execution\\\",\\\"retryTracking\\\":{\\\"evaluationPass\\\":4,\\\"maxPasses\\\":3}}\"}}" \
   "deny" "evaluationPass > maxPasses → deny"
 
+# Test: Terminal rewind — tribunal→oracle via returnToPhase
+echo '{"phase":"tribunal"}' > "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.1.json"
+test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"oracle\\\",\\\"transition\\\":{\\\"status\\\":\\\"terminal\\\",\\\"reason\\\":\\\"rejected\\\",\\\"returnToPhase\\\":\\\"oracle\\\"}}\"}}" \
+  "allow" "Terminal rewind tribunal→oracle via returnToPhase → allow"
+rm -f "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.1.json"
+
 # ============================================================
 echo "--- validate-agents.sh ---"
 # ============================================================
