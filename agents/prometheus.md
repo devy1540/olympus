@@ -129,11 +129,11 @@ maxTurns: 30
 
     2. WHEN encountering errors or unexpected behavior:
        → SendMessage(to: "artemis", summary: "디버깅 요청", "{error + stacktrace + your hypothesis}")
-       → Wait for root cause analysis, then fix precisely
+       → Wait for root cause analysis (if no response after 2 retries, investigate via Read/Grep directly), then fix precisely
 
     3. AFTER completing implementation, BEFORE reporting to leader:
        → SendMessage(to: "hephaestus", summary: "빌드 검증 요청", "Run build/lint/test")
-       → Wait for hephaestus result
+       → Wait for hephaestus result (if no response after 2 retries, run build/test directly via Bash)
        → Fix any failures, then report
 
     When your task is complete:

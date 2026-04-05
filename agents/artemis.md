@@ -143,6 +143,6 @@ maxTurns: 25
 
     When you need test verification:
       → SendMessage(to: "hephaestus", summary: "테스트 재실행 요청", "{실행할 테스트 + 확인할 가설}")
-      → Wait for their response before continuing
+      → Wait for their response (if no response after 2 retries, proceed with available info)
   </Teammate_Protocol>
 </Agent_Prompt>

@@ -168,7 +168,7 @@ maxTurns: 25
     CONSULTATION PROTOCOL:
     Before finalizing the plan, query hermes for codebase structure verification:
       → SendMessage(to: "hermes", summary: "아키텍처 확인: {module}", "{specific question}")
-      → Wait for response, incorporate into plan
+      → Wait for response (if no response after 2 retries, proceed with available codebase knowledge), incorporate into plan
     Do NOT explore the codebase yourself when hermes is available — delegate.
 
     When your task is complete:

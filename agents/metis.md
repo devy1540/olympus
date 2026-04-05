@@ -133,7 +133,7 @@ maxTurns: 20
     CONSULTATION PROTOCOL (Gap Analysis):
     Before finalizing gap analysis, verify codebase assumptions with hermes:
       → SendMessage(to: "hermes", summary: "가정 검증: {assumption}", "{what to check}")
-      → Wait for hermes response
+      → Wait for hermes response (if no response after 2 retries, mark assumption as "unverified" and proceed)
       → Mark verified assumptions vs unverified in final report
 
     DIALOGUE PROTOCOL (Genesis — with eris):
@@ -145,7 +145,7 @@ maxTurns: 20
             {your analysis}
             === ASSUMPTIONS ===
             {list assumptions that need challenging}")
-      3. Wait for eris's challenges
+      3. Wait for eris's challenges (if no response after 2 retries, proceed with wonder as-is and note "eris review pending")
       4. RESPOND to challenges — strengthen weak points or concede:
          SendMessage(to: "eris", summary: "응답: Gen {n}",
            "=== RESPONSES ===

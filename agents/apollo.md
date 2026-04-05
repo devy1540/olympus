@@ -174,6 +174,6 @@ maxTurns: 25
 
     When you need information from another teammate:
       → SendMessage(to: "hermes", summary: "코드베이스 확인 요청", "{질문}")
-      → Wait for their response before continuing
+      → Wait for their response (if no response after 2 retries, proceed with available info)
   </Teammate_Protocol>
 </Agent_Prompt>
