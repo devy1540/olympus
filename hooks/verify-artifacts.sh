@@ -220,6 +220,24 @@ if [[ "$FILENAME" == "verdict.md" && "$SKILL_NAME" == "review-pr" ]]; then
   fi
 fi
 
+# --- DA challenge mandatory for decision.md in agora ---
+if [[ "$FILENAME" == "decision.md" && "$SKILL_NAME" == "agora" ]]; then
+  DA_FILE="${ARTIFACT_DIR}/da-challenges.md"
+  if [[ ! -f "$DA_FILE" ]]; then
+    emit_allow_with_context \
+      "DA MANDATORY WARNING: Writing decision.md but da-challenges.md does not exist. Eris (Devil's Advocate) challenge is MANDATORY for Agora — do NOT write a committee decision without DA challenge. Spawn Eris and produce da-challenges.md first." \
+      "da-required"
+    exit 0
+  fi
+  DA_SIZE=$(wc -c < "$DA_FILE" 2>/dev/null || echo "0")
+  if [[ "$DA_SIZE" -lt 100 ]]; then
+    emit_allow_with_context \
+      "DA MANDATORY WARNING: da-challenges.md exists but is nearly empty (${DA_SIZE} bytes). Eris must produce substantive adversarial challenges. Re-spawn Eris if the previous attempt failed." \
+      "da-required"
+    exit 0
+  fi
+fi
+
 # --- DA evaluation mandatory for verdict.md in tribunal ---
 if [[ "$FILENAME" == "verdict.md" && "$SKILL_NAME" == "tribunal" ]]; then
   # Check consensus-record.json exists when Stage 3 should have been triggered

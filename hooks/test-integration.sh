@@ -539,7 +539,25 @@ RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
   "${AGORA_DIR}/da-challenges.md" "## DA Challenges\n### Challenge 1: Hasty Generalization")
 check_result "Agora: da-challenges.md (eris challenge)" "$RESULT" "allow"
 
-# Step 4: decision.md (orchestrator)
+# Step 4: decision.md WITHOUT da-challenges.md → DA mandatory warning
+echo "  [agora] Orchestrator → decision.md (no DA challenges)"
+AGORA_NO_DA_DIR="${TEST_DIR}/.olympus/agora-20260401-inttest9b"
+mkdir -p "$AGORA_NO_DA_DIR"
+echo '{}' > "${AGORA_NO_DA_DIR}/debate-frame.json"
+echo "## Positions" > "${AGORA_NO_DA_DIR}/committee-positions.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${AGORA_NO_DA_DIR}/decision.md" "## Committee Decision\n### Verdict: GraphQL\n### Consensus: 2/3")
+check_result "Agora: decision.md without da-challenges.md → DA mandatory warning (allow)" "$RESULT" "allow"
+
+# Step 5: decision.md WITH da-challenges.md present → allow
+echo "  [agora] Orchestrator → decision.md (with DA present)"
+# Write da-challenges with substantive content (>100 bytes)
+printf '## DA Challenges\n### Challenge 1: Hasty Generalization\nThe assumption that GraphQL will scale better lacks benchmark evidence. REST with HTTP/2 achieves similar parallelism.' > "${AGORA_NO_DA_DIR}/da-challenges.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${AGORA_NO_DA_DIR}/decision.md" "## Committee Decision\n### Verdict: GraphQL\n### Consensus: 2/3")
+check_result "Agora: decision.md with da-challenges.md present → allow" "$RESULT" "allow"
+
+# Step 4: decision.md (original test with da-challenges.md from step 3)
 echo "  [agora] Orchestrator → decision.md"
 RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
   "${AGORA_DIR}/decision.md" "## Committee Decision\n### Verdict: GraphQL\n### Consensus: 2/3")
