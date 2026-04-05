@@ -271,6 +271,13 @@ olympus_record_execution(pipeline_id, "review-pr", "nemesis", ...)
 Gate check:
   survival_rate = findings_surviving_DA / total_findings
   olympus_gate_check(pipeline_id, "consensus", survival_rate)
+
+  IF survival_rate >= 0.66:
+    → proceed to Step 9 (high-confidence findings)
+  ELSE:
+    next = olympus_next_action(pipeline_id)
+    # next.action: retry_phase (re-run analysis) or escalate (user decides)
+    → If all findings challenged by DA, verdict defaults to LGTM with note
 ```
 
 ---

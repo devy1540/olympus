@@ -205,6 +205,11 @@ WHEN triggered:
      - FAIL (1 approve): → REJECTED + dissent recorded
      - FAIL (0 approve): → REJECTED
 
+   IF REJECTED:
+     next = olympus_next_action(pipeline_id)
+     # next.action: advance_phase (record verdict → Odyssey decides retry/rewind)
+     #              or escalate (standalone: present options to user)
+
 4. Save consensus-record.json:
    { votes: { ares, eris, hera }, consensus_pct, gate_result, dissent }
 ```
