@@ -198,6 +198,8 @@ FOR each round (max 3):
          Ares argues: {ares_position_verbatim}. Respond to ares's specific objections.
          Output your rebuttal as your final response.")
      olympus_register_agent_spawn(pipeline_id, "zeus-cross")
+     olympus_record_execution(pipeline_id, "agora", "ares-cross", ...)
+     olympus_record_execution(pipeline_id, "agora", "zeus-cross", ...)
 
   olympus_record_execution(pipeline_id, "agora", "zeus-r{n}", ...)
   olympus_record_execution(pipeline_id, "agora", "ares-r{n}", ...)
@@ -243,6 +245,8 @@ Committee response (MANDATORY — FOREGROUND sequential):
       Eris challenged your position: {eris_challenge}. Respond specifically.
       Output your response as your final response.")
   olympus_register_agent_spawn(pipeline_id, "ares-resp")
+  olympus_record_execution(pipeline_id, "agora", "zeus-resp", ...)
+  olympus_record_execution(pipeline_id, "agora", "ares-resp", ...)
   → Write da-challenges.md from eris_challenge + committee responses
   → Re-measure consensus if changed
 ```
