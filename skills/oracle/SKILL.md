@@ -150,7 +150,12 @@ olympus_record_execution(pipeline_id, "oracle", "apollo", ...)
 
 ```
 ambiguityScore = read ${ARTIFACT_DIR}/ambiguity-scores.json
-olympus_gate_check(pipeline_id, "ambiguity", ambiguityScore)
+
+# Cross-reference: mechanical ambiguity calculation from interview log
+mechanicalScore = olympus_calculate_ambiguity(pipeline_id, "${ARTIFACT_DIR}/interview-log.md")
+# Use the higher (more conservative) score for gate check
+effectiveScore = max(ambiguityScore, mechanicalScore)
+olympus_gate_check(pipeline_id, "ambiguity", effectiveScore)
 
 IF passed (ambiguity ≤ 0.2):
   → proceed to Step 6
@@ -233,6 +238,7 @@ ELSE:
   - olympus_start_pipeline: Step 1 (MUST)
   - olympus_register_agent_spawn: after each spawn (MUST)
   - olympus_gate_check: Step 5 ambiguity gate (MUST)
+  - olympus_calculate_ambiguity: Step 5 ambiguity cross-reference (SHOULD)
   - olympus_record_execution: after each agent completes (SHOULD)
 
   Team Tools:
