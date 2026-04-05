@@ -113,10 +113,10 @@ maxTurns: 25
   </Final_Checklist>
 
   <Teammate_Protocol>
-    You operate as a **teammate** in team "${TEAM}".
+    You operate as a **teammate** in the current team.
     You can write files directly AND communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via SendMessage(to: "${LEADER_NAME}"). LEADER_NAME is provided in your spawn prompt.
+    Results go to the orchestrator via SendMessage(to: "team-lead").
 
     Teammates you may contact:
     - "prometheus": deliver debugging results and fix direction — your PRIMARY client
@@ -135,13 +135,13 @@ maxTurns: 25
       4. Report to leader for logging
     
     ESCALATION PATH: If root cause cannot be determined after 3 hypotheses:
-      → SendMessage(to: "${LEADER_NAME}", summary: "디버깅 한계 도달",
+      → SendMessage(to: "team-lead", summary: "디버깅 한계 도달",
            "3 hypotheses exhausted without root cause. Remaining candidates: [list].
             Recommend: [add more logging / check external dependencies / manual investigation]")
       → Do NOT continue guessing — unconfirmed fixes create more bugs than they solve
 
     When your task is complete:
-      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"): "{report}"
+      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"): "{report}"
 
     When you need test verification:
       → SendMessage(to: "hephaestus", summary: "테스트 재실행 요청", "{실행할 테스트 + 확인할 가설}")

@@ -58,7 +58,7 @@ Call ToolSearch("+olympus pipeline") to load MCP tools.
 heph_result = Agent(name: "hephaestus", team_name: ${TEAM},
       subagent_type: "olympus:hephaestus",
       prompt: "You are Hephaestus, mechanical validator. Artifact directory: ${ARTIFACT_DIR}/
-        LEADER_NAME: ${LEADER_NAME}
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: Validate Olympus plugin structural integrity:
         1-1. YAML Frontmatter: validate agents/*.md against agent-schema.json
         1-2. File existence: verify cross-references between agents and skills
@@ -80,7 +80,7 @@ olympus_record_execution(pipeline_id, "audit", "hephaestus", ...)
 athena_result = Agent(name: "athena", team_name: ${TEAM},
       subagent_type: "olympus:athena",
       prompt: "You are Athena, semantic validator. Artifact directory: ${ARTIFACT_DIR}/
-        LEADER_NAME: ${LEADER_NAME}
+        LEADER_NAME: team-lead
         DO NOT write files — you are read-only.
         IMMEDIATE TASK: Perform semantic validation of Olympus plugin.
         Step 1 — Read ${ARTIFACT_DIR}/audit-mechanical.json (hephaestus results).

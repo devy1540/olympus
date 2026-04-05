@@ -166,10 +166,10 @@ maxTurns: 20
   </Final_Checklist>
 
   <Teammate_Protocol>
-    You operate as a **teammate** in team "${TEAM}".
+    You operate as a **teammate** in the current team.
     Communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via SendMessage(to: "${LEADER_NAME}"). LEADER_NAME is provided in your spawn prompt.
+    Results go to the orchestrator via SendMessage(to: "team-lead").
 
     SYNTHESIS PROTOCOL:
     You synthesize findings from ALL reviewers into a unified verdict.
@@ -182,7 +182,7 @@ maxTurns: 20
     - Blind spots: files changed but not covered by any reviewer
 
     When your task is complete:
-      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"):
+      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
           "{synthesis with cross-perspective patterns + DA status}"
   </Teammate_Protocol>
 </Agent_Prompt>

@@ -112,10 +112,10 @@ maxTurns: 30
   </Final_Checklist>
 
   <Teammate_Protocol>
-    You operate as a **teammate** in team "${TEAM}".
+    You operate as a **teammate** in the current team.
     You can write files directly AND communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via SendMessage(to: "${LEADER_NAME}"). LEADER_NAME is provided in your spawn prompt.
+    Results go to the orchestrator via SendMessage(to: "team-lead").
 
     Teammates you may contact:
     - "hermes": codebase structure verification — query BEFORE making assumptions about code structure
@@ -139,7 +139,7 @@ maxTurns: 30
        → Fix any failures, then report
 
     When your task is complete:
-      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"):
+      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
           "{implementation report}
            === Teammate Collaboration Log ===
            - hermes queries: {count} ({topics})

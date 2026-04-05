@@ -98,7 +98,7 @@ Complexity assessment:
 hermes_result = Agent(name: "hermes", team_name: ${TEAM},
       subagent_type: "olympus:hermes",
       prompt: "You are Hermes in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-        LEADER_NAME: ${LEADER_NAME}
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: Explore codebase related to: {user_input}.
         DO NOT write files — you are read-only.
         Gather: project structure, relevant modules, existing patterns, dependencies.
@@ -118,16 +118,16 @@ Agent(name: "apollo", team_name: ${TEAM},
       subagent_type: "olympus:apollo",
       run_in_background: true,
       prompt: "You are Apollo in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-        LEADER_NAME: ${LEADER_NAME}
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: Conduct Socratic interview about: {user_input}. Complexity: {level}.
         DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/codebase-context.md for project context.
         IMPORTANT: You CANNOT use AskUserQuestion directly (teammates can't access it).
         Instead, send each question to the leader:
-          SendMessage(to: '${LEADER_NAME}', summary: '인터뷰 질문 {n}', '{질문 + 컨텍스트 + 선택지}')
+          SendMessage(to: 'team-lead', summary: '인터뷰 질문 {n}', '{질문 + 컨텍스트 + 선택지}')
         The leader will proxy the question to the user and relay the answer back to you.
         Track ambiguity scores internally. Terminate when ambiguity ≤ 0.2 or max 10 rounds.
-        When done: SendMessage(to: '${LEADER_NAME}', summary: '인터뷰 완료', '{interview log + scores}')")
+        When done: SendMessage(to: 'team-lead', summary: '인터뷰 완료', '{interview log + scores}')")
 olympus_register_agent_spawn(pipeline_id, "apollo")
 
 → Write interview-log.md, ambiguity-scores.json from apollo_result
@@ -150,7 +150,7 @@ ELSE IF rounds < 10:
     apollo_retry = Agent(name: "apollo", team_name: ${TEAM},
         subagent_type: "olympus:apollo",
         prompt: "You are Apollo. Artifact directory: ${ARTIFACT_DIR}/
-          LEADER_NAME: ${LEADER_NAME}
+          LEADER_NAME: team-lead
           Read ${ARTIFACT_DIR}/interview-log.md for previous rounds.
           Ambiguity still at {score}. Continue interview, focus on: {gap areas}.
           Output updated results as your final response.")
@@ -169,7 +169,7 @@ ELSE (rounds >= 10):
 metis_result = Agent(name: "metis", team_name: ${TEAM},
       subagent_type: "olympus:metis",
       prompt: "You are Metis in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
-        LEADER_NAME: ${LEADER_NAME}
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: Perform gap analysis on interview results.
         DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/interview-log.md and ${ARTIFACT_DIR}/codebase-context.md.

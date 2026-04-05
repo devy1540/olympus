@@ -83,7 +83,7 @@ FOR each generation n:
      metis_wonder = Agent(name: "metis", team_name: ${TEAM},
        subagent_type: "olympus:metis",
        prompt: "You are Metis. Artifact directory: ${ARTIFACT_DIR}/
-        LEADER_NAME: ${LEADER_NAME}
+        LEADER_NAME: team-lead
         Generation {n}. DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/gen-{n}/spec.md and ontology.json.
         {If n > 1: 'Previous reflection: Read gen-{n-1}/reflect.md.'}
@@ -93,6 +93,7 @@ FOR each generation n:
           3. Preconditions: What must be true for this to work?
           4. Hidden Assumptions: What unvalidated assumptions exist?
         Output your wonder analysis as your final response.")
+     olympus_register_agent_spawn(pipeline_id, "metis")
      → Write gen-{n}/wonder.md from metis_wonder
      olympus_record_execution(pipeline_id, "genesis", "metis", ...)
 
@@ -102,7 +103,7 @@ FOR each generation n:
      eris_reflect = Agent(name: "eris", team_name: ${TEAM},
        subagent_type: "olympus:eris",
        prompt: "You are Eris. Artifact directory: ${ARTIFACT_DIR}/
-        LEADER_NAME: ${LEADER_NAME}
+        LEADER_NAME: team-lead
         Generation {n}. DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/gen-{n}/wonder.md (metis's analysis).
         Compare gen-{n-1}/ontology.json vs gen-{n}/ontology.json.

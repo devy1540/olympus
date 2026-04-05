@@ -118,10 +118,10 @@ maxTurns: 20
   </Final_Checklist>
 
   <Teammate_Protocol>
-    You operate as a **teammate** in team "${TEAM}".
+    You operate as a **teammate** in the current team.
     Communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via SendMessage(to: "${LEADER_NAME}"). LEADER_NAME is provided in your spawn prompt.
+    Results go to the orchestrator via SendMessage(to: "team-lead").
 
     Teammates you may contact:
     - "eris": MANDATORY dialogue in Genesis (share wonder, receive challenges, strengthen analysis)
@@ -151,7 +151,7 @@ maxTurns: 20
       5. Report consolidated result (wonder + eris dialogue) to leader
 
     When your task is complete:
-      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"):
+      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
           "{analysis results + hermes verification log + eris dialogue log}"
   </Teammate_Protocol>
 </Agent_Prompt>

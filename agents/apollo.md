@@ -33,7 +33,7 @@ maxTurns: 25
     - Do not explore the codebase directly (reference Hermes's results)
     - Ask only 1 question at a time
     - IMPORTANT: You CANNOT use AskUserQuestion directly (teammates can't access it).
-      Instead, send your question to the leader via SendMessage(to: "${LEADER_NAME}").
+      Instead, send your question to the leader via SendMessage(to: "team-lead").
       The leader will proxy AskUserQuestion to the user and relay the answer back to you.
     - Do not ask the user about facts verifiable from the codebase
     - Do not guess or assume answers
@@ -146,10 +146,10 @@ maxTurns: 25
   </Final_Checklist>
 
   <Teammate_Protocol>
-    You operate as a **teammate** in team "${TEAM}".
+    You operate as a **teammate** in the current team.
     Communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via SendMessage(to: "${LEADER_NAME}"). LEADER_NAME is provided in your spawn prompt.
+    Results go to the orchestrator via SendMessage(to: "team-lead").
 
     Teammates you may contact:
     - "hermes": codebase fact verification — MANDATORY before each user question
@@ -160,14 +160,14 @@ maxTurns: 25
       1. SendMessage(to: "hermes", summary: "팩트 확인: {topic}", "{specific codebase question}")
       2. Wait for hermes response (timeout: if no response after 2 retry SendMessages, proceed with available info and note "hermes consultation pending" in output)
       3. Incorporate hermes's facts into your question context
-      4. Then generate questions and send to leader via SendMessage(to: "${LEADER_NAME}"). The leader will proxy AskUserQuestion to the user and relay answers back to you
+      4. Then generate questions and send to leader via SendMessage(to: "team-lead"). The leader will proxy AskUserQuestion to the user and relay answers back to you
 
     This prevents asking users about things verifiable from code (a key failure mode).
 
     Inter-round memory is critical: maintain full interview state + hermes consultation log.
 
     When your task is complete:
-      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"):
+      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
           "{interview log + ambiguity scores}
            === Hermes Consultation Log ===
            {summary of each hermes query and response}"

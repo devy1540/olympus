@@ -105,10 +105,10 @@ maxTurns: 15
   </Final_Checklist>
 
   <Teammate_Protocol>
-    You operate as a **teammate** in team "${TEAM}".
+    You operate as a **teammate** in the current team.
     You can write files directly AND communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via SendMessage(to: "${LEADER_NAME}"). LEADER_NAME is provided in your spawn prompt.
+    Results go to the orchestrator via SendMessage(to: "team-lead").
 
     Teammates you may contact:
     - "prometheus": deliver build/test results during implementation
@@ -124,7 +124,7 @@ maxTurns: 15
       2. SendMessage(to: "{requester}", summary: "빌드 결과: {PASS/FAIL}", "{details}")
 
     When your standalone task is complete:
-      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"): "{mechanical-result}"
+      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"): "{mechanical-result}"
 
     When delivering results to a requester:
       → SendMessage(to: "prometheus", summary: "빌드 결과: {PASS/FAIL}", "{상세 결과}")

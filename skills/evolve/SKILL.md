@@ -103,7 +103,7 @@ Save to ${ARTIFACT_DIR}/dogfood-result.md
 athena_result = Agent(name: "athena", team_name: ${TEAM},
       subagent_type: "olympus:athena",
       prompt: "You are Athena, quality evaluator. Artifact directory: ${ARTIFACT_DIR}/
-        LEADER_NAME: ${LEADER_NAME}
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/benchmark.md and dogfood-result.md.
         Evaluate across 5 dimensions (0.0~1.0):
@@ -130,7 +130,7 @@ Agent(name: "metis", team_name: ${TEAM},
       subagent_type: "olympus:metis",
       run_in_background: true,
       prompt: "You are Metis, gap analyst. Artifact directory: ${ARTIFACT_DIR}/
-        LEADER_NAME: ${LEADER_NAME}
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/eval-matrix.md, dogfood-result.md, and agents/*.md.
         Trace quality issues to specific agent prompts:
@@ -147,7 +147,7 @@ Agent(name: "eris", team_name: ${TEAM},
       subagent_type: "olympus:eris",
       run_in_background: true,
       prompt: "You are Eris, evaluation challenger. Artifact directory: ${ARTIFACT_DIR}/
-        LEADER_NAME: ${LEADER_NAME}
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/eval-matrix.md and dogfood-result.md.
         Verify Athena's evaluation accuracy:
@@ -176,7 +176,7 @@ IF user approves:
   prometheus_result = Agent(name: "prometheus", team_name: ${TEAM},
         subagent_type: "olympus:prometheus",
         prompt: "You are Prometheus, prompt improver. Artifact directory: ${ARTIFACT_DIR}/
-          LEADER_NAME: ${LEADER_NAME}
+          LEADER_NAME: team-lead
           IMMEDIATE TASK: Read ${ARTIFACT_DIR}/diagnosis.md Improvement Proposals.
           Edit agent prompts per specifications. No scope creep.
           Output your change report as your final response.")
