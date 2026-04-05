@@ -134,6 +134,7 @@
       "phase": 1,
       "writer": "orchestrator",
       "source": "metis",
+      "required_spawn": "metis",
       "readers": ["reflect"],
       "note": "Metis는 SendMessage로 결과 전달, 오케스트레이터가 저장"
     },
@@ -141,6 +142,7 @@
       "phase": 2,
       "writer": "orchestrator",
       "source": "eris",
+      "required_spawn": "eris",
       "readers": ["seed"],
       "note": "Eris는 SendMessage로 결과 전달, 오케스트레이터가 저장"
     },
