@@ -230,6 +230,12 @@ test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
   "allow" "Terminal rewind tribunal→oracle via returnToPhase → allow"
 rm -f "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.1.json"
 
+# Test: execution phase with themisVerdict=APPROVE → allow
+test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh"   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"execution\\\",\\\"gates\\\":{\\\"themisVerdict\\\":\\\"APPROVE\\\"}}\"}}"  "allow" "execution phase with APPROVE themisVerdict → allow"
+
+# Test: execution phase with themisVerdict=REVISE → deny
+test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh"   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"execution\\\",\\\"gates\\\":{\\\"themisVerdict\\\":\\\"REVISE\\\"}}\"}}"  "deny" "execution phase with REVISE themisVerdict → deny"
+
 # ============================================================
 echo "--- validate-agents.sh ---"
 # ============================================================
