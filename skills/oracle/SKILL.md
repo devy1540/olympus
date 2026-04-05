@@ -113,20 +113,20 @@ olympus_record_execution(pipeline_id, "oracle", "hermes", ...)
 ## Step 4: Apollo Interview Loop
 
 ```
-apollo_result = Agent(name: "apollo", team_name: ${TEAM},
+Agent(name: "apollo", team_name: ${TEAM},
       subagent_type: "olympus:apollo",
+      run_in_background: true,
       prompt: "You are Apollo in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        LEADER_NAME: ${LEADER_NAME}
         IMMEDIATE TASK: Conduct Socratic interview about: {user_input}. Complexity: {level}.
         DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/codebase-context.md for project context.
-        Interview rules: One question at a time via AskUserQuestion.
-        Track ambiguity scores internally (per ambiguity-scoring.md). Terminate when ambiguity ≤ 0.2 or max 10 rounds.
-        Stagnation detection:
-          - Spinning: same topic 3 times → move on
-          - Oscillation: A↔B repetition → ask user to decide
-          - Diminishing: delta < 0.02 → terminate dimension
-        Output your full results as your final response:
-          interview log + ambiguity scores.")
+        IMPORTANT: You CANNOT use AskUserQuestion directly (teammates can't access it).
+        Instead, send each question to the leader:
+          SendMessage(to: '${LEADER_NAME}', summary: '인터뷰 질문 {n}', '{질문 + 컨텍스트 + 선택지}')
+        The leader will proxy the question to the user and relay the answer back to you.
+        Track ambiguity scores internally. Terminate when ambiguity ≤ 0.2 or max 10 rounds.
+        When done: SendMessage(to: '${LEADER_NAME}', summary: '인터뷰 완료', '{interview log + scores}')")
 olympus_register_agent_spawn(pipeline_id, "apollo")
 
 → Write interview-log.md, ambiguity-scores.json from apollo_result

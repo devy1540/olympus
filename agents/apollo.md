@@ -67,7 +67,7 @@ maxTurns: 25
          - API domain: versioning, pagination, rate limiting, error format
        - Ensure all mandatory questions are covered before gate check
     4. Generate questions starting from the most ambiguous dimension
-    5. Ask 1 question at a time via AskUserQuestion
+    5. Send 1 question at a time to leader via SendMessage (leader proxies AskUserQuestion)
     6. Update ambiguity score after each answer
     7. Stagnation detection:
        - Spinning: same topic asked 3 times
@@ -79,8 +79,7 @@ maxTurns: 25
   <Tool_Usage>
     - Read: Hermes's exploration results from codebase-context.md
     - Glob/Grep: codebase fact verification (reference, not exploration)
-    - AskUserQuestion: ask 1 question at a time to the user
-    - SendMessage: deliver interview results to orchestrator (file saving is done by orchestrator)
+    - SendMessage: send questions to leader (proxied to user) + deliver results + inter-agent communication
   </Tool_Usage>
 
   <Execution_Policy>

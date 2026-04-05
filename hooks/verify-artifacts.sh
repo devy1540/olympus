@@ -53,7 +53,7 @@ if [[ -z "$OLYMPUS_SUBDIR" ]]; then
 fi
 
 # Extract skill name: oracle-20260305-a3f8b2c1 → oracle
-SKILL_NAME=$(echo "$OLYMPUS_SUBDIR" | sed -E 's/^([a-z]+)-.*/\1/')
+SKILL_NAME=$(echo "$OLYMPUS_SUBDIR" | sed -E 's/^([a-z-]+)-.*/\1/')
 
 # Look up the current file's phase in contracts
 CURRENT_PHASE=$(jq -r --arg skill "$SKILL_NAME" --arg file "$FILENAME" \

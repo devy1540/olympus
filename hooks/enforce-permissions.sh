@@ -94,7 +94,7 @@ if [[ -z "$OLYMPUS_SUBDIR" ]]; then
   echo '{ "behavior": "allow" }'
   exit 0
 fi
-SKILL_NAME=$(echo "$OLYMPUS_SUBDIR" | sed -E 's/^([a-z]+)-.*/\1/')
+SKILL_NAME=$(echo "$OLYMPUS_SUBDIR" | sed -E 's/^([a-z-]+)-.*/\1/')
 
 # --- Look up expected writer from artifact-contracts.json ---
 # Mirrors getDenyRuleForTool(): find the rule that matches this tool+input
