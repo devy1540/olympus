@@ -304,6 +304,41 @@ RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
 check_result "Review-PR: verdict.md (nemesis synthesis)" "$RESULT" "allow"
 
 # ============================================================
+echo ""
+echo "--- Phase 6: Evolve Pipeline (artifact creation order) ---"
+# ============================================================
+
+EVOLVE_DIR="${TEST_DIR}/.olympus/evolve-20260401-inttest6"
+mkdir -p "$EVOLVE_DIR/.checkpoints"
+
+# Step 1: benchmark.md (orchestrator)
+echo "  [evolve] Orchestrator → benchmark.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${EVOLVE_DIR}/benchmark.md" "## Benchmark\n### Target Skill: oracle")
+check_result "Evolve: benchmark.md (orchestrator writes)" "$RESULT" "allow"
+
+# Step 2: dogfood-result.md (orchestrator)
+echo "  [evolve] Orchestrator → dogfood-result.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${EVOLVE_DIR}/dogfood-result.md" "## Dogfood Result\n### Finding 1")
+check_result "Evolve: dogfood-result.md (orchestrator writes)" "$RESULT" "allow"
+
+# Step 3: eval-matrix.md (from athena)
+echo "  [evolve] Athena → eval-matrix.md"
+echo "## Benchmark" > "${EVOLVE_DIR}/benchmark.md"
+echo "## Dogfood" > "${EVOLVE_DIR}/dogfood-result.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${EVOLVE_DIR}/eval-matrix.md" "## Evaluation Matrix\n| Dimension | Score |")
+check_result "Evolve: eval-matrix.md (athena source)" "$RESULT" "allow"
+
+# Step 4: diagnosis.md (from metis+eris)
+echo "  [evolve] Metis+Eris → diagnosis.md"
+echo "## Eval" > "${EVOLVE_DIR}/eval-matrix.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${EVOLVE_DIR}/diagnosis.md" "## Diagnosis\n### Improvement Proposals")
+check_result "Evolve: diagnosis.md (metis+eris source)" "$RESULT" "allow"
+
+# ============================================================
 # Cleanup
 rm -rf "$TEST_DIR"
 
