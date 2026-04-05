@@ -70,6 +70,19 @@ ambiguity_score  = 1 - weighted_clarity
 
 Gate passes when `ambiguity_score <= 0.2`, i.e., `weighted_clarity >= 0.8`.
 
+## JSON Field Names (ambiguity-scores.json)
+
+The `validate-gate.sh` hook accepts both field name conventions:
+
+| Field       | Canonical (apollo.md) | Alternative          |
+|-------------|----------------------|----------------------|
+| goal        | `goal`               | `goal`               |
+| constraints | `constraints`        | `constraints`        |
+| ac          | `ac`                 | `acceptanceCriteria` |
+| rounds      | `rounds`             | `round`              |
+
+Use the canonical form (`ac`) in new code. `acceptanceCriteria` is supported for backward compatibility.
+
 ## Examples
 
 ### Example 1: Passes gate
