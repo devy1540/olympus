@@ -13,9 +13,9 @@ Consensus levels define the degree of agreement required among participants (age
 - **Action:** Proceed without reservation
 - **Usage:** Required in Hell mode (`--hell`) for all decisions
 
-### Working Consensus (~67%)
+### Working Consensus (≥66%)
 
-- **Threshold:** 2/3 participants agree, or approximately two-thirds majority
+- **Threshold:** 2/3 participants agree (gate value: 0.66 — 2÷3=0.6667 must pass; 0.67 would incorrectly reject it)
 - **Meaning:** Clear majority with documented minority position
 - **Action:** Proceed with noted dissent documented in the artifact
 - **Usage:** Default threshold in Normal mode for proceeding
@@ -42,7 +42,7 @@ Consensus levels define the degree of agreement required among participants (age
 
 | Mode   | Flag     | Minimum Threshold | Behavior on Failure                        |
 |--------|----------|-------------------|--------------------------------------------|
-| Normal | (none)   | Working (>=67%)   | Proceed with dissent documented            |
+| Normal | (none)   | Working (>=66%, i.e. 2/3)   | Proceed with dissent documented            |
 | Hell   | `--hell` | Strong (100%)     | Loop until unanimous or user intervenes    |
 
 ## Consensus Recording
@@ -52,7 +52,7 @@ When consensus is reached, the record must include:
 ```json
 {
   "level": "strong | working | partial | none",
-  "percentage": 0.67,
+  "percentage": 0.6667,
   "for": ["perspective-A", "perspective-B"],
   "against": ["perspective-C"],
   "abstain": [],

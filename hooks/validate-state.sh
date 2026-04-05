@@ -240,7 +240,7 @@ if [[ "$FILENAME" == "odyssey-state.json" ]]; then
         ;;
       planning)
         CONSENSUS=$(echo "$CONTENT" | jq -r '.gates.consensusLevel // empty' 2>/dev/null || true)
-        CON_THRESHOLD=$(jq -r '.consensus.threshold' "$THRESHOLDS_FILE" 2>/dev/null || echo "0.67")
+        CON_THRESHOLD=$(jq -r '.consensus.threshold' "$THRESHOLDS_FILE" 2>/dev/null || echo "0.66")
         if [[ -n "$CONSENSUS" ]]; then
           VIOLATED=$(echo "$CONSENSUS $CON_THRESHOLD" | awk '{ print ($1 < $2) ? "true" : "false" }')
           if [[ "$VIOLATED" == "true" ]]; then
