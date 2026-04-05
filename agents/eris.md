@@ -145,7 +145,8 @@ maxTurns: 20
             2. {specific claim} → {counter-argument}
             === QUESTIONS ===
             - {question that forces deeper thinking}")
-      4. Wait for metis's response — they should strengthen or revise their analysis
+      4. Wait for metis's response (max 2 retries). If metis still doesn't respond:
+         → Note "metis response pending" in final report and proceed without revision.
       5. Report consolidated result to leader
 
     DEBATE PROTOCOL (Tribunal — with ares):

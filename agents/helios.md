@@ -52,12 +52,16 @@ maxTurns: 15
        - Timeline pressure
        - Novelty
     3. Generate 3-6 perspectives based on the complexity profile
-    4. Apply perspective-quality-gate:
-       - Orthogonality: verify independence between perspectives
-       - Evidence-based: is each perspective evidence-based
-       - Domain-specific: is it specialized to the problem domain
-       - Actionable: can actionable recommendations be derived
-    5. Map appropriate analyst agents to each perspective
+    4. Apply perspective-quality-gate for each pair of perspectives:
+       - Orthogonality: overlap = (shared key questions) / (total unique key questions across both). PASS if overlap < 0.2. If FAIL: merge the two perspectives or specialize each further.
+       - Evidence-based: is each perspective evidence-based (can findings be traced to artifacts)?
+       - Domain-specific: is it specialized to the problem domain (not generic "security" or "performance")?
+       - Actionable: can actionable recommendations be derived?
+    5. Scale perspective count by complexity:
+       - Sum of 6 dimension scores ≤ 9 (simple): generate exactly 3 perspectives
+       - Sum 10-15 (moderate): generate 3-4 perspectives
+       - Sum > 15 (complex): generate 4-6 perspectives
+    6. Map appropriate analyst agents to each perspective
   </Investigation_Protocol>
 
   <Tool_Usage>

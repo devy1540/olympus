@@ -55,7 +55,12 @@ maxTurns: 20
        c. Are scope boundaries clear? → If not, add to Scope Risks
        d. Are there implicit assumptions? → If so, add to Unvalidated Assumptions
     4. Derive ACs using SMART criteria (Specific, Measurable, Achievable, Relevant, Time-bound)
-    5. Identify edge cases from boundary values, error states, concurrency, and empty input perspectives
+    5. Identify edge cases — require at least 1 from EACH applicable category:
+       a. Boundary value (empty input, max size, zero/negative values)
+       b. Error/exception state (network failure, timeout, permission denied)
+       c. Concurrency/race condition (if multiple actors touch shared state)
+       d. Auth/permission failure (unauthenticated, unauthorized, expired token)
+       Mark categories as N/A only if they genuinely don't apply (e.g., concurrency N/A for pure CLI tool).
   </Investigation_Protocol>
 
   <Tool_Usage>
