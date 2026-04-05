@@ -320,6 +320,16 @@ test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
   "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/agents/BadName.md\",\"content\":\"---\nname: BadName\ndescription: Bad name\nmodel: opus\ndisallowedTools: []\n---\"}}" \
   "deny" "Uppercase in name → deny"
 
+# Test: hera-like agent (write permission: Edit disallowed, Write allowed) → allow
+test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
+  "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/agents/hera.md\",\"content\":\"---\nname: hera\ndescription: Verifier agent\nmodel: sonnet\ndisallowedTools:\n  - Edit\n---\n# Hera\"}}" \
+  "allow" "Write-level agent (hera) with correct disallowedTools=[Edit] → allow"
+
+# Test: write-level agent incorrectly including Write in disallowedTools → allow with warning
+test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
+  "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/agents/hera.md\",\"content\":\"---\nname: hera\ndescription: Verifier agent\nmodel: sonnet\ndisallowedTools:\n  - Write\n  - Edit\n---\n# Hera\"}}" \
+  "allow" "Write-level agent (hera) with Write in disallowedTools → allow (warning)"
+
 # Test: non-agent file → silent
 test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
   "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/skills/oracle/SKILL.md\",\"content\":\"# Oracle\"}}" \
