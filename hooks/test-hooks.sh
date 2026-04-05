@@ -24,7 +24,7 @@ test_hook() {
 
   local actual_behavior=""
   if [[ -z "$output" ]]; then
-    actual_behavior="silent"
+    actual_behavior="allow"
   else
     actual_behavior=$(echo "$output" | jq -r '.behavior // "text"' 2>/dev/null || echo "text")
   fi
@@ -60,12 +60,12 @@ echo "--- enforce-permissions.sh ---"
 # Test: non-olympus file → silent (allow)
 test_hook "enforce-perm" "$SCRIPT_DIR/enforce-permissions.sh" \
   '{"tool_input":{"file_path":"/tmp/random.txt","content":"hello"}}' \
-  "silent" "Non-.olympus file passes through"
+  "allow" "Non-.olympus file passes through"
 
 # Test: orchestrator-written file → silent (allow)
 test_hook "enforce-perm" "$SCRIPT_DIR/enforce-permissions.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/spec.md\",\"content\":\"# Spec\"}}" \
-  "silent" "Orchestrator-written artifact passes"
+  "allow" "Orchestrator-written artifact passes"
 
 # ============================================================
 echo "--- verify-artifacts.sh ---"
@@ -74,7 +74,7 @@ echo "--- verify-artifacts.sh ---"
 # Test: non-olympus file → silent
 test_hook "verify-art" "$SCRIPT_DIR/verify-artifacts.sh" \
   '{"tool_input":{"file_path":"/tmp/random.txt","content":"hello"}}' \
-  "silent" "Non-.olympus file passes through"
+  "allow" "Non-.olympus file passes through"
 
 # Test: spec.md (phase 5) without predecessor artifacts → warning
 test_hook "verify-art" "$SCRIPT_DIR/verify-artifacts.sh" \
@@ -84,7 +84,7 @@ test_hook "verify-art" "$SCRIPT_DIR/verify-artifacts.sh" \
 # Test: codebase-context.md (phase 1, no predecessors) → silent
 test_hook "verify-art" "$SCRIPT_DIR/verify-artifacts.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/codebase-context.md\",\"content\":\"# Context\"}}" \
-  "silent" "Phase 1 artifact with no predecessors passes"
+  "allow" "Phase 1 artifact with no predecessors passes"
 
 # Test: DA mandatory — analysis.md without da-evaluation.md → warning
 PANTHEON_DIR=$(mktemp -d)/pantheon-test/.olympus/pantheon-20260404-test
@@ -108,7 +108,7 @@ echo '{"interview_round":1}' > "${ARTIFACT_DIR}/interview-log.md"
 echo "## Round 1" >> "${ARTIFACT_DIR}/interview-log.md"
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/ambiguity-scores.json\",\"content\":\"{\\\"goal\\\":0.9,\\\"constraints\\\":0.9,\\\"ac\\\":0.9}\"}}" \
-  "silent" "Ambiguity score pass (high clarity) → silent"
+  "allow" "Ambiguity score pass (high clarity) → allow"
 
 # Test: ambiguity without interview-log → evidence warning
 rm -f "${ARTIFACT_DIR}/interview-log.md"
@@ -128,7 +128,7 @@ rm -f "${ARTIFACT_DIR}/codebase-context.md"
 # Test: mechanical-result.json all pass → silent
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/mechanical-result.json\",\"content\":\"{\\\"results\\\":{\\\"build\\\":{\\\"status\\\":\\\"PASS\\\"},\\\"test\\\":{\\\"status\\\":\\\"PASS\\\"}},\\\"overall\\\":\\\"PASS\\\"}\"}}" \
-  "silent" "Mechanical result all PASS → silent"
+  "allow" "Mechanical result all PASS → allow"
 
 # Test: mechanical-result.json with failure → deny
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
@@ -138,7 +138,7 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
 # Test: non-gate file → silent
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/random.txt\",\"content\":\"hello\"}}" \
-  "silent" "Non-gate file → silent"
+  "allow" "Non-gate file → allow"
 
 # ============================================================
 echo "--- validate-state.sh ---"
@@ -147,7 +147,7 @@ echo "--- validate-state.sh ---"
 # Test: valid odyssey phase
 test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"oracle\\\"}\"}}" \
-  "silent" "Valid phase 'oracle' → silent"
+  "allow" "Valid phase 'oracle' → allow"
 
 # Test: invalid odyssey phase
 test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
@@ -157,7 +157,7 @@ test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
 # Test: valid Terminal transition
 test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"completed\\\",\\\"transition\\\":{\\\"status\\\":\\\"terminal\\\",\\\"reason\\\":\\\"completed\\\"}}\"}}" \
-  "silent" "Valid Terminal transition → silent"
+  "allow" "Valid Terminal transition → allow"
 
 # Test: invalid Terminal reason
 test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
@@ -172,7 +172,7 @@ test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
 # Test: valid Continue with retry tracking
 test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"execution\\\",\\\"transition\\\":{\\\"status\\\":\\\"continue\\\",\\\"reason\\\":\\\"implementation_retry\\\",\\\"retryCount\\\":1,\\\"maxRetries\\\":3}}\"}}" \
-  "silent" "Valid Continue with retry within limit → silent"
+  "allow" "Valid Continue with retry within limit → allow"
 
 # Test: Continue with exceeded retries
 test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
@@ -191,7 +191,7 @@ echo "--- validate-agents.sh ---"
 # Test: valid agent file
 test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
   "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/agents/hermes.md\",\"content\":\"---\nname: hermes\ndescription: Explorer agent\nmodel: haiku\ndisallowedTools:\n  - Write\n  - Edit\n---\n# Hermes\"}}" \
-  "silent" "Valid agent definition → silent"
+  "allow" "Valid agent definition → allow"
 
 # Test: missing required field
 test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
@@ -211,7 +211,7 @@ test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
 # Test: non-agent file → silent
 test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
   "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/skills/oracle/SKILL.md\",\"content\":\"# Oracle\"}}" \
-  "silent" "Non-agents/ file → silent"
+  "allow" "Non-agents/ file → allow"
 
 # ============================================================
 echo "--- compact-context.sh ---"
@@ -220,7 +220,7 @@ echo "--- compact-context.sh ---"
 # Test: no phase transition → silent
 test_hook "compact-ctx" "$SCRIPT_DIR/compact-context.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"oracle\\\"}\"}}" \
-  "silent" "No phase transition → silent"
+  "allow" "No phase transition → allow"
 
 # Test: phase transition with checkpoint
 echo '{"phase":"oracle"}' > "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.001.json"
@@ -231,7 +231,7 @@ test_hook "compact-ctx" "$SCRIPT_DIR/compact-context.sh" \
 # Test: non-state file → silent
 test_hook "compact-ctx" "$SCRIPT_DIR/compact-context.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/spec.md\",\"content\":\"# Spec\"}}" \
-  "silent" "Non-state file → silent"
+  "allow" "Non-state file → allow"
 
 # ============================================================
 echo "--- denial-tracking.sh ---"

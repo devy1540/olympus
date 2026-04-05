@@ -64,11 +64,13 @@ INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
 
 if [[ -z "$FILE_PATH" ]]; then
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
 # Only check files inside .olympus/ directories
 if [[ "$FILE_PATH" != *"/.olympus/"* ]]; then
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
@@ -77,6 +79,7 @@ PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$0")")}"
 CONTRACTS_FILE="${PLUGIN_ROOT}/docs/shared/artifact-contracts.json"
 
 if [[ ! -f "$CONTRACTS_FILE" ]]; then
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
@@ -84,6 +87,7 @@ fi
 # pipeline_id is the full subdir name (e.g., "odyssey-20260405-abc123")
 OLYMPUS_SUBDIR=$(echo "$FILE_PATH" | sed -n 's|.*\.olympus/\([^/]*\)/.*|\1|p' || true)
 if [[ -z "$OLYMPUS_SUBDIR" ]]; then
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
@@ -106,6 +110,7 @@ fi
 
 if [[ -z "$REQUIRED_SPAWN_RAW" || "$REQUIRED_SPAWN_RAW" == "null" ]]; then
   # No spawn requirement — allow
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
@@ -117,6 +122,7 @@ if [[ ! -x "$MCP_BIN" ]]; then
   else
     # Binary not available — fail open with warning rather than blocking all writes
     echo "[enforce-spawn-gate] WARNING: olympus-mcp binary not found at ${MCP_BIN}, skipping spawn check for ${FILENAME}" >&2
+    echo '{ "behavior": "allow" }'
     exit 0
   fi
 fi

@@ -39,7 +39,7 @@ check_result() {
   TOTAL=$((TOTAL + 1))
   local actual=""
   if [[ -z "$output" ]]; then
-    actual="silent"
+    actual="allow"
   else
     actual=$(echo "$output" | jq -r '.behavior // "text"' 2>/dev/null || echo "text")
   fi
@@ -76,7 +76,7 @@ echo "--- Phase 1: Oracle Pipeline (artifact creation order) ---"
 echo "  [oracle] Hermes → codebase-context.md"
 RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
   "${ORACLE_DIR}/codebase-context.md" "# Codebase Context\n## Structure\nsrc/\n  auth.ts\n  api/")
-check_result "Oracle: codebase-context.md (phase 1, no predecessors)" "$RESULT" "silent"
+check_result "Oracle: codebase-context.md (phase 1, no predecessors)" "$RESULT" "allow"
 
 # Step 2: Apollo writes interview-log.md (phase 2, after codebase-context)
 # First check: codebase-context.md should exist as predecessor
@@ -84,14 +84,14 @@ echo "# Codebase Context" > "${ORACLE_DIR}/codebase-context.md"
 echo "  [oracle] Apollo → interview-log.md"
 RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
   "${ORACLE_DIR}/interview-log.md" "## Round 1\nQ: What is the auth flow?\nA: OAuth2 with refresh tokens")
-check_result "Oracle: interview-log.md (phase 2, codebase-context exists)" "$RESULT" "silent"
+check_result "Oracle: interview-log.md (phase 2, codebase-context exists)" "$RESULT" "allow"
 
 # Step 3: Apollo writes ambiguity-scores.json (phase 2)
 echo "## Round 1" > "${ORACLE_DIR}/interview-log.md"
 echo "  [oracle] Apollo → ambiguity-scores.json (passing score)"
 RESULT=$(run_hook "$SCRIPT_DIR/validate-gate.sh" \
   "${ORACLE_DIR}/ambiguity-scores.json" '{"goal":0.9,"constraints":0.85,"ac":0.9,"rounds":1}')
-check_result "Oracle: ambiguity gate PASS (score=0.12)" "$RESULT" "silent"
+check_result "Oracle: ambiguity gate PASS (score=0.12)" "$RESULT" "allow"
 
 # Step 3b: What if ambiguity is too high?
 echo "  [oracle] Apollo → ambiguity-scores.json (failing score)"
@@ -104,14 +104,14 @@ echo '{"goal":0.9,"constraints":0.85,"ac":0.9}' > "${ORACLE_DIR}/ambiguity-score
 echo "  [oracle] Metis → gap-analysis.md"
 RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
   "${ORACLE_DIR}/gap-analysis.md" "# Gap Analysis\n## Missing Questions\n- Token refresh TTL")
-check_result "Oracle: gap-analysis.md (phase 4, predecessors exist)" "$RESULT" "silent"
+check_result "Oracle: gap-analysis.md (phase 4, predecessors exist)" "$RESULT" "allow"
 
 # Step 5: Orchestrator writes spec.md (phase 5)
 echo "# Gap Analysis" > "${ORACLE_DIR}/gap-analysis.md"
 echo "  [oracle] Orchestrator → spec.md"
 RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
   "${ORACLE_DIR}/spec.md" "# Specification: Auth Service\n## GOAL\nImplement OAuth2\n## ACCEPTANCE_CRITERIA\n1. GIVEN valid token WHEN /api/me THEN 200")
-check_result "Oracle: spec.md (phase 5, all predecessors exist)" "$RESULT" "silent"
+check_result "Oracle: spec.md (phase 5, all predecessors exist)" "$RESULT" "allow"
 
 # ============================================================
 echo ""
@@ -126,7 +126,7 @@ echo "  [tribunal] Hephaestus → mechanical-result.json (all PASS)"
 MECH_PASS='{"results":{"build":{"status":"PASS"},"lint":{"status":"PASS"},"typecheck":{"status":"PASS"},"test":{"status":"PASS","passed":12,"failed":0}},"overall":"PASS"}'
 RESULT=$(run_hook "$SCRIPT_DIR/validate-gate.sh" \
   "${TRIBUNAL_DIR}/mechanical-result.json" "$MECH_PASS")
-check_result "Tribunal: mechanical gate PASS" "$RESULT" "silent"
+check_result "Tribunal: mechanical gate PASS" "$RESULT" "allow"
 
 # Step 1b: What if build fails?
 echo "  [tribunal] Hephaestus → mechanical-result.json (build FAIL)"
@@ -166,7 +166,7 @@ check_result "Tribunal: semantic-matrix without file:line refs → warning" "$RE
 echo "  [tribunal] Orchestrator → verdict.md"
 RESULT=$(run_hook "$SCRIPT_DIR/validate-gate.sh" \
   "${TRIBUNAL_DIR}/verdict.md" "# Tribunal Verdict\n## Final: APPROVED")
-check_result "Tribunal: verdict.md with spec.md present" "$RESULT" "silent"
+check_result "Tribunal: verdict.md with spec.md present" "$RESULT" "allow"
 
 # ============================================================
 echo ""
@@ -178,7 +178,7 @@ echo "  [odyssey] oracle → pantheon (skip genesis)"
 echo '{"phase":"oracle"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.001.json"
 RESULT=$(run_hook "$SCRIPT_DIR/validate-state.sh" \
   "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"pantheon","gates":{"ambiguityScore":0.15}}')
-check_result "Odyssey: oracle→pantheon (valid, ambiguity passed)" "$RESULT" "silent"
+check_result "Odyssey: oracle→pantheon (valid, ambiguity passed)" "$RESULT" "allow"
 
 # Compaction trigger on transition
 echo "  [odyssey] oracle→pantheon compaction trigger"
@@ -198,14 +198,14 @@ echo "  [odyssey] completed with Terminal{reason:completed}"
 echo '{"phase":"tribunal"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.003.json"
 RESULT=$(run_hook "$SCRIPT_DIR/validate-state.sh" \
   "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"completed","transition":{"status":"terminal","reason":"completed"},"gates":{"mechanicalPass":true}}')
-check_result "Odyssey: tribunal→completed with Terminal → silent" "$RESULT" "silent"
+check_result "Odyssey: tribunal→completed with Terminal → silent" "$RESULT" "allow"
 
 # Continue transition with retry tracking
 echo "  [odyssey] execution retry with Continue"
 echo '{"phase":"tribunal"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.004.json"
 RESULT=$(run_hook "$SCRIPT_DIR/validate-state.sh" \
   "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"execution","transition":{"status":"continue","reason":"implementation_retry","retryCount":2,"maxRetries":3}}')
-check_result "Odyssey: tribunal→execution retry (within limit)" "$RESULT" "silent"
+check_result "Odyssey: tribunal→execution retry (within limit)" "$RESULT" "allow"
 
 # Gate precondition: pantheon without ambiguity passed
 echo '{"phase":"oracle"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.005.json"
@@ -225,21 +225,21 @@ HERMES_CONTENT=$(cat "${CLAUDE_PLUGIN_ROOT}/agents/hermes.md")
 RESULT=$(jq -n --arg fp "${CLAUDE_PLUGIN_ROOT}/agents/hermes.md" --arg ct "$HERMES_CONTENT" \
   '{ tool_input: { file_path: $fp, content: $ct } }' | \
   bash "$SCRIPT_DIR/validate-agents.sh" 2>/dev/null || true)
-check_result "Audit: hermes.md passes schema validation" "$RESULT" "silent"
+check_result "Audit: hermes.md passes schema validation" "$RESULT" "allow"
 
 echo "  [audit] Validate real agent: zeus.md"
 ZEUS_CONTENT=$(cat "${CLAUDE_PLUGIN_ROOT}/agents/zeus.md")
 RESULT=$(jq -n --arg fp "${CLAUDE_PLUGIN_ROOT}/agents/zeus.md" --arg ct "$ZEUS_CONTENT" \
   '{ tool_input: { file_path: $fp, content: $ct } }' | \
   bash "$SCRIPT_DIR/validate-agents.sh" 2>/dev/null || true)
-check_result "Audit: zeus.md passes schema validation" "$RESULT" "silent"
+check_result "Audit: zeus.md passes schema validation" "$RESULT" "allow"
 
 echo "  [audit] Validate real agent: apollo.md"
 APOLLO_CONTENT=$(cat "${CLAUDE_PLUGIN_ROOT}/agents/apollo.md")
 RESULT=$(jq -n --arg fp "${CLAUDE_PLUGIN_ROOT}/agents/apollo.md" --arg ct "$APOLLO_CONTENT" \
   '{ tool_input: { file_path: $fp, content: $ct } }' | \
   bash "$SCRIPT_DIR/validate-agents.sh" 2>/dev/null || true)
-check_result "Audit: apollo.md passes schema validation" "$RESULT" "silent"
+check_result "Audit: apollo.md passes schema validation" "$RESULT" "allow"
 
 # Validate ALL 15 agents in a batch
 echo "  [audit] Batch validate all 15 agents"

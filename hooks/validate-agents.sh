@@ -37,16 +37,19 @@ INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
 
 if [[ -z "$FILE_PATH" ]]; then
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
 # Only validate agents/*.md files
 if [[ "$FILE_PATH" != */agents/*.md ]]; then
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
 CONTENT=$(echo "$INPUT" | jq -r '.tool_input.content // empty')
 if [[ -z "$CONTENT" ]]; then
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 

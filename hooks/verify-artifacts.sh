@@ -22,11 +22,13 @@ INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
 
 if [[ -z "$FILE_PATH" ]]; then
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
 # Only verify files inside .olympus/ directories
 if [[ "$FILE_PATH" != *"/.olympus/"* ]]; then
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
@@ -38,6 +40,7 @@ PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$0")")}"
 CONTRACTS_FILE="${PLUGIN_ROOT}/docs/shared/artifact-contracts.json"
 
 if [[ ! -f "$CONTRACTS_FILE" ]]; then
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
@@ -45,6 +48,7 @@ fi
 # Extract skill name from .olympus/{skill}-{date}-{uuid}/ pattern
 OLYMPUS_SUBDIR=$(echo "$FILE_PATH" | sed -n 's|.*\.olympus/\([^/]*\)/.*|\1|p' || true)
 if [[ -z "$OLYMPUS_SUBDIR" ]]; then
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
@@ -68,6 +72,7 @@ fi
 
 if [[ -z "$CURRENT_PHASE" ]]; then
   # File not in contracts — skip verification
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
@@ -212,4 +217,5 @@ if [[ "$FILENAME" == "verdict.md" && "$SKILL_NAME" == "tribunal" ]]; then
   fi
 fi
 
+echo '{ "behavior": "allow" }'
 exit 0

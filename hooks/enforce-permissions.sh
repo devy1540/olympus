@@ -67,11 +67,13 @@ INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
 
 if [[ -z "$FILE_PATH" ]]; then
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
 # Only check files inside .olympus/ directories
 if [[ "$FILE_PATH" != *"/.olympus/"* ]]; then
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
@@ -81,6 +83,7 @@ CONTRACTS_FILE="${PLUGIN_ROOT}/docs/shared/artifact-contracts.json"
 SCHEMA_FILE="${PLUGIN_ROOT}/docs/shared/agent-schema.json"
 
 if [[ ! -f "$CONTRACTS_FILE" || ! -f "$SCHEMA_FILE" ]]; then
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
@@ -88,6 +91,7 @@ fi
 # .olympus/{skill}-{date}-{uuid}/ pattern
 OLYMPUS_SUBDIR=$(echo "$FILE_PATH" | sed -n 's|.*\.olympus/\([^/]*\)/.*|\1|p' || true)
 if [[ -z "$OLYMPUS_SUBDIR" ]]; then
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 SKILL_NAME=$(echo "$OLYMPUS_SUBDIR" | sed -E 's/^([a-z]+)-.*/\1/')
@@ -109,6 +113,7 @@ fi
 
 if [[ -z "$WRITER" ]]; then
   # Not in contracts — allow (unknown files are not enforced)
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
@@ -116,6 +121,7 @@ fi
 # Mirrors hasPermissionsToUseTool → getDenyRuleForTool chain
 # "orchestrator" always has write permission (it's the host)
 if [[ "$WRITER" == "orchestrator" ]]; then
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
@@ -125,6 +131,7 @@ PERMISSION_LEVEL=$(jq -r --arg agent "$WRITER" \
 
 if [[ -z "$PERMISSION_LEVEL" ]]; then
   # Agent not in registry — allow (unregistered agents are not enforced)
+  echo '{ "behavior": "allow" }'
   exit 0
 fi
 
@@ -145,4 +152,5 @@ if [[ "$PERMISSION_LEVEL" == "read-only" ]]; then
   fi
 fi
 
+echo '{ "behavior": "allow" }'
 exit 0
