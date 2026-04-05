@@ -375,6 +375,7 @@ Teammates communicate via SendMessage. The leader does NOT need to relay every m
 | prometheus | hermes | Codebase structure queries during implementation | On-demand |
 | prometheus | artemis | Debugging assistance during implementation | On-demand |
 | prometheus | hephaestus | Quick build checks during implementation | On-demand |
+| zeus | hermes | Codebase context before plan finalization | On-demand |
 | apollo | hermes | Codebase context during interview | Mandatory per round |
 | apollo | metis | Gap analysis feedback during interview | On-demand |
 | metis | eris | Wonder/Reflect loop (Genesis) | Mandatory (dialogue) |
@@ -382,7 +383,11 @@ Teammates communicate via SendMessage. The leader does NOT need to relay every m
 | ares | poseidon | Cross-reference: quality ↔ security findings | Mandatory (Pantheon) |
 | poseidon | ares | Cross-reference: security ↔ quality findings | Mandatory (Pantheon) |
 | hera | hephaestus | Evidence collection for verdict | Mandatory |
-| athena | hephaestus | AC evidence verification | Mandatory |
+| athena | hephaestus | AC evidence verification (athena→hephaestus) | Mandatory |
+| hephaestus | athena | Evidence delivery in response to AC queries | Service response |
+| hephaestus | hera | Evidence delivery in response to verdict queries | Service response |
+| hephaestus | prometheus | Build/test results during implementation | Service response |
+| hephaestus | artemis | Build diagnostic data for debugging | Service response |
 | Any agent | leader | Task completion, results, escalation | Mandatory |
 
 **Communication rules:**
