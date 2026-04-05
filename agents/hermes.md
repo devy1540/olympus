@@ -83,7 +83,9 @@ maxTurns: 15
     | {path} | {role} | {key exports} |
 
     ### Dependencies
-    - {fileA} → {fileB}: {relationship}
+    | From | To | Relationship |
+    |------|-----|-------------|
+    | {fileA} | {fileB} | imports/extends/implements/calls |
 
     ### Patterns & Conventions
     - {pattern}: {description} (e.g., {file:line})

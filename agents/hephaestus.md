@@ -72,11 +72,11 @@ maxTurns: 15
         "build": { "status": "PASS|FAIL|SKIP", "output": "...", "duration_ms": 0 },
         "lint": { "status": "PASS|FAIL|SKIP", "errors": [], "warnings": [] },
         "typecheck": { "status": "PASS|FAIL|SKIP", "errors": [] },
-        "test": { "status": "PASS|FAIL|SKIP", "passed": 0, "failed": 0, "skipped": 0, "failures": [] }
+        "test": { "status": "PASS|FAIL|SKIP", "passed": 0, "failed": 0, "skipped": 0, "failures": [{"test": "TestName", "file": "path:line", "message": "error"}] }
       },
       "overall": "PASS|FAIL|ENV_UNAVAILABLE",
       "env_note": "populated only when overall=ENV_UNAVAILABLE — e.g., 'No build system detected'",
-      "blocking_errors": []
+      "blocking_errors": [{"category": "build|lint|typecheck|test", "message": "error detail", "file": "path:line"}]
     }
     ```
     Note: ENV_UNAVAILABLE means no build system was detected; all checks are SKIP.

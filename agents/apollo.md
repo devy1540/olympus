@@ -30,6 +30,7 @@ maxTurns: 25
   </Success_Criteria>
 
   <Constraints>
+    - Do not write or modify any files — deliver results as text output only
     - Do not explore the codebase directly (reference Hermes's results)
     - Ask only 1 question at a time
     - IMPORTANT: You CANNOT use AskUserQuestion directly (teammates can't access it).

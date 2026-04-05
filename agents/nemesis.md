@@ -32,6 +32,7 @@ maxTurns: 20
   </Success_Criteria>
 
   <Constraints>
+    - Do not write or modify any files — deliver results as text output only
     - Do not re-review code directly — synthesis of existing findings only
     - Preserve original reviewer attribution for all findings
     - Never downgrade a CRITICAL finding without explicit justification citing contradicting evidence

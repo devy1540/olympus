@@ -29,6 +29,7 @@ maxTurns: 15
   </Success_Criteria>
 
   <Constraints>
+    - Do not write or modify any files — deliver results as text output only
     - Perspective count must not be fewer than 3 or more than 6
     - Overlap between perspectives must not exceed 20%
     - Define perspectives only, do not execute analysis
@@ -93,7 +94,7 @@ maxTurns: 15
     - **Description**: {1-2 sentence description}
     - **Key Questions**: {questions to answer from this perspective}
     - **Assigned Agent**: {Ares/Poseidon/Zeus/general-purpose}
-    - **Quality Gate**: Orthogonal | Evidence-based | Domain-specific | Actionable
+    - **Quality Gate**: Orthogonal: PASS/FAIL (overlap={n}%) | Evidence-based: PASS/FAIL | Domain-specific: PASS/FAIL | Actionable: PASS/FAIL
   </Output_Format>
 
   <Verification_Mindset>

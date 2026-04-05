@@ -144,6 +144,15 @@ run_check "IMMEDIATE TASK pattern: ${IMMEDIATE}/${SPAWN_SKILLS}" "[ $IMMEDIATE -
 MANDATORY=$(grep -rl "MANDATORY" skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
 run_check "MANDATORY consultation: ${MANDATORY}/${SPAWN_SKILLS}" "[ $MANDATORY -ge $SPAWN_SKILLS ]"
 
+SEQUENTIAL=$(grep -rl "SEQUENTIAL SPAWN" skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+run_check "SEQUENTIAL SPAWN rule: ${SEQUENTIAL}/${SPAWN_SKILLS}" "[ $SEQUENTIAL -ge $SPAWN_SKILLS ]"
+
+RESULT_CAPTURE=$(grep -rl "RESULT CAPTURE RULE" skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+run_check "RESULT CAPTURE RULE: ${RESULT_CAPTURE}/${SPAWN_SKILLS}" "[ $RESULT_CAPTURE -ge $SPAWN_SKILLS ]"
+
+RESPONSE_RULE=$(grep -rl "RESPONSE RULE" skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+run_check "RESPONSE RULE: ${RESPONSE_RULE}/${SPAWN_SKILLS}" "[ $RESPONSE_RULE -ge $SPAWN_SKILLS ]"
+
 RO_SENDMSG=0
 for a in hermes apollo metis ares poseidon athena themis eris helios nemesis; do
   if grep -q 'SendMessage.*LEADER_NAME\|SendMessage.*team-lead\|SendMessage.*leader' "agents/${a}.md" 2>/dev/null; then
@@ -151,6 +160,9 @@ for a in hermes apollo metis ares poseidon athena themis eris helios nemesis; do
   fi
 done
 run_check "Read-only agents SendMessage: ${RO_SENDMSG}/10" "[ $RO_SENDMSG -eq 10 ]"
+
+VMINDSET=$(grep -rl "Verification_Mindset" agents/*.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+run_check "Verification_Mindset: ${VMINDSET}/15" "[ $VMINDSET -eq 15 ]"
 
 XREF_ARES=$(grep -c "poseidon\|CROSS-REFERENCE" agents/ares.md 2>/dev/null || echo 0)
 XREF_POSEIDON=$(grep -c "ares\|CROSS-REFERENCE" agents/poseidon.md 2>/dev/null || echo 0)

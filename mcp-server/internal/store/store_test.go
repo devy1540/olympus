@@ -192,6 +192,108 @@ func TestCollaborationLog(t *testing.T) {
 	}
 }
 
+func TestUpdateStatus(t *testing.T) {
+	st := newTestStore(t)
+	st.CreatePipeline("status-001", "odyssey")
+
+	if err := st.UpdateStatus("status-001", "completed"); err != nil {
+		t.Fatalf("update status: %v", err)
+	}
+
+	p, _ := st.GetPipeline("status-001")
+	if p.Status != "completed" {
+		t.Errorf("expected status=completed, got %s", p.Status)
+	}
+}
+
+func TestGetLatestGateScoreAny(t *testing.T) {
+	st := newTestStore(t)
+	st.CreatePipeline("gate-any-001", "odyssey")
+
+	st.RecordGateScore("gate-any-001", "ambiguity", 0.15, true, "")
+	st.RecordGateScore("gate-any-001", "consensus", 0.80, true, `{"detail":"ok"}`)
+
+	gs, err := st.GetLatestGateScoreAny("gate-any-001")
+	if err != nil {
+		t.Fatalf("query: %v", err)
+	}
+	// Latest inserted is consensus
+	if gs.GateType != "consensus" {
+		t.Errorf("expected gate_type=consensus (latest), got %s", gs.GateType)
+	}
+	if gs.Score != 0.80 {
+		t.Errorf("expected score=0.80, got %f", gs.Score)
+	}
+}
+
+func TestGetLatestGateScoreAnyNotFound(t *testing.T) {
+	st := newTestStore(t)
+	st.CreatePipeline("gate-any-empty", "odyssey")
+
+	_, err := st.GetLatestGateScoreAny("gate-any-empty")
+	if err == nil {
+		t.Error("should error when no gate scores exist")
+	}
+}
+
+func TestNextPhaseFromInit(t *testing.T) {
+	st := newTestStore(t)
+	st.CreatePipeline("next-init", "odyssey")
+
+	transitions := map[string][]string{
+		"oracle": {"genesis", "pantheon"},
+	}
+
+	next, allowed, err := st.NextPhase("next-init", transitions)
+	if err != nil {
+		t.Fatalf("next phase: %v", err)
+	}
+	// init maps to oracle, oracle's first transition is genesis
+	if next != "genesis" {
+		t.Errorf("expected next=genesis, got %s", next)
+	}
+	if len(allowed) != 2 {
+		t.Errorf("expected 2 allowed transitions, got %v", allowed)
+	}
+}
+
+func TestNextPhaseTerminal(t *testing.T) {
+	st := newTestStore(t)
+	transitions := map[string][]string{
+		"oracle": {"genesis"},
+	}
+
+	st.CreatePipeline("next-terminal", "odyssey")
+	st.UpdatePhase("next-terminal", "genesis", map[string][]string{"init": {"genesis"}})
+
+	_, _, err := st.NextPhase("next-terminal", transitions)
+	if err == nil {
+		t.Error("genesis has no transitions, should error")
+	}
+}
+
+func TestAggregateStatsMultiple(t *testing.T) {
+	st := newTestStore(t)
+	st.CreatePipeline("agg-001", "odyssey")
+
+	st.RecordExecution("agg-001", "oracle", "hermes", 1000, 2000, 10, 3, true, "")
+	st.RecordExecution("agg-001", "oracle", "hermes", 2000, 3000, 20, 5, true, "")
+
+	stats, err := st.GetAggregateStats("odyssey", "oracle", "hermes")
+	if err != nil {
+		t.Fatalf("stats: %v", err)
+	}
+	if stats.Count != 2 {
+		t.Errorf("expected count=2, got %d", stats.Count)
+	}
+	if stats.AvgDuration != 1500 {
+		t.Errorf("expected avg_duration=1500, got %f", stats.AvgDuration)
+	}
+	if stats.AvgLOC != 15 {
+		t.Errorf("expected avg_loc=15, got %f", stats.AvgLOC)
+	}
+}
+
 func TestExecutionRecord(t *testing.T) {
 	st := newTestStore(t)
 	st.CreatePipeline("exec-001", "odyssey")
