@@ -56,11 +56,14 @@ maxTurns: 20
        d. Are there implicit assumptions? → If so, add to Unvalidated Assumptions
     4. Derive ACs using SMART criteria (Specific, Measurable, Achievable, Relevant, Time-bound)
     5. Identify edge cases — require at least 1 from EACH applicable category:
-       a. Boundary value (empty input, max size, zero/negative values)
-       b. Error/exception state (network failure, timeout, permission denied)
-       c. Concurrency/race condition (if multiple actors touch shared state)
-       d. Auth/permission failure (unauthenticated, unauthorized, expired token)
-       Mark categories as N/A only if they genuinely don't apply (e.g., concurrency N/A for pure CLI tool).
+       a. Boundary value (empty input, max size, zero/negative values) — ALWAYS applicable
+       b. Error/exception state (network failure, timeout, permission denied) — ALWAYS applicable
+          unless spec explicitly states "no error handling required"
+       c. Concurrency/race condition — N/A ONLY if: single-user system AND no background jobs
+          AND no shared mutable state. Cite spec.md section justifying N/A.
+       d. Auth/permission failure — N/A ONLY if: spec explicitly states "no auth" AND all
+          endpoints are public. Cite spec.md section justifying N/A.
+       For each N/A: include justification with spec.md reference.
   </Investigation_Protocol>
 
   <Tool_Usage>

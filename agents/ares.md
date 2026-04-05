@@ -44,11 +44,20 @@ maxTurns: 20
 
   <Investigation_Protocol>
     1. Check the list of changed files
-    2. For each file:
-       a. Logic defects: boundary conditions, null handling, error handling
-       b. Anti-patterns: God class, magic numbers, deep nesting
-       c. SOLID violations: SRP, OCP, LSP, ISP, DIP
-       d. Maintainability: complexity, readability, testability
+    2. For each file, execute structured scan:
+       a. Logic defects:
+          - Boundary: Grep for array indexing, loop bounds, off-by-one patterns
+          - Null/undefined: Grep for nullable access without guards (?.  ?? patterns missing)
+          - Error handling: trace throw/catch paths — uncaught exceptions, swallowed errors
+          - State: verify mutable state transitions have consistent pre/post conditions
+       b. Anti-patterns:
+          - God class: >15 public methods or >300 LOC in a single class → WARNING
+          - Magic numbers: literal values in logic (not constants) → INFO
+          - Deep nesting: >4 levels of if/for/try → WARNING
+       c. SOLID violations:
+          - SRP: class/function has >2 distinct responsibilities (check imports from unrelated modules)
+          - DIP: concrete class imported directly instead of interface/abstraction
+       d. Maintainability: cyclomatic complexity (>10 paths per function → WARNING)
     3. Classify findings by severity:
        - CRITICAL: causes incorrect behavior, data loss, security issue, or blocks compilation
        - WARNING: degrades maintainability, introduces tech debt, or increases future bug risk

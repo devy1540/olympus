@@ -77,12 +77,18 @@ maxTurns: 25
 
   <Investigation_Protocol>
     1. Read spec.md, gap-analysis.md, analysis.md
-    2. Determine architectural approach
+    2. Determine architectural approach:
+       a. Identify affected modules (Grep for imports/exports)
+       b. Map component boundaries and dependencies
+       c. Evaluate: new module vs extend existing (prefer extend unless >3 new responsibilities)
     3. Decompose tasks:
-       a. Each task: title, description, AC mapping, expected files
-       b. Define dependency order
-       c. Identify parallelizable tasks
-    4. Document risks and alternatives
+       a. Each task: title, description, AC mapping, expected files to modify
+       b. Task sizing: each task should touch 1-5 files. If >5 files: split task. If <1 file: merge with adjacent.
+       c. Define dependency order (task graph)
+       d. Identify parallelizable tasks (independent file sets)
+    4. Document risks and alternatives:
+       a. For each high-risk task: at least 1 alternative approach considered
+       b. Risk = (complexity × blast_radius). High risk if either factor > 3
     5. Write plan.md
     6. Request critique from Themis
   </Investigation_Protocol>

@@ -48,20 +48,28 @@ maxTurns: 20
        (algorithms, token TTLs, rate limits, hashing config, key management). Cross-reference these
        against your OWASP checklist BEFORE claiming any parameter is "unspecified" or "missing."
        Violation of this rule is a CRITICAL clarity-enforcement error.
-    1. OWASP Top 10 checklist:
-       a. A01: Broken Access Control
-       b. A02: Cryptographic Failures
-       c. A03: Injection (SQL, XSS, Command)
-       d. A04: Insecure Design
-       e. A05: Security Misconfiguration
-       f. A06: Vulnerable Components
-       g. A07: Auth Failures
-       h. A08: Software/Data Integrity Failures
-       i. A09: Logging/Monitoring Failures
-       j. A10: SSRF
-    2. Secret scan: hardcoded API keys, passwords, tokens
-    3. Dependency vulnerabilities: known CVEs
-    4. Input validation: user input sanitization
+    1. OWASP Top 10 — prioritized by risk (start with highest-impact categories):
+       HIGH PRIORITY (check first):
+       a. A03: Injection — Grep for SQL concatenation (SELECT.*+), innerHTML/dangerouslySetInnerHTML,
+          exec/spawn/eval. For each match: verify parameterization at file:line.
+       b. A07: Auth Failures — trace auth flow: login → token generation → validation → session.
+          Check: token expiry, password hashing, brute-force protection.
+       c. A01: Broken Access Control — verify authorization checks on every endpoint/route.
+          Grep for route definitions, check each has auth middleware.
+       MEDIUM PRIORITY:
+       d. A02: Cryptographic Failures — check TLS config, hashing algorithms, key storage.
+       e. A05: Security Misconfiguration — default credentials, debug mode, CORS policy.
+       f. A08: Software/Data Integrity Failures — verify signature checks on updates/data.
+       STANDARD PRIORITY:
+       g. A04: Insecure Design — architectural-level security review.
+       h. A06: Vulnerable Components — run dependency audit if available.
+       i. A09: Logging/Monitoring Failures — sensitive data in logs, audit trail presence.
+       j. A10: SSRF — user-controlled URLs, internal network access.
+    2. Secret scan: Grep for patterns (password|secret|api_key|token|private_key) in source files.
+       Exclude test fixtures and example configs. Flag any match with file:line.
+    3. Dependency vulnerabilities: run npm audit / pip audit / cargo audit if available.
+    4. Input validation: trace user input from entry point to database/output.
+       Check: sanitization, type validation, length limits at each boundary.
   </Investigation_Protocol>
 
   <Tool_Usage>
