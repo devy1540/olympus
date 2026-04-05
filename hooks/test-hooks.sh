@@ -204,6 +204,18 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "allow" "Suspiciously low ambiguity on complex project → calibration warning"
 rm -f "${ARTIFACT_DIR}/codebase-context.md"
 
+# Test: ambiguity round-count inconsistency (rounds=5 in scores, 1 in log) → warning
+# interview-log.md has 1 Round heading, but rounds=5 in scores → diff > 2 → warning
+echo '## Round 1' > "${ARTIFACT_DIR}/interview-log.md"
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/ambiguity-scores.json\",\"content\":\"{\\\"goal\\\":0.9,\\\"constraints\\\":0.9,\\\"ac\\\":0.9,\\\"rounds\\\":5}\"}}" \
+  "allow" "Ambiguity rounds=5 in scores but 1 in log (diff>2) → evidence warning (allow)"
+
+# Test: ambiguity round-count within tolerance (rounds=2, log=1) → allow
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/ambiguity-scores.json\",\"content\":\"{\\\"goal\\\":0.9,\\\"constraints\\\":0.9,\\\"ac\\\":0.9,\\\"rounds\\\":2}\"}}" \
+  "allow" "Ambiguity rounds=2 in scores, 1 in log (diff<=2) → allow"
+
 # Test: mechanical-result.json all pass → silent
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/mechanical-result.json\",\"content\":\"{\\\"results\\\":{\\\"build\\\":{\\\"status\\\":\\\"PASS\\\"},\\\"test\\\":{\\\"status\\\":\\\"PASS\\\"}},\\\"overall\\\":\\\"PASS\\\"}\"}}" \
@@ -303,6 +315,20 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${SEMANTIC_DIR}/semantic-matrix.md\",\"content\":\"# Semantic Matrix\n## AC1: PASS — src/auth.ts:42 validates token\"}}" \
   "allow" "semantic-matrix.md with PASS mechanical and file:line ref → allow"
 rm -rf "$(dirname "$SEMANTIC_DIR")"
+
+# Test: verdict.md without spec.md → evidence warning
+VERDICT_DIR=$(mktemp -d)/.olympus/tribunal-20260401-verdict
+mkdir -p "$VERDICT_DIR"
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${VERDICT_DIR}/verdict.md\",\"content\":\"# Verdict\n## Final: APPROVED\"}}" \
+  "allow" "verdict.md without spec.md → evidence warning (allow)"
+
+# Test: verdict.md with spec.md present → allow (no warning)
+echo "# Spec" > "${VERDICT_DIR}/spec.md"
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${VERDICT_DIR}/verdict.md\",\"content\":\"# Verdict\n## Final: APPROVED\"}}" \
+  "allow" "verdict.md with spec.md present → allow"
+rm -rf "$(dirname "$VERDICT_DIR")"
 
 # Test: non-gate file → silent
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
