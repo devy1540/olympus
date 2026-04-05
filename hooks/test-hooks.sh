@@ -184,6 +184,16 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/consensus-record.json\",\"content\":\"{\\\"level\\\":\\\"working\\\",\\\"percentage\\\":0.6667}\"}}" \
   "allow" "Consensus record 0.6667 (2/3) → allow"
 
+# Test: consensus-record.json at exact threshold (0.66) → allow
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/consensus-record.json\",\"content\":\"{\\\"level\\\":\\\"working\\\",\\\"percentage\\\":0.66}\"}}" \
+  "allow" "Consensus record 0.66 (at boundary) → allow"
+
+# Test: consensus-record.json just below threshold (0.659) → deny
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/consensus-record.json\",\"content\":\"{\\\"level\\\":\\\"partial\\\",\\\"percentage\\\":0.659}\"}}" \
+  "deny" "Consensus record 0.659 (below 0.66) → deny"
+
 # Test: consensus-record.json below threshold → deny
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/consensus-record.json\",\"content\":\"{\\\"level\\\":\\\"partial\\\",\\\"percentage\\\":0.5}\"}}" \
