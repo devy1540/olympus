@@ -427,7 +427,18 @@ This prevents infinite waiting while preserving evidence that consultation was a
 4. **Gate enforcement stays with leader**: Teammates report results, leader checks gates via MCP + artifact files
 5. **Permission inheritance**: Teammates inherit their agent definition's permissions. Read-only agents (Write/Edit in disallowedTools) remain read-only as teammates — they SendMessage results to the leader who writes files
 6. **Cross-phase persistence**: Teammates survive across phase boundaries within the same skill execution. This is a key advantage — Prometheus remembers what it implemented when asked to fix tests
-7. **Teardown at skill end**: `SendMessage(to: each, shutdown_request)` → await responses → `TeamDelete`
+7. **Teardown at skill end**: Robust shutdown sequence:
+   ```
+   a. SendMessage(to: each_teammate, { type: "shutdown_request" })
+   b. Wait up to 30 seconds for shutdown_response from each
+   c. If any teammate still active after timeout:
+      - Send plain text "Shut down now — all work is complete"
+      - Retry shutdown_request once
+   d. TeamDelete — if fails with "active members":
+      - Log warning: "Force-deleting team with {n} active members"
+      - Retry TeamDelete after 5 seconds (teammate may be mid-shutdown)
+   e. Final safety: git checkout -- agents/ to restore any files modified by lingering teammates
+   ```
 8. **No cross-skill persistence**: When Odyssey's sub-skills complete, the team persists. But standalone skill teams are torn down when the skill ends
 
 ### 6.6 Leader Responsibilities
