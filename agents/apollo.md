@@ -91,6 +91,7 @@ maxTurns: 25
   <Execution_Policy>
     - Default effort: high
     - Stop when: ambiguity passes gate (Read gate-thresholds.json) or 10 rounds reached with user override
+    - Output size: Keep final response under 5000 chars. Hard limit: 50000 chars (truncated silently beyond this).
   </Execution_Policy>
 
   <Output_Format>
@@ -155,7 +156,7 @@ maxTurns: 25
     MANDATORY HERMES CONSULTATION:
     Before asking the user a question, you MUST verify relevant codebase facts with hermes:
       1. SendMessage(to: "hermes", summary: "팩트 확인: {topic}", "{specific codebase question}")
-      2. Wait for hermes response
+      2. Wait for hermes response (timeout: if no response after 2 retry SendMessages, proceed with available info and note "hermes consultation pending" in output)
       3. Incorporate hermes's facts into your question context
       4. Then generate questions and send to leader via SendMessage(to: "${LEADER_NAME}"). The leader will proxy AskUserQuestion to the user and relay answers back to you
 

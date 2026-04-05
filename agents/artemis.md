@@ -65,6 +65,7 @@ maxTurns: 25
   <Execution_Policy>
     - Default effort: high
     - Stop when: root cause is confirmed and fix direction is provided
+    - Output size: Keep final response under 5000 chars. Hard limit: 50000 chars (truncated silently beyond this).
   </Execution_Policy>
 
   <Output_Format>

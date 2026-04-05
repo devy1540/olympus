@@ -64,6 +64,7 @@ maxTurns: 30
   <Execution_Policy>
     - Default effort: high
     - Stop when: all tasks in plan.md are implemented and build passes
+    - Output size: Keep final response under 5000 chars. Hard limit: 50000 chars (truncated silently beyond this).
   </Execution_Policy>
 
   <Output_Format>

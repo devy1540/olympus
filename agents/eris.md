@@ -74,6 +74,7 @@ maxTurns: 20
   <Execution_Policy>
     - Default effort: high
     - Stop when: 2 rounds completed or all CRITICAL issues resolved
+    - Output size: Keep final response under 5000 chars. Hard limit: 50000 chars (truncated silently beyond this).
   </Execution_Policy>
 
   <Output_Format>

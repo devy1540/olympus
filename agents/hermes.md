@@ -68,6 +68,7 @@ maxTurns: 15
   <Execution_Policy>
     - Default effort: medium
     - Stop when: requested context is collected and delivered to orchestrator via SendMessage
+    - Output size: Keep final response under 5000 chars. Hard limit: 50000 chars (truncated silently beyond this).
   </Execution_Policy>
 
   <Output_Format>

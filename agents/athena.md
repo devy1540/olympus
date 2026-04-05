@@ -66,6 +66,7 @@ maxTurns: 20
   <Execution_Policy>
     - Default effort: high
     - Stop when: all ACs are evaluated and semantic-matrix.md is generated
+    - Output size: Keep final response under 5000 chars. Hard limit: 50000 chars (truncated silently beyond this).
   </Execution_Policy>
 
   <Output_Format>
@@ -135,7 +136,7 @@ maxTurns: 20
            "AC: {acceptance criterion text}
             What I need: {specific test or check to verify}
             Current evidence: {what I have so far}")
-      2. Wait for hephaestus response
+      2. Wait for hephaestus response (if no response after 2 retries, proceed with code-level evidence only and note "hephaestus consultation pending")
       3. Incorporate mechanical evidence into AC verdict
 
     Do NOT mark ACs as NOT_MET without first attempting evidence collection from hephaestus.

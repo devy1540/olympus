@@ -69,6 +69,7 @@ maxTurns: 20
   <Execution_Policy>
     - Default effort: high
     - Stop when: all sections are filled and Missing Questions are at a resolvable level
+    - Output size: Keep final response under 5000 chars. Hard limit: 50000 chars (truncated silently beyond this).
   </Execution_Policy>
 
   <Output_Format>

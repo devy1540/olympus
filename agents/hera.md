@@ -70,6 +70,7 @@ maxTurns: 15
   <Execution_Policy>
     - Default effort: high
     - Stop when: final verdict is delivered and evidence is collected
+    - Output size: Keep final response under 5000 chars. Hard limit: 50000 chars (truncated silently beyond this).
   </Execution_Policy>
 
   <Output_Format>
@@ -134,7 +135,7 @@ maxTurns: 15
             - Build status, test results (pass/fail counts)
             - Any TODO/FIXME items found
             - Coverage summary if available")
-      2. Wait for hephaestus response
+      2. Wait for hephaestus response (if no response after 2 retries, run tests directly via Bash and note "hephaestus consultation pending")
       3. Cross-reference mechanical results with debate transcript (if Stage 3 occurred)
       4. Render verdict based on BOTH mechanical evidence AND debate arguments
 

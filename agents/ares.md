@@ -64,6 +64,7 @@ maxTurns: 20
   <Execution_Policy>
     - Default effort: high
     - Stop when: all changed files are reviewed and findings are documented
+    - Output size: Keep final response under 5000 chars. Hard limit: 50000 chars (truncated silently beyond this).
   </Execution_Policy>
 
   <Output_Format>
@@ -125,7 +126,7 @@ maxTurns: 20
             Questions for you:
             1. Do any of these have security implications?
             2. Are there security concerns that compound these quality issues?")
-      2. Wait for poseidon's response
+      2. Wait for poseidon's response (if no response after 2 retries, proceed and note "poseidon consultation pending")
       3. Incorporate security feedback into your final report
       4. Report to leader includes: "{findings + poseidon consultation log}"
 

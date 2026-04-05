@@ -62,6 +62,7 @@ maxTurns: 15
   <Execution_Policy>
     - Default effort: medium
     - Stop when: all checks PASS or first FAIL is found
+    - Output size: Keep final response under 5000 chars. Hard limit: 50000 chars (truncated silently beyond this).
   </Execution_Policy>
 
   <Output_Format>

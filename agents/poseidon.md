@@ -75,6 +75,7 @@ maxTurns: 20
   <Execution_Policy>
     - Default effort: high
     - Stop when: full OWASP Top 10 scan + secret scan completed
+    - Output size: Keep final response under 5000 chars. Hard limit: 50000 chars (truncated silently beyond this).
   </Execution_Policy>
 
   <Output_Format>
@@ -138,7 +139,7 @@ maxTurns: 20
             Questions for you:
             1. Do the code quality issues you found compound these security risks?
             2. Would any refactoring inadvertently fix or worsen security posture?")
-      2. Wait for ares's response
+      2. Wait for ares's response (if no response after 2 retries, proceed and note "ares consultation pending")
       3. Incorporate quality feedback into your final report
       4. Report to leader includes: "{findings + ares consultation log}"
 
