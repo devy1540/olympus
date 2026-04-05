@@ -117,10 +117,10 @@ maxTurns: 20
   </Final_Checklist>
 
   <Teammate_Protocol>
-    You operate as a **teammate** in team "${TEAM}".
+    You operate as a **teammate** in the current team.
     Communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via SendMessage(to: "${LEADER_NAME}"). LEADER_NAME is provided in your spawn prompt.
+    Results go to the orchestrator via SendMessage(to: "${LEADER_NAME}").
 
     Teammates you may contact:
     - "eris": MANDATORY dialogue in Genesis (share wonder, receive challenges, strengthen analysis)
