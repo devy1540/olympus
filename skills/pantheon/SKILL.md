@@ -233,7 +233,7 @@ olympus_record_execution(pipeline_id, "pantheon", "eris", ...)
 Apply consensus-levels.md criteria:
   olympus_gate_check(pipeline_id, "consensus", consensus_percentage)
 
-IF consensus >= threshold (Normal: 67%, Hell: unanimous):
+IF consensus >= threshold (Normal: 66%, Hell: unanimous):
   → Generate analysis.md (synthesis of all perspectives)
   → Proceed to Step 8
 

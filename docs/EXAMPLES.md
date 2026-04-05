@@ -169,7 +169,7 @@ Phase 2: Genesis (if needed)
 
 Phase 3: Pantheon
   Multi-perspective analysis of the auth design
-  Gate: consensus ≥ 67% ✓
+  Gate: consensus ≥ 66% ✓
 
 Phase 4: Plan
   Zeus creates implementation plan → Themis reviews
@@ -329,8 +329,8 @@ All artifacts are stored in `.olympus/{skill}-{date}-{uuid}/` and auto-chained.
 |:------|:------|:-------|:-----|
 | `/olympus:oracle` | Vague idea | `spec.md` | Ambiguity ≤ 0.2 |
 | `/olympus:genesis` | Spec | Evolved spec | Convergence ≥ 0.95 |
-| `/olympus:pantheon` | Problem/decision | `analysis.md` | Consensus ≥ 67% |
-| `/olympus:agora` | Debate topic | `decision.md` | Consensus ≥ 67% |
+| `/olympus:pantheon` | Problem/decision | `analysis.md` | Consensus ≥ 66% |
+| `/olympus:agora` | Debate topic | `decision.md` | Consensus ≥ 66% |
 | `/olympus:odyssey` | Idea | Code + `verdict.md` | All gates |
 | `/olympus:tribunal` | Implementation | `verdict.md` | Mechanical + Semantic |
 | `/olympus:hestia` | (your project) | Skill recommendation | — |

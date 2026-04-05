@@ -169,7 +169,7 @@ Phase 2: Genesis (필요시)
 
 Phase 3: Pantheon
   인증 설계의 다관점 분석
-  게이트: 합의 ≥ 67% ✓
+  게이트: 합의 ≥ 66% ✓
 
 Phase 4: 계획
   Zeus 구현 계획 작성 → Themis 검토
@@ -299,8 +299,8 @@ Odyssey  → verdict.md (위 모든 것을 오케스트레이션)
 |:-----|:-----|:-----|:-------|
 | `/olympus:oracle` | 막연한 아이디어 | `spec.md` | 모호성 ≤ 0.2 |
 | `/olympus:genesis` | 스펙 | 진화된 스펙 | 수렴도 ≥ 0.95 |
-| `/olympus:pantheon` | 문제/결정 | `analysis.md` | 합의 ≥ 67% |
-| `/olympus:agora` | 토론 주제 | `decision.md` | 합의 ≥ 67% |
+| `/olympus:pantheon` | 문제/결정 | `analysis.md` | 합의 ≥ 66% |
+| `/olympus:agora` | 토론 주제 | `decision.md` | 합의 ≥ 66% |
 | `/olympus:odyssey` | 아이디어 | 코드 + `verdict.md` | 모든 게이트 |
 | `/olympus:tribunal` | 구현체 | `verdict.md` | 기계적 + 의미적 |
 | `/olympus:hestia` | (프로젝트) | 스킬 추천 | — |

@@ -94,7 +94,7 @@ Gate evaluation compares numeric values stored in artifacts against thresholds d
 |------|-----------|-------------|------------|
 | Ambiguity (≤ 0.2) | Re-enter Phase 2 (interview) | 10 rounds | Offer user override |
 | Convergence (≥ 0.95) | Re-enter Phase 1 (Wonder) | 30 generations | Persona switch or user decision on stagnation |
-| Consensus (≥ 67%) | Phase 3-4 feedback loop | 2 (normal) | User escalation |
+| Consensus (≥ 66%) | Phase 3-4 feedback loop | 2 (normal) | User escalation |
 | Semantic (≥ 0.8) | Re-enter Phase 5 (implementation) | 3 (evaluationPass) | Genesis rewind + user decision |
 | Mechanical (PASS) | Enter Phase 5 (debugging) | 3 | BLOCKED verdict and exit |
 | Evolve Dim Min (≥ 0.6) | Targeted refinement of weak dimension | Per iteration | Notify user, focus next iteration |
@@ -163,7 +163,7 @@ Situations requiring user intervention:
 | Situation | Trigger | User Options |
 |-----------|---------|-------------|
 | Repeated gate failure | Max retries exceeded | Override / Rewind / Abort |
-| No consensus reached | Consensus gate fails (< 67%) twice in a row | Decide / Add perspectives / Abort |
+| No consensus reached | Consensus gate fails (< 66%) twice in a row | Decide / Add perspectives / Abort |
 | Repeated Themis rejection | REVISE 3 times consecutively | Agora debate / Override / Abort |
 | Repeated evaluation failure | evaluationPass >= 3 | Genesis rewind / Override / Abort |
 | Stagnation detected | Spinning/Oscillation/Diminishing | Persona switch / Change benchmark / Abort |

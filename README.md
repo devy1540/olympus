@@ -54,7 +54,7 @@ This is not bureaucracy — it's **structural honesty**. Every claim requires `f
 ```
   Ambiguity Gate     ≤ 0.2    "Are we clear enough to build?"
   Convergence Gate   ≥ 0.95   "Has the spec stabilized?"
-  Consensus Gate     ≥ 67%    "Do the reviewers agree?"
+  Consensus Gate     ≥ 66%    "Do the reviewers agree?"
   Quality Gate       ≥ 0.8    "Is the output good enough?"
 ```
 
@@ -125,7 +125,7 @@ Each stage has a **gate**. No stage proceeds without passing.
 |:------|:-----|:---------:|:-------------|
 | **Oracle** | Ambiguity Score | ≤ 0.2 | Socratic interview until requirements are 80%+ clear |
 | **Genesis** | Ontology Convergence | ≥ 0.95 | Spec evolves generation by generation until stable |
-| **Pantheon** | Consensus | ≥ 67% | Multi-perspective analysis survives devil's advocate |
+| **Pantheon** | Consensus | ≥ 66% | Multi-perspective analysis survives devil's advocate |
 | **Tribunal** | Mechanical + Semantic | Pass all | Build, test, type-check, then AC verification |
 
 ---
