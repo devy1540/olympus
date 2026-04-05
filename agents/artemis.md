@@ -133,6 +133,12 @@ maxTurns: 25
             Fix direction: {what to change}
             Risk: {risk assessment}")
       4. Report to leader for logging
+    
+    ESCALATION PATH: If root cause cannot be determined after 3 hypotheses:
+      → SendMessage(to: "${LEADER_NAME}", summary: "디버깅 한계 도달",
+           "3 hypotheses exhausted without root cause. Remaining candidates: [list].
+            Recommend: [add more logging / check external dependencies / manual investigation]")
+      → Do NOT continue guessing — unconfirmed fixes create more bugs than they solve
 
     When your task is complete:
       → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"): "{report}"
