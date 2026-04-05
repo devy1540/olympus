@@ -339,6 +339,40 @@ RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
 check_result "Evolve: diagnosis.md (metis+eris source)" "$RESULT" "allow"
 
 # ============================================================
+echo ""
+echo "--- Phase 7: Genesis Pipeline (gen-{n} pattern) ---"
+# ============================================================
+
+GENESIS_DIR="${TEST_DIR}/.olympus/genesis-20260401-inttest7"
+mkdir -p "$GENESIS_DIR/gen-1/.checkpoints"
+
+# Step 1: gen-1/spec.md (orchestrator initial)
+echo "  [genesis] Orchestrator → gen-1/spec.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${GENESIS_DIR}/gen-1/spec.md" "# Spec v1\n## GOAL\nBuild login feature")
+check_result "Genesis: gen-1/spec.md (initial spec)" "$RESULT" "allow"
+
+# Step 2: gen-1/wonder.md (from metis)
+echo "  [genesis] Metis → gen-1/wonder.md"
+echo "# Spec" > "${GENESIS_DIR}/gen-1/spec.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${GENESIS_DIR}/gen-1/wonder.md" "## Wonder\n### Essence\nLogin is identity verification")
+check_result "Genesis: gen-1/wonder.md (metis wonder)" "$RESULT" "allow"
+
+# Step 3: gen-1/reflect.md (from eris)
+echo "  [genesis] Eris → gen-1/reflect.md"
+echo "## Wonder" > "${GENESIS_DIR}/gen-1/wonder.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${GENESIS_DIR}/gen-1/reflect.md" "## Reflect\n### Challenge 1: Hasty Generalization")
+check_result "Genesis: gen-1/reflect.md (eris reflect)" "$RESULT" "allow"
+
+# Step 4: convergence.json (orchestrator)
+echo "  [genesis] Orchestrator → convergence.json"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${GENESIS_DIR}/convergence.json" '{"similarity":0.97,"converged":true}')
+check_result "Genesis: convergence.json (convergence check)" "$RESULT" "allow"
+
+# ============================================================
 # Cleanup
 rm -rf "$TEST_DIR"
 
