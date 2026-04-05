@@ -13,8 +13,10 @@ for agent_file in "$AGENTS_DIR"/*.md; do
 
   # --- 1. Add CC-pattern frontmatter fields (isReadOnly, isConcurrencySafe) ---
   # Determine isReadOnly from disallowedTools
-  HAS_WRITE=$(grep -c '^\s*-\s*Write' "$agent_file" || echo "0")
-  HAS_EDIT=$(grep -c '^\s*-\s*Edit' "$agent_file" || echo "0")
+  # Extract only frontmatter (between --- markers) to check disallowedTools
+  FRONTMATTER=$(sed -n '2,/^---$/p' "$agent_file" | head -20)
+  HAS_WRITE=0; echo "$FRONTMATTER" | grep -q '  - Write' && HAS_WRITE=1
+  HAS_EDIT=0; echo "$FRONTMATTER" | grep -q '  - Edit' && HAS_EDIT=1
   if [[ "$HAS_WRITE" -gt 0 && "$HAS_EDIT" -gt 0 ]]; then
     IS_READONLY="true"
   else
@@ -69,5 +71,32 @@ isConcurrencySafe: ${IS_CONCURRENCY_SAFE}
   echo "  DONE $name (isReadOnly=$IS_READONLY)"
 done
 
+# --- 3. Add output size guide to Execution_Policy ---
 echo ""
-echo "Upgraded $CHANGED agents."
+echo "--- Pass 2: Output size guide + LEADER_NAME consistency ---"
+OUTPUT_CHANGED=0
+
+for agent_file in "$AGENTS_DIR"/*.md; do
+  name=$(basename "$agent_file" .md)
+
+  # 3a. Add output size guide to Execution_Policy if missing
+  if ! grep -q 'Output size: Keep' "$agent_file"; then
+    if grep -q '</Execution_Policy>' "$agent_file"; then
+      sed -i '' 's|  </Execution_Policy>|    - Output size: Keep final response under 5000 chars. Hard limit: 50000 chars (truncated silently beyond this).\n  </Execution_Policy>|' "$agent_file"
+      echo "  ADD  $name: output size guide"
+      OUTPUT_CHANGED=$((OUTPUT_CHANGED + 1))
+    fi
+  fi
+
+  # 3b. Replace ${LEADER_NAME} template vars with literal "team-lead"
+  # (agent .md files have no template engine — literals are more reliable)
+  if grep -q 'SendMessage(to: "${LEADER_NAME}"' "$agent_file"; then
+    sed -i '' 's|SendMessage(to: "${LEADER_NAME}"|SendMessage(to: "team-lead"|g' "$agent_file"
+    echo "  FIX  $name: \${LEADER_NAME} → team-lead"
+    OUTPUT_CHANGED=$((OUTPUT_CHANGED + 1))
+  fi
+done
+
+echo ""
+echo "Upgraded $CHANGED agents (frontmatter+context)."
+echo "Fixed $OUTPUT_CHANGED items (output size+LEADER_NAME)."
