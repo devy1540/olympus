@@ -142,6 +142,17 @@ if [[ -n "$NAME" ]]; then
         WARNINGS="${WARNINGS}\n  - Agent '${NAME}' is registered as read-only but disallowedTools doesn't include both Write and Edit"
       fi
     fi
+    # Check: if registry says write, disallowedTools must include Edit (can Write but not Edit)
+    if [[ "$REGISTRY_PERMISSION" == "write" ]]; then
+      HAS_EDIT=$(echo "$DISALLOWED_TOOLS" | grep -c "Edit" || echo "0")
+      if [[ "$HAS_EDIT" == "0" ]]; then
+        WARNINGS="${WARNINGS}\n  - Agent '${NAME}' is registered as write-only but disallowedTools doesn't include Edit"
+      fi
+      HAS_WRITE=$(echo "$DISALLOWED_TOOLS" | grep -c "Write" || echo "0")
+      if [[ "$HAS_WRITE" -gt 0 ]]; then
+        WARNINGS="${WARNINGS}\n  - Agent '${NAME}' is registered as write-only but disallowedTools includes Write (should only disallow Edit)"
+      fi
+    fi
     # Check: if registry says full, disallowedTools should be empty
     if [[ "$REGISTRY_PERMISSION" == "full" ]]; then
       TOOL_COUNT=$(echo "$DISALLOWED_TOOLS" | grep -c '.' || echo "0")
