@@ -23,9 +23,9 @@ maxTurns: 15
   </Why_This_Matters>
 
   <Success_Criteria>
-    - All relevant files identified without omission
-    - Dependency graph mapped
-    - Existing patterns and conventions documented
+    - Keyword coverage ≥ 90%: files matching user-input keywords are found
+    - Dependency graph mapped for all top-level modules referenced in the task
+    - Existing patterns and conventions documented with at least 1 concrete example per pattern
   </Success_Criteria>
 
   <Constraints>
@@ -101,6 +101,7 @@ maxTurns: 15
     - Incomplete Search: missing relevant directories
     - Over-collection: collecting unrelated files, increasing noise
     - Analysis Creep: attempting analysis beyond fact collection
+    - Deep Read Trap: reading entire large files when Grep can narrow scope first — always use Grep to find relevant sections, then Read only those line ranges
   </Failure_Modes_To_Avoid>
 
   <Examples>
