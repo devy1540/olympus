@@ -137,9 +137,19 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/ambiguity-scores.json\",\"content\":\"{\\\"goal\\\":0.3,\\\"constraints\\\":0.4,\\\"ac\\\":0.5}\"}}" \
   "deny" "Ambiguity score violation (high ambiguity) → deny"
 
-# Test: ambiguity score pass (high clarity = low ambiguity)
+# Test: ambiguity at exact boundary (0.8 clarity → 0.2 ambiguity) → allow
 echo '{"interview_round":1}' > "${ARTIFACT_DIR}/interview-log.md"
 echo "## Round 1" >> "${ARTIFACT_DIR}/interview-log.md"
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/ambiguity-scores.json\",\"content\":\"{\\\"goal\\\":0.8,\\\"constraints\\\":0.8,\\\"ac\\\":0.8}\"}}" \
+  "allow" "Ambiguity 0.2 (at boundary) → allow"
+
+# Test: ambiguity just above threshold (0.79 clarity → 0.21 ambiguity) → deny
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/ambiguity-scores.json\",\"content\":\"{\\\"goal\\\":0.79,\\\"constraints\\\":0.79,\\\"ac\\\":0.79}\"}}" \
+  "deny" "Ambiguity 0.21 (just above 0.2 threshold) → deny"
+
+# Test: ambiguity score pass (high clarity = low ambiguity)
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/ambiguity-scores.json\",\"content\":\"{\\\"goal\\\":0.9,\\\"constraints\\\":0.9,\\\"ac\\\":0.9}\"}}" \
   "allow" "Ambiguity score pass (high clarity) → allow"
