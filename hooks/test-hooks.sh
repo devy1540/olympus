@@ -300,6 +300,20 @@ test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
   "allow" "Terminal rewind tribunal→oracle via returnToPhase → allow"
 rm -f "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.1.json"
 
+# Test: completed → oracle (invalid - completed is terminal) → deny
+echo '{"phase":"completed"}' > "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.1.json"
+test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"oracle\\\"}\"}}" \
+  "deny" "completed→oracle (completed is terminal) → deny"
+rm -f "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.1.json"
+
+# Test: same phase (oracle→oracle state update) → allow
+echo '{"phase":"oracle"}' > "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.1.json"
+test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"oracle\\\"}\"}}" \
+  "allow" "oracle→oracle (same phase state update) → allow"
+rm -f "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.1.json"
+
 # Test: execution phase with themisVerdict=APPROVE → allow
 test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh"   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"execution\\\",\\\"gates\\\":{\\\"themisVerdict\\\":\\\"APPROVE\\\"}}\"}}"  "allow" "execution phase with APPROVE themisVerdict → allow"
 
