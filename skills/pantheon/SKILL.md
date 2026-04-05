@@ -236,6 +236,8 @@ IF consensus >= threshold (Normal: 67%, Hell: unanimous):
   → Proceed to Step 8
 
 ELSE:
+  next = olympus_next_action(pipeline_id)
+  # next.action: retry_phase, advance_phase, or spawn_agent
   → Feedback loop (max 2 iterations):
     - Save current to prior-iterations.md
     - Add new perspectives only
@@ -268,6 +270,8 @@ ELSE:
   - olympus_start_pipeline: Step 1 (MUST)
   - olympus_register_agent_spawn: after each spawn (MUST)
   - olympus_gate_check: Step 7 consensus gate (MUST)
+  - olympus_next_action: consensus failure recovery (SHOULD)
+  - olympus_pipeline_status: parallel agent spawn verification (SHOULD)
   - olympus_record_execution: after each analyst (SHOULD)
 
   Team Tools:

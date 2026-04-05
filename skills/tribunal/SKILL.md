@@ -248,6 +248,8 @@ ELSE:
   - olympus_register_agent_spawn: after each spawn (MUST)
   - olympus_record_execution: after each agent (SHOULD)
   - olympus_log_collaboration: Stage 3 debate exchanges (SHOULD)
+  - olympus_next_action: verdict failure recovery (SHOULD)
+  - olympus_pipeline_status: stage transition validation (SHOULD)
 
   Team Tools:
   - TeamCreate: Step 1 (standalone only)

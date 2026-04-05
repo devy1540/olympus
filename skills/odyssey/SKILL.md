@@ -643,6 +643,8 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
   - olympus_gate_check: at each gate (MUST call)
   - olympus_record_execution: after each agent task completes (SHOULD call)
   - olympus_validate_plan: Step 5 before planning (SHOULD call)
+  - olympus_next_action: gate failure recovery + debug cycle strategy (SHOULD call)
+  - olympus_pipeline_status: phase transition validation (SHOULD call)
 
   Team Tools:
   - TeamCreate: Step 1 (create team once)

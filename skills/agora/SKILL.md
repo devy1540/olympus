@@ -263,6 +263,9 @@ Hell mode (--hell):
 
 Gate check:
   olympus_gate_check(pipeline_id, "consensus", consensus_percentage)
+  IF gate fails:
+    next = olympus_next_action(pipeline_id)
+    # next.action: retry_phase, advance_phase, or pipeline_complete
 
 Generate decision.md:
   ## Decision: {selected option}
@@ -292,6 +295,7 @@ ELSE:
   - olympus_start_pipeline: Step 1 (MUST)
   - olympus_register_agent_spawn: after each spawn (MUST)
   - olympus_gate_check: Step 6 consensus (MUST)
+  - olympus_next_action: consensus failure recovery (SHOULD)
   - olympus_record_execution: after each round (SHOULD)
 
   Team Tools:

@@ -131,6 +131,8 @@ FOR each generation n:
        → BREAK: evolution converged → Step 3
 
      IF stagnation detected:
+       next = olympus_next_action(pipeline_id)
+       # next.action: retry_phase (with persona hint), advance_phase, or pipeline_complete
        - Spinning (same hash 3×): → Contrarian persona
        - Oscillation (A↔B 2-cycle): → Simplifier persona
        - Diminishing (delta < 0.01 for 3 rounds): → Researcher persona
@@ -187,6 +189,7 @@ ELSE:
   - olympus_start_pipeline: Step 1 (MUST)
   - olympus_register_agent_spawn: after each agent spawn — metis and eris per generation (MUST)
   - olympus_gate_check: each convergence check (MUST)
+  - olympus_next_action: stagnation recovery strategy (SHOULD)
   - olympus_record_execution: each generation (SHOULD)
 
   Team Tools:
