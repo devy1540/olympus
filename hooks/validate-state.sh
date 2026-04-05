@@ -111,6 +111,15 @@ if [[ -d "$CHECKPOINT_DIR" ]]; then
       # Same phase is allowed (state update without transition)
       [[ "$PREV_PHASE" == "$CURRENT_PHASE" ]] && TRANSITION_VALID=true
 
+      # Terminal rewind: tribunal rejection can rewind to any earlier phase
+      # via Terminal.returnToPhase (REJECTED_SPEC→oracle, REJECTED_ARCHITECTURE→planning)
+      if [[ "$TRANSITION_VALID" == "false" ]]; then
+        RETURN_TO=$(echo "$CONTENT" | jq -r '.transition.returnToPhase // empty' 2>/dev/null || true)
+        if [[ -n "$RETURN_TO" && "$RETURN_TO" == "$CURRENT_PHASE" ]]; then
+          TRANSITION_VALID=true
+        fi
+      fi
+
       if [[ "$TRANSITION_VALID" == "false" ]]; then
         emit_deny \
           "STATE VIOLATION: invalid transition '${PREV_PHASE}' -> '${CURRENT_PHASE}'. Allowed: oracle->genesis|pantheon, genesis->pantheon, pantheon->planning, planning->execution, execution->tribunal, tribunal->completed|execution" \

@@ -165,7 +165,12 @@
       "pantheon":  ["planning"],
       "planning":  ["execution"],
       "execution": ["tribunal"],
-      "tribunal":  ["completed", "execution"]
+      "tribunal":  ["completed", "execution", "oracle", "planning"]
+    },
+    "rewindTransitions": {
+      "description": "Terminal rewinds: tribunal rejection can go to earlier phases via returnToPhase",
+      "tribunal→oracle": "REJECTED_SPEC — requirements need rework",
+      "tribunal→planning": "REJECTED_ARCHITECTURE — plan needs redesign"
     }
   }
 }
