@@ -94,6 +94,7 @@ When activated:
 helios_result = Agent(name: "helios", team_name: ${TEAM},
       subagent_type: "olympus:helios",
       prompt: "You are Helios in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: Generate analysis perspectives.
         DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/spec.md. Read codebase-context.md if present.
@@ -134,6 +135,7 @@ Agent(name: "ares", team_name: ${TEAM},
       subagent_type: "olympus:ares",
       run_in_background: true,
       prompt: "You are Ares in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: Analyze from Code Quality perspective.
         DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
@@ -152,6 +154,7 @@ Agent(name: "poseidon", team_name: ${TEAM},
       subagent_type: "olympus:poseidon",
       run_in_background: true,
       prompt: "You are Poseidon in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: Analyze from Security perspective.
         DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
@@ -169,6 +172,7 @@ IF architecture perspective:
   zeus_result = Agent(name: "zeus", team_name: ${TEAM},
         subagent_type: "olympus:zeus",
         prompt: "You are Zeus in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+          LEADER_NAME: team-lead
           IMMEDIATE TASK: Analyze from Architecture perspective.
           DO NOT write files — you are read-only.
           Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
@@ -192,6 +196,7 @@ olympus_record_execution for each analyst
 eris_result = Agent(name: "eris", team_name: ${TEAM},
       subagent_type: "olympus:eris",
       prompt: "You are Eris in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: Challenge all analyst findings with DA methodology.
         DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/analyst-findings.md.

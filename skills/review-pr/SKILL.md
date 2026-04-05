@@ -117,6 +117,7 @@ Effect: downstream agents also read spec-context.md for strategic review.
 hermes_result = Agent(name: "hermes", team_name: ${TEAM},
       subagent_type: "olympus:hermes",
       prompt: "You are Hermes. Artifact directory: ${ARTIFACT_DIR}/
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/pr-diff.patch and explore affected codebase areas.
         For each changed file: module, dependencies, change type (add/modify/delete).
@@ -137,6 +138,7 @@ olympus_record_execution(pipeline_id, "review-pr", "hermes", ...)
 helios_result = Agent(name: "helios", team_name: ${TEAM},
       subagent_type: "olympus:helios",
       prompt: "You are Helios. Artifact directory: ${ARTIFACT_DIR}/
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/pr-context.md and generate 3-5 review perspectives.
         Mandatory: Code Quality (→ ares), Security (→ poseidon).
@@ -162,6 +164,7 @@ Agent(name: "ares", team_name: ${TEAM},
       subagent_type: "olympus:ares",
       run_in_background: true,
       prompt: "You are Ares, code quality reviewer. Artifact directory: ${ARTIFACT_DIR}/
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/pr-context.md, review-perspectives.md.
         {If spec-context.md: 'Read spec-context.md for domain invariants.'}
@@ -177,6 +180,7 @@ Agent(name: "poseidon", team_name: ${TEAM},
       subagent_type: "olympus:poseidon",
       run_in_background: true,
       prompt: "You are Poseidon, security reviewer. Artifact directory: ${ARTIFACT_DIR}/
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/pr-context.md.
         {If spec-context.md: 'Read spec-context.md for security requirements.'}
@@ -202,6 +206,7 @@ olympus_record_execution for each reviewer
 eris_result = Agent(name: "eris", team_name: ${TEAM},
       subagent_type: "olympus:eris",
       prompt: "You are Eris. Artifact directory: ${ARTIFACT_DIR}/
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/review-findings.md.
         Read docs/shared/fallacy-catalog.md.
@@ -233,6 +238,7 @@ BLOCKING_QUESTION resolution:
 nemesis_result = Agent(name: "nemesis", team_name: ${TEAM},
       subagent_type: "olympus:nemesis",
       prompt: "You are Nemesis. Artifact directory: ${ARTIFACT_DIR}/
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ALL agent results:
         - pr-context.md (hermes reconnaissance)

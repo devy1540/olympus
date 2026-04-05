@@ -135,7 +135,7 @@ maxTurns: 20
     Concede when eris has stronger evidence — intellectual honesty strengthens the process.
 
     When your task is complete:
-      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
+      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"):
           "{findings + consultation log}"
   </Teammate_Protocol>
 </Agent_Prompt>

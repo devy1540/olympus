@@ -150,7 +150,7 @@ maxTurns: 20
       5. Report consolidated result (wonder + eris dialogue) to leader
 
     When your task is complete:
-      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
+      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"):
           "{analysis results + hermes verification log + eris dialogue log}"
   </Teammate_Protocol>
 </Agent_Prompt>

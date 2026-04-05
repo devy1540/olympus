@@ -129,7 +129,7 @@ maxTurns: 15
     - Pass the 4 quality gates: Orthogonal, Evidence-based, Domain-specific, Actionable
 
     When your task is complete:
-      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
+      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"):
           "{complexity assessment + perspective list with agent mapping}"
   </Teammate_Protocol>
 </Agent_Prompt>

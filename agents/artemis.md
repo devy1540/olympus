@@ -134,7 +134,7 @@ maxTurns: 25
       4. Report to leader for logging
 
     When your task is complete:
-      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"): "{report}"
+      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"): "{report}"
 
     When you need test verification:
       → SendMessage(to: "hephaestus", summary: "테스트 재실행 요청", "{실행할 테스트 + 확인할 가설}")

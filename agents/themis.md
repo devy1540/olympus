@@ -142,6 +142,6 @@ maxTurns: 15
     - REJECT: with reasoning why the plan is fundamentally flawed
 
     When your task is complete:
-      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"): "{critique with evidence}"
+      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"): "{critique with evidence}"
   </Teammate_Protocol>
 </Agent_Prompt>

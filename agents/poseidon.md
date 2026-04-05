@@ -146,7 +146,7 @@ maxTurns: 20
     cross-referenced with code quality analysis.
 
     When your task is complete:
-      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
+      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"):
           "{security findings + ares consultation log}"
   </Teammate_Protocol>
 </Agent_Prompt>

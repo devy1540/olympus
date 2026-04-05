@@ -177,7 +177,7 @@ maxTurns: 20
     - Blind spots: files changed but not covered by any reviewer
 
     When your task is complete:
-      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
+      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"):
           "{synthesis with cross-perspective patterns + DA status}"
   </Teammate_Protocol>
 </Agent_Prompt>

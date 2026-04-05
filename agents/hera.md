@@ -146,7 +146,7 @@ maxTurns: 15
       - Use hephaestus evidence to settle factual disputes
 
     When your task is complete:
-      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
+      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"):
           "{verdict + evidence log + debate synthesis}"
   </Teammate_Protocol>
 </Agent_Prompt>

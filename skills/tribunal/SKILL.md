@@ -77,6 +77,7 @@ Call ToolSearch("+olympus pipeline") to load MCP tools.
 heph_result = Agent(name: "hephaestus", team_name: ${TEAM},
       subagent_type: "olympus:hephaestus",
       prompt: "You are Hephaestus in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: Run mechanical verification — build, lint, type-check, and test suite in order.
         Output results as your final response in mechanical-result.json format.")
 olympus_register_agent_spawn(pipeline_id, "hephaestus")
@@ -98,6 +99,7 @@ Decision:
 athena_result = Agent(name: "athena", team_name: ${TEAM},
       subagent_type: "olympus:athena",
       prompt: "You are Athena in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        LEADER_NAME: team-lead
         IMMEDIATE TASK: Perform semantic evaluation of AC compliance.
         DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/spec.md and mechanical-result.json.
@@ -138,6 +140,7 @@ WHEN triggered:
       ares_position = Agent(name: "ares", team_name: ${TEAM},
         subagent_type: "olympus:ares",
         prompt: "You are Ares. Artifact directory: ${ARTIFACT_DIR}/
+          LEADER_NAME: team-lead
           IMMEDIATE TASK: Read ${ARTIFACT_DIR}/semantic-matrix.md and explore relevant code.
           Argue for APPROVE or REJECT from quality perspective.
           Include file:line evidence for every claim.
@@ -147,7 +150,8 @@ WHEN triggered:
    b. Eris counter-argues — SEES ares's full argument (FOREGROUND):
       eris_counter = Agent(name: "eris", team_name: ${TEAM},
         subagent_type: "olympus:eris",
-        prompt: "ARES ARGUES: {ares_position}.
+        prompt: "LEADER_NAME: team-lead
+          ARES ARGUES: {ares_position}.
           Your job: find logical fallacies, unsupported claims, overlooked evidence.
           Use fallacy-catalog.md. Include file:line counter-evidence.
           IMPORTANT: Respond SPECIFICALLY to ares's points — do not make independent arguments.
@@ -157,7 +161,8 @@ WHEN triggered:
    c. OPTIONAL: Ares rebuttal (if eris raised substantive new points, FOREGROUND):
       ares_rebuttal = Agent(name: "ares", team_name: ${TEAM},
         subagent_type: "olympus:ares",
-        prompt: "ERIS COUNTERS: {eris_counter}.
+        prompt: "LEADER_NAME: team-lead
+          ERIS COUNTERS: {eris_counter}.
           Respond ONLY to new points eris raised. Do not repeat your opening.
           Concede where eris is right. Defend where you have stronger evidence.
           Output your rebuttal as your final response.")
@@ -165,7 +170,8 @@ WHEN triggered:
    d. Hera synthesizes — SEES the full debate transcript (FOREGROUND):
       hera_verdict = Agent(name: "hera", team_name: ${TEAM},
         subagent_type: "olympus:hera",
-        prompt: "DEBATE TRANSCRIPT:
+        prompt: "LEADER_NAME: team-lead
+          DEBATE TRANSCRIPT:
           === ARES OPENING === {ares_position}
           === ERIS REBUTTAL === {eris_counter}
           === ARES REBUTTAL === {ares_rebuttal or 'N/A'}

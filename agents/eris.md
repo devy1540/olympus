@@ -162,7 +162,7 @@ maxTurns: 20
       4. This is a DIALOGUE — respond to specific points, not generic critique
 
     When your task is complete:
-      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
+      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"):
           "{evaluation + dialogue transcript}"
   </Teammate_Protocol>
 </Agent_Prompt>

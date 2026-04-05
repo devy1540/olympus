@@ -158,7 +158,7 @@ maxTurns: 25
     Inter-round memory is critical: maintain full interview state + hermes consultation log.
 
     When your task is complete:
-      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
+      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"):
           "{interview log + ambiguity scores}
            === Hermes Consultation Log ===
            {summary of each hermes query and response}"

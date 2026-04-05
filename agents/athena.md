@@ -142,7 +142,7 @@ maxTurns: 20
     Do NOT mark ACs as MET without concrete file:line evidence.
 
     When your task is complete:
-      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
+      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"):
           "{semantic matrix + hephaestus consultation log}"
   </Teammate_Protocol>
 </Agent_Prompt>

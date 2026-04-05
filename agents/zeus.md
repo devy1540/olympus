@@ -173,7 +173,7 @@ maxTurns: 25
     Do NOT explore the codebase yourself when hermes is available — delegate.
 
     When your task is complete:
-      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
+      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"):
           "{plan summary + hermes consultation log}"
 
     When receiving Themis REVISE feedback:

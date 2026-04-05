@@ -89,6 +89,7 @@ IF "zeus" not in team:
         subagent_type: "olympus:zeus",
         run_in_background: false,
         prompt: "You are Zeus, planner and tie-breaker in a committee debate.
+          LEADER_NAME: team-lead
           IMMEDIATE TASK: You will present positions and respond to other members each round.
           CONSULTATION: In Round 2+, you MUST explicitly reference ares's or eris's prior argument
           and either agree, rebut, or qualify it. Independent opinions without engagement are incomplete.
@@ -102,6 +103,7 @@ IF "ares" not in team:
         subagent_type: "olympus:ares",
         run_in_background: false,
         prompt: "You are Ares, engineering critic in a committee debate.
+          LEADER_NAME: team-lead
           IMMEDIATE TASK: You will evaluate options from technical feasibility, maintainability, scalability.
           CONSULTATION: In Round 2+, you MUST explicitly reference zeus's or eris's prior argument
           and either agree, rebut, or qualify it with technical evidence. Independent opinions are incomplete.
@@ -114,6 +116,7 @@ IF "eris" not in team:
         subagent_type: "olympus:eris",
         run_in_background: false,
         prompt: "You are Eris, devil's advocate in a committee debate.
+          LEADER_NAME: team-lead
           IMMEDIATE TASK: You will challenge ALL positions using fallacy-catalog.md.
           CONSULTATION: You MUST target specific claims made by zeus or ares — not abstract positions.
           Quote the claim you are challenging, then deliver your challenge.
@@ -125,6 +128,7 @@ Spawn UX critic (general-purpose, always fresh):
   Agent(name: "ux-critic", team_name: ${TEAM},
         run_in_background: false,
         prompt: "You are a UX critic in a committee debate.
+          LEADER_NAME: team-lead
           IMMEDIATE TASK: You will evaluate options from user experience, accessibility, usability.
           CONSULTATION: In Round 2+, you MUST reference a prior speaker's claim and respond to it
           from a UX lens. Independent opinions without engagement are incomplete.
@@ -144,21 +148,24 @@ FOR each round (max 3):
      Round 1 — Initial positions:
      Agent(name: "zeus-r{n}", team_name: ${TEAM}, subagent_type: "olympus:zeus",
        run_in_background: true,
-       prompt: "Read ${ARTIFACT_DIR}/debate-frame.json.
+       prompt: "LEADER_NAME: team-lead
+         Read ${ARTIFACT_DIR}/debate-frame.json.
          Present: preferred option + rationale + pros/cons of others.
          Include evidence (file:line if applicable).
          Output your position as your final response.")
 
      Agent(name: "ares-r{n}", team_name: ${TEAM}, subagent_type: "olympus:ares",
        run_in_background: true,
-       prompt: "DO NOT write files — you are read-only.
+       prompt: "LEADER_NAME: team-lead
+         DO NOT write files — you are read-only.
          Read ${ARTIFACT_DIR}/debate-frame.json.
          Present: preferred option from technical perspective + evidence.
          Output your position as your final response.")
 
      Agent(name: "ux-r{n}", team_name: ${TEAM},
        run_in_background: true,
-       prompt: "DO NOT write files — you are read-only.
+       prompt: "LEADER_NAME: team-lead
+         DO NOT write files — you are read-only.
          Read ${ARTIFACT_DIR}/debate-frame.json.
          Present: preferred option from UX perspective + evidence.
          Output your position as your final response.")
@@ -174,10 +181,12 @@ FOR each round (max 3):
 
   3. Cross-questioning (if disagreements — FOREGROUND sequential):
      ares_rebuttal = Agent(name: "ares-cross", subagent_type: "olympus:ares",
-       prompt: "Zeus argues: {zeus_position_verbatim}. Counter-argue with specific technical evidence.")
+       prompt: "LEADER_NAME: team-lead
+         Zeus argues: {zeus_position_verbatim}. Counter-argue with specific technical evidence.")
 
      zeus_rebuttal = Agent(name: "zeus-cross", subagent_type: "olympus:zeus",
-       prompt: "Ares argues: {ares_position_verbatim}. Respond to ares's specific objections.")
+       prompt: "LEADER_NAME: team-lead
+         Ares argues: {ares_position_verbatim}. Respond to ares's specific objections.")
 
   4. Measure consensus (per consensus-levels.md):
      - Strong (3/3): unanimous → exit
@@ -195,7 +204,8 @@ FOR each round (max 3):
 ```
 eris_challenge = Agent(name: "eris-da", team_name: ${TEAM},
     subagent_type: "olympus:eris",
-    prompt: "DO NOT write files — you are read-only.
+    prompt: "LEADER_NAME: team-lead
+      DO NOT write files — you are read-only.
       Read all committee positions from previous rounds.
       Challenge each claim by name — do not issue abstract challenges.
       Challenge areas:

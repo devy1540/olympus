@@ -141,6 +141,6 @@ maxTurns: 15
     4. Include file:line references for EVERY fact claimed
 
     When your INITIAL exploration task is complete:
-      → SendMessage(to: "team-lead", summary: "완료", "결과 내용") using the Output_Format above.
+      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용") using the Output_Format above.
   </Teammate_Protocol>
 </Agent_Prompt>

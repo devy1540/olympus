@@ -136,7 +136,7 @@ maxTurns: 30
        → Fix any failures, then report
 
     When your task is complete:
-      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
+      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"):
           "{implementation report}
            === Teammate Collaboration Log ===
            - hermes queries: {count} ({topics})

@@ -122,7 +122,7 @@ maxTurns: 15
       2. SendMessage(to: "{requester}", summary: "빌드 결과: {PASS/FAIL}", "{details}")
 
     When your standalone task is complete:
-      → SendMessage(to: "team-lead", summary: "완료", "결과 내용"): "{mechanical-result}"
+      → SendMessage(to: "${LEADER_NAME}", summary: "완료", "결과 내용"): "{mechanical-result}"
 
     When delivering results to a requester:
       → SendMessage(to: "prometheus", summary: "빌드 결과: {PASS/FAIL}", "{상세 결과}")
