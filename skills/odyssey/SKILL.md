@@ -438,16 +438,21 @@ Create implementation plan with independent critique. Zeus consults hermes; Them
    → REVISE: Re-spawn zeus (FOREGROUND) with Themis feedback:
        zeus_revised = Agent(name: "zeus", team_name: ${TEAM},
            subagent_type: "olympus:zeus",
-           prompt: "You are Zeus. Artifact directory: ${ARTIFACT_DIR}/
+           prompt: "You are Zeus in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+             LEADER_NAME: team-lead
              Themis critique: {specific feedback}. Revise plan.md.
              Read ${ARTIFACT_DIR}/plan.md and fix precisely what Themis flagged.
              Output your revised plan as your final response.")
+     olympus_register_agent_spawn(pipeline_id, "zeus")
      → Update plan.md from zeus_revised
      Re-spawn themis (FOREGROUND) for re-review:
        themis_recheck = Agent(name: "themis", team_name: ${TEAM},
            subagent_type: "olympus:themis",
-           prompt: "You are Themis. Re-review revised ${ARTIFACT_DIR}/plan.md against spec.md.
+           prompt: "You are Themis in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+             LEADER_NAME: team-lead
+             Re-review revised ${ARTIFACT_DIR}/plan.md against spec.md.
              Output verdict as your final response.")
+     olympus_register_agent_spawn(pipeline_id, "themis")
      → Re-check verdict
    → 3 consecutive REVISE: trigger Agora debate
      (ares, zeus, eris structured debate → forward to zeus → Themis re-review)
