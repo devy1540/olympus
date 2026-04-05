@@ -85,7 +85,7 @@ HOOK_RESULT=$?
 if [[ $HOOK_RESULT -ne 0 ]]; then
   error "Hook tests failed. Fix issues before releasing."
 fi
-ok "Hook tests passed (30/30)"
+ok "Hook tests passed"
 
 bash hooks/test-integration.sh > /dev/null 2>&1
 INTEGRATION_RESULT=$?
@@ -93,6 +93,21 @@ if [[ $INTEGRATION_RESULT -ne 0 ]]; then
   error "Integration tests failed. Fix issues before releasing."
 fi
 ok "Integration tests passed"
+
+# Go tests (MCP server)
+if [[ -f "mcp-server/go.mod" ]]; then
+  (cd mcp-server && go test ./... > /dev/null 2>&1)
+  GO_RESULT=$?
+  if [[ $GO_RESULT -ne 0 ]]; then
+    error "Go tests failed. Fix issues before releasing."
+  fi
+  ok "Go tests passed"
+
+  # Rebuild MCP binary
+  info "Rebuilding MCP binary..."
+  (cd mcp-server && go build -o ../bin/olympus-mcp ./cmd/olympus-mcp/)
+  ok "MCP binary rebuilt: bin/olympus-mcp"
+fi
 
 # --- Bump version in files ---
 info "Bumping version: ${CURRENT_VERSION} → ${NEW_VERSION}"
