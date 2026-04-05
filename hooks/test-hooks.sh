@@ -224,6 +224,11 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/mechanical-result.json\",\"content\":\"{\\\"overall\\\":\\\"ENV_UNAVAILABLE\\\",\\\"results\\\":{\\\"build\\\":{\\\"status\\\":\\\"SKIP\\\"},\\\"test\\\":{\\\"status\\\":\\\"SKIP\\\"}}}\"}}" \
   "allow" "Mechanical result ENV_UNAVAILABLE → allow"
 
+# Test: mechanical-result.json with SKIP stages but overall PASS → allow (optional stage skipped)
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/mechanical-result.json\",\"content\":\"{\\\"overall\\\":\\\"PASS\\\",\\\"results\\\":{\\\"build\\\":{\\\"status\\\":\\\"PASS\\\"},\\\"typecheck\\\":{\\\"status\\\":\\\"SKIP\\\"},\\\"test\\\":{\\\"status\\\":\\\"PASS\\\"}}}\"}}" \
+  "allow" "Mechanical result: SKIP stage with overall PASS → allow"
+
 # Test: consensus-record.json above threshold → allow
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/consensus-record.json\",\"content\":\"{\\\"level\\\":\\\"working\\\",\\\"percentage\\\":0.6667}\"}}" \
