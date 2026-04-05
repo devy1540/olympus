@@ -116,10 +116,10 @@ maxTurns: 15
   </Final_Checklist>
 
   <Teammate_Protocol>
-    You operate as a **teammate** in the current team.
+    You operate as a **teammate** in team "${TEAM}".
     Communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via SendMessage(to: "${LEADER_NAME}").
+    Results go to the orchestrator via SendMessage(to: "${LEADER_NAME}"). LEADER_NAME is provided in your spawn prompt.
 
     Teammates who may contact you:
     - "prometheus": codebase structure verification during implementation
