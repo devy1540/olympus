@@ -50,8 +50,29 @@ if [[ -f "mcp-server/go.mod" ]]; then
   run_suite "Go tests (MCP server)" "cd mcp-server && go test ./..."
 fi
 
-# Agent consistency
-run_suite "Agent schema (batch)" "bash hooks/validate-agents.sh < /dev/null"
+# Agent consistency: validate each agent file through the schema hook
+TOTAL=$((TOTAL + 1))
+printf "  %-30s " "Agent schema (batch)"
+AGENT_FAILURES=""
+for agent_file in agents/*.md; do
+  agent_content=$(cat "$agent_file")
+  result=$(jq -n --arg fp "${ROOT_DIR}/${agent_file}" --arg ct "$agent_content" \
+    '{ tool_input: { file_path: $fp, content: $ct } }' | \
+    bash hooks/validate-agents.sh 2>/dev/null || true)
+  if [[ -n "$result" ]]; then
+    behavior=$(echo "$result" | jq -r '.behavior // "text"' 2>/dev/null || echo "text")
+    if [[ "$behavior" == "deny" ]]; then
+      AGENT_FAILURES="${AGENT_FAILURES} $(basename $agent_file)"
+    fi
+  fi
+done
+if [[ -z "$AGENT_FAILURES" ]]; then
+  echo -e "${GREEN}✓${NC} all $(ls agents/*.md | wc -l | tr -d ' ') agents valid"
+  PASSED=$((PASSED + 1))
+else
+  echo -e "${RED}✗${NC} failed:${AGENT_FAILURES}"
+  FAILED=$((FAILED + 1))
+fi
 
 # Quick structural checks
 TOTAL=$((TOTAL + 1))
