@@ -32,8 +32,9 @@ bash hooks/validate-agents.sh    # 에이전트 정의 스키마 검증
 bash hooks/validate-gate.sh      # 게이트 임계값 검증
 bash hooks/validate-state.sh     # 상태 전이 검증
 bash hooks/verify-artifacts.sh   # 아티팩트 계약 검증
-bash hooks/test-hooks.sh         # 훅 통합 테스트
-bash hooks/test-integration.sh   # 전체 파이프라인 통합 테스트
+bash hooks/test-hooks.sh         # 훅 단위 테스트 (36건: permissions, spawn-gate, gate, state, agents, compact, denial)
+bash hooks/test-integration.sh   # 전체 파이프라인 통합 테스트 (22건: Oracle→Tribunal 흐름)
+cd mcp-server && go test ./...   # MCP 서버 Go 테스트 (config, gate, store)
 
 # 릴리스
 bash scripts/release.sh patch    # 패치 릴리스 (x.x.X)
@@ -90,7 +91,9 @@ SKILL.md의 Step에서 지정된 에이전트는 **반드시** Agent tool(name +
 - 에이전트 정의: `agents/{name}.md` (YAML frontmatter + prompt). 스키마: `docs/shared/agent-schema.json`
 - 아티팩트 I/O: `docs/shared/artifact-contracts.json`이 페이즈별 읽기/쓰기 권한 통제
 - 상태 머신: `docs/shared/pipeline-states.json` (CC의 query.ts Terminal/Continue 패턴 포팅)
-- 훅: `hooks/hooks.json` — Pre-Write(권한·계약 검증), Post-Write(스키마·게이트·상태 검증 + 체크포인트)
+- 훅: `hooks/hooks.json` — Pre-Write(권한·계약·스폰 검증), Post-Write(스키마·게이트·상태 검증 + 체크포인트)
+- 스폰 강제: `artifact-contracts.json`의 `required_spawn` 필드 + `enforce-spawn-gate.sh` 훅이 §0 위반 차단 (22건 등록)
+- 런타임 안정성: 에이전트 출력 5000자 권장/50000자 한도, 피어 무응답 시 2회 재시도 후 graceful degradation
 - 런타임 아티팩트: `.olympus/{skill}-{YYYYMMDD}-{uuid}/` (gitignored, `.checkpoints/`에 자동 백업)
 
 ### 컨벤션
