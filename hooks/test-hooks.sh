@@ -334,11 +334,23 @@ test_hook "compact-ctx" "$SCRIPT_DIR/compact-context.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"oracle\\\"}\"}}" \
   "allow" "No phase transition → allow"
 
-# Test: phase transition with checkpoint
+# Test: oracle→pantheon phase transition → compaction instruction
 echo '{"phase":"oracle"}' > "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.001.json"
 test_hook "compact-ctx" "$SCRIPT_DIR/compact-context.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"pantheon\\\"}\"}}" \
   "allow" "oracle→pantheon transition → compaction instruction"
+
+# Test: execution→tribunal phase transition → compaction instruction
+echo '{"phase":"execution"}' > "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.002.json"
+test_hook "compact-ctx" "$SCRIPT_DIR/compact-context.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"tribunal\\\"}\"}}" \
+  "allow" "execution→tribunal transition → compaction instruction"
+
+# Test: tribunal→completed (terminal) → timing only, no crash
+echo '{"phase":"tribunal"}' > "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.003.json"
+test_hook "compact-ctx" "$SCRIPT_DIR/compact-context.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"completed\\\"}\"}}" \
+  "allow" "tribunal→completed transition → allow (timing reminder)"
 
 # Test: non-state file → silent
 test_hook "compact-ctx" "$SCRIPT_DIR/compact-context.sh" \
