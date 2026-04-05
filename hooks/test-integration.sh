@@ -428,7 +428,14 @@ RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
   "${PANTHEON_TEST_DIR}/da-evaluation.md" "## DA Evaluation\n### Verdict: SUFFICIENT")
 check_result "Pantheon: da-evaluation.md (eris challenge)" "$RESULT" "allow"
 
-# Step 4: analysis.md (orchestrator synthesis)
+# Step 3b: analysis.md WITHOUT da-evaluation.md → DA mandatory warning (still allow)
+echo "  [pantheon] Orchestrator → analysis.md (no DA yet)"
+rm -f "${PANTHEON_TEST_DIR}/da-evaluation.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${PANTHEON_TEST_DIR}/analysis.md" "## Cross-Perspective Analysis\n### Recommendations")
+check_result "Pantheon: analysis.md without da-evaluation.md → DA mandatory warning" "$RESULT" "allow"
+
+# Step 4: analysis.md (orchestrator synthesis) with da-evaluation.md present
 echo "  [pantheon] Orchestrator → analysis.md"
 echo "## DA" > "${PANTHEON_TEST_DIR}/da-evaluation.md"
 RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
