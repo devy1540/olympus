@@ -18,5 +18,15 @@
     "threshold": 0.8,
     "operator": ">=",
     "description": "Semantic/quality score must be ≥ 0.8 to pass Tribunal/Evolve gate"
+  },
+  "mechanical": {
+    "threshold": "PASS",
+    "operator": "==",
+    "description": "All build/lint/test/type-check must PASS; ENV_UNAVAILABLE yields MANUAL_REVIEW_REQUIRED"
+  },
+  "evolve_dimension_minimum": {
+    "threshold": 0.6,
+    "operator": ">=",
+    "description": "Each individual dimension must be >= 0.6 for Evolve convergence; overall >= 0.8 alone is insufficient"
   }
 }
