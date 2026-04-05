@@ -81,6 +81,7 @@ extract_field() {
 NAME=$(extract_field "name")
 DESCRIPTION=$(extract_field "description")
 MODEL=$(extract_field "model")
+MAX_TURNS=$(extract_field "maxTurns")
 # disallowedTools is a YAML array — extract items
 # Handle block format:  disallowedTools:\n  - Write\n  - Edit
 DISALLOWED_TOOLS=$(echo "$FRONTMATTER" | sed -n '/^disallowedTools:/,/^[a-zA-Z]/p' | grep -E '^[[:space:]]*-' | sed 's/^[[:space:]]*-[[:space:]]*//' | sed 's/[[:space:]]*$//' || true)
@@ -168,6 +169,18 @@ if [[ -n "$DESCRIPTION" ]]; then
   DESC_LEN=${#DESCRIPTION}
   if [[ "$DESC_LEN" -gt 200 ]]; then
     WARNINGS="${WARNINGS}\n  - description length (${DESC_LEN}) exceeds recommended max of 200 characters"
+  fi
+fi
+
+# --- 7. maxTurns range (schema: integer, 1-50) ---
+if [[ -n "$MAX_TURNS" ]]; then
+  IS_INT=$(echo "$MAX_TURNS" | grep -cE '^[0-9]+$' || echo "0")
+  if [[ "$IS_INT" == "0" ]]; then
+    VIOLATIONS="${VIOLATIONS}\n  - maxTurns '${MAX_TURNS}' must be an integer"
+  else
+    if [[ "$MAX_TURNS" -lt 1 || "$MAX_TURNS" -gt 50 ]]; then
+      VIOLATIONS="${VIOLATIONS}\n  - maxTurns ${MAX_TURNS} out of range [1, 50] (agent-schema.json constraint)"
+    fi
   fi
 fi
 

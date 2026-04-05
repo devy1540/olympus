@@ -450,6 +450,16 @@ test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
   "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/agents/hera.md\",\"content\":\"---\nname: hera\ndescription: Verifier agent\nmodel: sonnet\ndisallowedTools:\n  - Write\n  - Edit\n---\n# Hera\"}}" \
   "allow" "Write-level agent (hera) with Write in disallowedTools → allow (warning)"
 
+# Test: maxTurns within valid range → allow
+test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
+  "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/agents/good.md\",\"content\":\"---\nname: good\ndescription: Good agent\nmodel: sonnet\ndisallowedTools: []\nmaxTurns: 20\n---\n# Good\"}}" \
+  "allow" "maxTurns: 20 (valid range 1-50) → allow"
+
+# Test: maxTurns too high → deny
+test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
+  "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/agents/toomany.md\",\"content\":\"---\nname: toomany\ndescription: Too many turns\nmodel: haiku\ndisallowedTools: []\nmaxTurns: 100\n---\n# TooMany\"}}" \
+  "deny" "maxTurns: 100 (exceeds maximum 50) → deny"
+
 # Test: non-agent file → silent
 test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
   "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/skills/oracle/SKILL.md\",\"content\":\"# Oracle\"}}" \
