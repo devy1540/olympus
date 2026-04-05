@@ -111,6 +111,11 @@ olympus_register_agent_spawn(pipeline_id, "athena")
 
 → Write audit-semantic.json from athena_result
 olympus_record_execution(pipeline_id, "audit", "athena", ...)
+olympus_log_collaboration(pipeline_id, "athena", "hephaestus", "의미 검증: athena↔hephaestus 크로스검증")
+
+DEADLOCK FALLBACK: If athena does not send a cross-check question to hephaestus within 3 minutes:
+  → SendMessage(to: "athena", "Cross-check consultation timeout. Finalize audit-semantic.json using audit-mechanical.json findings only. Note 'hephaestus consultation pending'.")
+  → Leader flags incomplete cross-verification in audit-report.md.
 ```
 
 ---
@@ -157,6 +162,7 @@ Shutdown all teammates → TeamDelete
   - olympus_start_pipeline: Step 1 (MUST)
   - olympus_register_agent_spawn: after each spawn (MUST)
   - olympus_record_execution: after each agent (SHOULD)
+  - olympus_log_collaboration: Step 3 athena↔hephaestus consultation (SHOULD)
 
   Team Tools:
   - TeamCreate: Step 1
