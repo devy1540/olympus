@@ -168,6 +168,14 @@ RESULT=$(run_hook "$SCRIPT_DIR/validate-gate.sh" \
   "${TRIBUNAL_DIR}/verdict.md" "# Tribunal Verdict\n## Final: APPROVED")
 check_result "Tribunal: verdict.md with spec.md present" "$RESULT" "allow"
 
+# Step 3b: verdict.md with semantic-matrix.md present but no consensus-record.json → Stage 3 warning
+echo "  [tribunal] Orchestrator → verdict.md (no consensus-record when semantic-matrix exists)"
+echo "# Semantic Matrix" > "${TRIBUNAL_DIR}/semantic-matrix.md"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${TRIBUNAL_DIR}/verdict.md" "# Tribunal Verdict\n## Final: APPROVED")
+check_result "Tribunal: verdict.md with semantic-matrix but no consensus-record → Stage3 warning" "$RESULT" "allow"
+rm -f "${TRIBUNAL_DIR}/semantic-matrix.md"
+
 # ============================================================
 echo ""
 echo "--- Phase 3: Odyssey State Machine ---"
