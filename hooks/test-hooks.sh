@@ -169,6 +169,11 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/mechanical-result.json\",\"content\":\"{\\\"results\\\":{\\\"build\\\":{\\\"status\\\":\\\"FAIL\\\",\\\"stage\\\":\\\"build\\\"}},\\\"overall\\\":\\\"FAIL\\\"}\"}}" \
   "deny" "Mechanical result FAIL → deny"
 
+# Test: mechanical-result.json FAIL without stage field → deny (stage key from results key, not .stage)
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/mechanical-result.json\",\"content\":\"{\\\"results\\\":{\\\"lint\\\":{\\\"status\\\":\\\"FAIL\\\"}},\\\"overall\\\":\\\"FAIL\\\"}\"}}" \
+  "deny" "Mechanical result FAIL (no .stage field) → deny with correct stage name"
+
 # Test: mechanical-result.json ENV_UNAVAILABLE → allow (no build system is valid)
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/mechanical-result.json\",\"content\":\"{\\\"overall\\\":\\\"ENV_UNAVAILABLE\\\",\\\"results\\\":{\\\"build\\\":{\\\"status\\\":\\\"SKIP\\\"},\\\"test\\\":{\\\"status\\\":\\\"SKIP\\\"}}}\"}}" \
