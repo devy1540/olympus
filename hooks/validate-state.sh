@@ -251,6 +251,15 @@ if [[ "$FILENAME" == "odyssey-state.json" ]]; then
           fi
         fi
         ;;
+      execution)
+        THEMIS_VERDICT=$(echo "$CONTENT" | jq -r '.gates.themisVerdict // empty' 2>/dev/null || true)
+        if [[ -n "$THEMIS_VERDICT" && "$THEMIS_VERDICT" != "APPROVE" ]]; then
+          emit_deny \
+            "STATE VIOLATION: execution phase requires gates.themisVerdict = APPROVE, got ${THEMIS_VERDICT}. Themis must approve the plan before execution." \
+            "gate" "themis precondition"
+          exit 0
+        fi
+        ;;
       completed)
         BUILD_PASS=$(echo "$CONTENT" | jq -r '.gates.mechanicalPass // .gates.buildPass // empty' 2>/dev/null || true)
         if [[ -n "$BUILD_PASS" && "$BUILD_PASS" != "true" ]]; then
