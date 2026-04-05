@@ -505,7 +505,8 @@ Implement the approved plan. **Teammate mode shines here — agents collaborate 
 
      debug_result = Agent(name: "prometheus", team_name: ${TEAM},
        subagent_type: "olympus:prometheus",
-       prompt: "Build/test failed: {heph_result summary}.
+       prompt: "LEADER_NAME: team-lead
+         Build/test failed: {heph_result summary}.
          Fix the failures. You CAN write files directly.
          Output your fix report as your final response.")
      olympus_register_agent_spawn(pipeline_id, "prometheus")

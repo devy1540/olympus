@@ -167,7 +167,8 @@ DEADLOCK FALLBACK: metis sends draft to eris; eris challenges back. If 5 minutes
   → Leader synthesizes from whichever responded; flags incomplete cross-verification in diagnosis.md.
 
 WAIT for both completion notifications → leader synthesizes into diagnosis.md
-olympus_record_execution for each
+olympus_record_execution(pipeline_id, "evolve", "metis", ...)
+olympus_record_execution(pipeline_id, "evolve", "eris", ...)
 ```
 
 ---

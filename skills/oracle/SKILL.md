@@ -170,6 +170,7 @@ ELSE IF rounds < 10:
           Ambiguity still at {score}. Continue interview, focus on: {gap areas}.
           Output updated results as your final response.")
     olympus_register_agent_spawn(pipeline_id, "apollo")
+    olympus_record_execution(pipeline_id, "oracle", "apollo-retry", ...)
   → re-check gate after completion
 
 ELSE (rounds >= 10):
