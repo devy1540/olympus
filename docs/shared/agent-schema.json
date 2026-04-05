@@ -27,6 +27,22 @@
       },
       "description": "Tools this agent cannot use. Ported from Claude Code's getDenyRuleForTool() pattern (src/utils/permissions/permissions.ts:287-292)"
     },
+    "isReadOnly": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this agent can only read (no Write/Edit). Should be true when disallowedTools includes Write AND Edit."
+    },
+    "isConcurrencySafe": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this agent can safely run in parallel with other agents."
+    },
+    "maxTurns": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50,
+      "description": "Maximum number of turns this agent can take before being stopped."
+    },
 
     "defaults": {
       "$comment": "Ported from TOOL_DEFAULTS (src/Tool.ts:757-769). These fields have safe defaults and need not be specified in agent .md files.",
