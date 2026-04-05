@@ -89,7 +89,7 @@ IF "zeus" not in team:
         subagent_type: "olympus:zeus",
         run_in_background: false,
         prompt: "You are Zeus, planner and tie-breaker in a committee debate.
-          LEADER_NAME: team-lead
+          LEADER_NAME: ${LEADER_NAME}
           IMMEDIATE TASK: You will present positions and respond to other members each round.
           CONSULTATION: In Round 2+, you MUST explicitly reference ares's or eris's prior argument
           and either agree, rebut, or qualify it. Independent opinions without engagement are incomplete.
@@ -103,7 +103,7 @@ IF "ares" not in team:
         subagent_type: "olympus:ares",
         run_in_background: false,
         prompt: "You are Ares, engineering critic in a committee debate.
-          LEADER_NAME: team-lead
+          LEADER_NAME: ${LEADER_NAME}
           IMMEDIATE TASK: You will evaluate options from technical feasibility, maintainability, scalability.
           CONSULTATION: In Round 2+, you MUST explicitly reference zeus's or eris's prior argument
           and either agree, rebut, or qualify it with technical evidence. Independent opinions are incomplete.
@@ -116,7 +116,7 @@ IF "eris" not in team:
         subagent_type: "olympus:eris",
         run_in_background: false,
         prompt: "You are Eris, devil's advocate in a committee debate.
-          LEADER_NAME: team-lead
+          LEADER_NAME: ${LEADER_NAME}
           IMMEDIATE TASK: You will challenge ALL positions using fallacy-catalog.md.
           CONSULTATION: You MUST target specific claims made by zeus or ares — not abstract positions.
           Quote the claim you are challenging, then deliver your challenge.
@@ -128,7 +128,7 @@ Spawn UX critic (general-purpose, always fresh):
   Agent(name: "ux-critic", team_name: ${TEAM},
         run_in_background: false,
         prompt: "You are a UX critic in a committee debate.
-          LEADER_NAME: team-lead
+          LEADER_NAME: ${LEADER_NAME}
           IMMEDIATE TASK: You will evaluate options from user experience, accessibility, usability.
           CONSULTATION: In Round 2+, you MUST reference a prior speaker's claim and respond to it
           from a UX lens. Independent opinions without engagement are incomplete.
@@ -148,7 +148,7 @@ FOR each round (max 3):
      Round 1 — Initial positions:
      Agent(name: "zeus-r{n}", team_name: ${TEAM}, subagent_type: "olympus:zeus",
        run_in_background: true,
-       prompt: "LEADER_NAME: team-lead
+       prompt: "LEADER_NAME: ${LEADER_NAME}
          Read ${ARTIFACT_DIR}/debate-frame.json.
          Present: preferred option + rationale + pros/cons of others.
          Include evidence (file:line if applicable).
