@@ -141,6 +141,11 @@ APOLLO INTERVIEW PROXY LOOP (leader handles while Apollo runs in background):
     3. Relay user answer back: SendMessage(to: "apollo", "{user's answer}")
     Note: if user wants to skip interview → send "SKIP" to apollo; apollo terminates and reports current score.
 
+  DEADLOCK FALLBACK: If 5 minutes elapse without apollo sending '인터뷰 질문' or '인터뷰 완료':
+    → SendMessage(to: "apollo", "Interview timeout. Submit your current findings and scores now.")
+    → Retry up to 2 times (2-minute intervals)
+    → If still no response: proceed with available information, note "apollo consultation incomplete" in interview-log.md
+
 → Write interview-log.md, ambiguity-scores.json from apollo's final '인터뷰 완료' message
 olympus_record_execution(pipeline_id, "oracle", "apollo", ...)
 ```
