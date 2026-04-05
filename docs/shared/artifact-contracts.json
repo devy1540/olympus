@@ -165,6 +165,7 @@
       "phase": 3,
       "writer": "orchestrator",
       "source": ["committee"],
+      "required_spawn": ["zeus", "ares", "eris"],
       "readers": ["eris", "orchestrator"],
       "note": "위원들은 SendMessage로 입장 전달, 오케스트레이터가 저장"
     },
@@ -172,6 +173,7 @@
       "phase": 4,
       "writer": "orchestrator",
       "source": "eris",
+      "required_spawn": "eris",
       "readers": ["committee"],
       "note": "Eris는 SendMessage로 챌린지 전달, 오케스트레이터가 저장"
     },
@@ -205,6 +207,7 @@
     "audit-mechanical.json": {
       "phase": 1,
       "writer": "hephaestus",
+      "required_spawn": "hephaestus",
       "readers": ["athena"],
       "writerRequires": ["Write", "Bash"]
     },
@@ -212,6 +215,7 @@
       "phase": 2,
       "writer": "orchestrator",
       "source": "athena",
+      "required_spawn": "athena",
       "readers": ["orchestrator"],
       "note": "Athena는 SendMessage로 결과 전달, 오케스트레이터가 저장"
     },
@@ -237,6 +241,7 @@
       "phase": 1,
       "writer": "orchestrator",
       "source": "hermes",
+      "required_spawn": "hermes",
       "readers": ["helios", "ares", "poseidon", "eris", "nemesis"],
       "note": "Hermes는 SendMessage로 결과 전달, 오케스트레이터가 저장"
     },
@@ -244,6 +249,7 @@
       "phase": 2,
       "writer": "orchestrator",
       "source": "helios",
+      "required_spawn": "helios",
       "readers": ["ares", "poseidon", "dynamic-reviewers"],
       "note": "Helios는 SendMessage로 결과 전달, 오케스트레이터가 저장"
     },
@@ -251,6 +257,7 @@
       "phase": 3,
       "writer": "orchestrator",
       "source": ["ares", "poseidon", "dynamic-reviewers"],
+      "required_spawn": ["ares", "poseidon"],
       "readers": ["eris", "nemesis"],
       "note": "리뷰 에이전트들은 SendMessage로 결과 전달, 오케스트레이터가 합산 저장"
     },
@@ -258,6 +265,7 @@
       "phase": 4,
       "writer": "orchestrator",
       "source": "eris",
+      "required_spawn": "eris",
       "readers": ["nemesis"],
       "note": "Eris는 SendMessage로 결과 전달, 오케스트레이터가 저장"
     },
@@ -265,6 +273,7 @@
       "phase": 5,
       "writer": "orchestrator",
       "source": "nemesis",
+      "required_spawn": "nemesis",
       "readers": ["user", "github"],
       "note": "Nemesis는 SendMessage로 결과 전달, 오케스트레이터가 저장"
     },
@@ -290,6 +299,7 @@
       "phase": 3,
       "writer": "orchestrator",
       "source": "athena",
+      "required_spawn": "athena",
       "readers": ["eris", "metis"],
       "note": "Athena는 SendMessage로 평가 결과 전달, 오케스트레이터가 저장"
     },
@@ -297,6 +307,7 @@
       "phase": 4,
       "writer": "orchestrator",
       "source": ["metis", "eris"],
+      "required_spawn": ["metis", "eris"],
       "readers": ["prometheus"],
       "note": "Metis와 Eris는 SendMessage로 진단 결과 전달, 오케스트레이터가 종합 저장"
     },
