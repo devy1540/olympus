@@ -189,6 +189,16 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/consensus-record.json\",\"content\":\"{\\\"level\\\":\\\"partial\\\",\\\"percentage\\\":0.5}\"}}" \
   "deny" "Consensus record 0.5 < 0.66 → deny"
 
+# Test: convergence.json above threshold → allow
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/convergence.json\",\"content\":\"{\\\"similarity\\\":0.97,\\\"converged\\\":true}\"}}" \
+  "allow" "Convergence 0.97 >= 0.95 → allow"
+
+# Test: convergence.json below threshold → deny
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/convergence.json\",\"content\":\"{\\\"similarity\\\":0.8,\\\"converged\\\":false}\"}}" \
+  "deny" "Convergence 0.8 < 0.95 → deny"
+
 # Test: non-gate file → silent
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/random.txt\",\"content\":\"hello\"}}" \
