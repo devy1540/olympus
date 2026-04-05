@@ -161,6 +161,8 @@ IF passed (ambiguity ≤ 0.2):
   → proceed to Step 6
 
 ELSE IF rounds < 10:
+  next = olympus_next_action(pipeline_id)
+  # next.action: retry_phase — re-interview with focus on gap areas
   → Re-spawn apollo (FOREGROUND) with follow-up task:
     apollo_retry = Agent(name: "apollo", team_name: ${TEAM},
         subagent_type: "olympus:apollo",
@@ -174,6 +176,8 @@ ELSE IF rounds < 10:
   → re-check gate after completion
 
 ELSE (rounds >= 10):
+  next = olympus_next_action(pipeline_id)
+  # next.action: escalate → user override decision
   → AskUserQuestion: "다음 갭이 남아있습니다. 그대로 진행할까요?"
   → On override: proceed to Step 6
 ```
@@ -239,6 +243,7 @@ ELSE:
   - olympus_start_pipeline: Step 1 (MUST)
   - olympus_register_agent_spawn: after each spawn (MUST)
   - olympus_gate_check: Step 5 ambiguity gate (MUST)
+  - olympus_next_action: Step 5 gate failure recovery (SHOULD)
   - olympus_calculate_ambiguity: Step 5 ambiguity cross-reference (SHOULD)
   - olympus_record_execution: after each agent completes (SHOULD)
 

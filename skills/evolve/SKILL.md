@@ -221,8 +221,14 @@ Convergence:
   IF overall >= 0.8 AND all 5 dimensions >= 0.6: converged → generate final report
   ELIF overall >= 0.8 BUT any dimension < 0.6: not converged — address weak dimension explicitly
   ELIF iteration >= maxIterations (5): AskUserQuestion [Continue, Accept, Reset]
-  ELIF score_delta < 0.02 for 2 iterations: stagnation → notify user
-  ELSE: return to Step 3 (same benchmark)
+  ELIF score_delta < 0.02 for 2 iterations:
+    next = olympus_next_action(pipeline_id)
+    # next.action: retry_phase (stagnation — suggest persona switch or benchmark change)
+    → notify user of stagnation with options
+  ELSE:
+    next = olympus_next_action(pipeline_id)
+    # next.action: retry_phase → return to Step 3 with next.hint
+    → return to Step 3 (same benchmark)
     ← Teammates REMEMBER previous iterations — evaluation improves
 
 Note: per-dimension minimum (0.6) prevents a weak dimension being masked by high scores elsewhere.
@@ -245,6 +251,7 @@ Shutdown all teammates → TeamDelete
   - olympus_start_pipeline: Step 1 (MUST)
   - olympus_register_agent_spawn: after each spawn (MUST)
   - olympus_gate_check: Step 8 convergence check (MUST)
+  - olympus_next_action: Step 8 stagnation/retry recovery (SHOULD)
   - olympus_record_execution: after each agent (SHOULD)
 
   Team Tools:
