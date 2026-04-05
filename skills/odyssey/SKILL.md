@@ -260,6 +260,7 @@ When enabled:
                 Answer 4 questions: Essence, Root Cause, Preconditions, Hidden Assumptions.
                 Output your wonder analysis as your final response.")
         olympus_register_agent_spawn(pipeline_id, "metis")
+        olympus_record_execution(pipeline_id, "genesis", "metis", ...)
 
      c. Spawn eris for reflect (FOREGROUND, receives metis wonder):
         eris_reflect = Agent(name: "eris-gen{n}", team_name: ${TEAM},
@@ -271,6 +272,7 @@ When enabled:
                 {metis_wonder}
                 Output your challenges as your final response.")
         olympus_register_agent_spawn(pipeline_id, "eris")
+        olympus_record_execution(pipeline_id, "genesis", "eris", ...)
 
         → Write gen-{n}/wonder.md from metis_wonder + eris_reflect dialogue
         olympus_log_collaboration(pipeline_id, "metis", "eris", "Gen {n} wonder/reflect dialogue")

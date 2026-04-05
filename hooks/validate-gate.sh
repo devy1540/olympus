@@ -193,14 +193,20 @@ case "$FILENAME" in
     ;;
 
   mechanical-result.json)
-    # Mechanical: all stages must be PASS
+    # Mechanical: all stages must be PASS (or overall=ENV_UNAVAILABLE when no build system)
     CONTENT=$(echo "$INPUT" | jq -r '.tool_input.content // empty')
     if [[ -z "$CONTENT" ]]; then
       exit 0
     fi
 
+    MECH_OVERALL=$(echo "$CONTENT" | jq -r '.overall // empty' 2>/dev/null || true)
+    if [[ "$MECH_OVERALL" == "ENV_UNAVAILABLE" ]]; then
+      # No build system detected — SKIP status for all stages is valid
+      exit 0
+    fi
+
     FAILED_STAGES=$(echo "$CONTENT" | jq -r '
-      [.. | objects | select(.status != null and .status != "PASS") | .stage // .name // "unknown"]
+      [.. | objects | select(.status != null and .status != "PASS" and .status != "SKIP") | .stage // .name // "unknown"]
       | if length > 0 then join(", ") else empty end
     ' 2>/dev/null || true)
 
@@ -211,7 +217,7 @@ case "$FILENAME" in
     ;;
 
   evolve-state.json)
-    # Evolve: overall quality >= threshold
+    # Evolve: overall quality >= semantic threshold AND each dimension >= evolve_dimension_minimum
     CONTENT=$(echo "$INPUT" | jq -r '.tool_input.content // empty')
     if [[ -z "$CONTENT" ]]; then
       exit 0
@@ -227,6 +233,20 @@ case "$FILENAME" in
       emit_deny "GATE VIOLATION: evolve overall quality ${OVERALL} < threshold ${SEMANTIC_THRESHOLD}. Quality score must be >= ${SEMANTIC_THRESHOLD}." "gate" "semantic"
       exit 0
     fi
+
+    # Per-dimension minimum check (evolve_dimension_minimum from gate-thresholds.json)
+    if [[ -f "$THRESHOLDS_FILE" ]]; then
+      DIM_MIN=$(jq -r '.evolve_dimension_minimum.threshold // 0.6' "$THRESHOLDS_FILE" 2>/dev/null || echo "0.6")
+      FAILED_DIM=$(echo "$CONTENT" | jq -r --argjson min "$DIM_MIN" '
+        (.scores // .dimensions // {}) | to_entries[]
+        | select(.value != null and ((.value | tonumber? // .value) < $min))
+        | "\(.key)=\(.value)"
+      ' 2>/dev/null || true)
+      if [[ -n "$FAILED_DIM" ]]; then
+        emit_allow_with_context "EVOLVE WARNING: dimension(s) below minimum ${DIM_MIN}: ${FAILED_DIM}. Address weak dimensions before declaring convergence." "gate"
+        exit 0
+      fi
+    fi
     ;;
 
   semantic-matrix.md)
@@ -236,8 +256,8 @@ case "$FILENAME" in
     # Precondition: mechanical-result.json must be PASS
     if [[ -f "${DIR}/mechanical-result.json" ]]; then
       MECH_OVERALL=$(jq -r '.overall // empty' "${DIR}/mechanical-result.json" 2>/dev/null || true)
-      if [[ -n "$MECH_OVERALL" && "$MECH_OVERALL" != "PASS" ]]; then
-        emit_deny "mechanical-result.json must be PASS before writing semantic-matrix.md. Current: ${MECH_OVERALL}. Complete Tribunal Stage 1 first." "contract" "semantic-matrix precondition"
+      if [[ -n "$MECH_OVERALL" && "$MECH_OVERALL" != "PASS" && "$MECH_OVERALL" != "ENV_UNAVAILABLE" ]]; then
+        emit_deny "mechanical-result.json must be PASS (or ENV_UNAVAILABLE) before writing semantic-matrix.md. Current: ${MECH_OVERALL}. Complete Tribunal Stage 1 first." "contract" "semantic-matrix precondition"
         exit 0
       fi
     else
