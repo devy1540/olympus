@@ -126,7 +126,7 @@
             "maxPasses": { "type": "integer", "default": 3 },
             "feedbackLoopCount": { "type": "integer", "default": 0 },
             "consecutiveFailures": { "type": "integer", "default": 0 },
-            "consecutiveDebugFailures": { "type": "integer", "default": 0, "description": "Phase 5 debug cycle counter. Circuit breaker at >= 3." },
+            "consecutiveDebugFailures": { "type": "integer", "default": 0, "description": "Phase 5 debug cycle counter. Circuit breaker fires when > maxDebugCycles (strict greater-than). At = maxDebugCycles: boundary allow. Increments on each failed debug attempt." },
             "maxDebugCycles": { "type": "integer", "default": 3 }
           }
         },

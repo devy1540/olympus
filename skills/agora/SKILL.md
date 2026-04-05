@@ -130,7 +130,7 @@ IF "eris" not in team:
           Output your results as your final response.")
   olympus_register_agent_spawn(pipeline_id, "eris")
 
-Spawn UX critic (general-purpose, always fresh):
+Spawn UX critic (general-purpose, NOT an olympus agent — skip register_spawn):
   Agent(name: "ux-critic", team_name: ${TEAM},
         run_in_background: false,
         prompt: "You are a UX critic in a committee debate.
@@ -140,12 +140,12 @@ Spawn UX critic (general-purpose, always fresh):
           CONSULTATION: In Round 2+, you MUST reference a prior speaker's claim and respond to it
           from a UX lens. Independent opinions without engagement are incomplete.
           Output your results as your final response.")
-  olympus_register_agent_spawn(pipeline_id, "ux-critic")
+  # NOTE: ux-critic is a general-purpose agent, not in agent-schema.json registry.
+  # Do NOT call olympus_register_agent_spawn for non-olympus agents.
 
 olympus_record_execution(pipeline_id, "agora", "zeus", ...)
 olympus_record_execution(pipeline_id, "agora", "ares", ...)
 olympus_record_execution(pipeline_id, "agora", "eris", ...)
-olympus_record_execution(pipeline_id, "agora", "ux-critic", ...)
 ```
 
 ---
@@ -184,8 +184,8 @@ FOR each round (max 3):
 
      olympus_register_agent_spawn(pipeline_id, "zeus-r{n}")
      olympus_register_agent_spawn(pipeline_id, "ares-r{n}")
-     olympus_register_agent_spawn(pipeline_id, "ux-r{n}")
-     olympus_pipeline_status(pipeline_id)  # verify all round debaters are registered
+     # NOTE: ux-r{n} is a general-purpose agent — skip register_spawn (not in agent registry)
+     olympus_pipeline_status(pipeline_id)  # verify olympus round debaters are registered
      DEADLOCK FALLBACK: If 3 minutes elapse without all members completing:
        → SendMessage(to: non-responding member, "Round timeout. Submit your current position now.")
        → After 1 additional minute: proceed with available responses, note missing positions in committee-positions.md.
@@ -219,7 +219,6 @@ FOR each round (max 3):
 
   olympus_record_execution(pipeline_id, "agora", "zeus-r{n}", ...)
   olympus_record_execution(pipeline_id, "agora", "ares-r{n}", ...)
-  olympus_record_execution(pipeline_id, "agora", "ux-r{n}", ...)
 
   4. Measure consensus (per consensus-levels.md):
      - Strong (3/3): unanimous → exit
