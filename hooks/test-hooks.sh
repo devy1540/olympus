@@ -244,6 +244,11 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/consensus-record.json\",\"content\":\"{\\\"level\\\":\\\"partial\\\",\\\"percentage\\\":0.5}\"}}" \
   "deny" "Consensus record 0.5 < 0.66 → deny"
 
+# Test: consensus-record.json with consensus_pct field (tribunal format) → deny below threshold
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/consensus-record.json\",\"content\":\"{\\\"votes\\\":{\\\"ares\\\":\\\"APPROVE\\\",\\\"eris\\\":\\\"REJECT\\\",\\\"hera\\\":\\\"REJECT\\\"},\\\"consensus_pct\\\":0.33}\"}}" \
+  "deny" "Consensus record using consensus_pct field (0.33) → deny"
+
 # Test: convergence.json above threshold → allow
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/convergence.json\",\"content\":\"{\\\"similarity\\\":0.97,\\\"converged\\\":true}\"}}" \

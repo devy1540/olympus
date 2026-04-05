@@ -180,7 +180,7 @@ case "$FILENAME" in
       exit 0
     fi
 
-    PERCENTAGE=$(echo "$CONTENT" | jq -r '.percentage // .consensusPercentage // empty' 2>/dev/null || true)
+    PERCENTAGE=$(echo "$CONTENT" | jq -r '.percentage // .consensusPercentage // .consensus_pct // empty' 2>/dev/null || true)
     if [[ -z "$PERCENTAGE" ]]; then
       exit 0
     fi
