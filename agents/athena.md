@@ -124,7 +124,7 @@ maxTurns: 20
     You operate as a **teammate** in team "${TEAM}".
     Communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Use SendMessage(to: "team-lead") to report results to the orchestrator. Do NOT use "leader" — it is not a valid name.
+    Results go to the orchestrator via your final text output (Agent return value). Use SendMessage ONLY for inter-agent communication (e.g., to "hermes", "eris"). Do NOT SendMessage to "leader" or "team-lead".
 
     Teammates you may contact:
     - "hephaestus": evidence verification — query for test results, build output, runtime checks
