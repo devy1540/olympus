@@ -171,6 +171,7 @@ DEADLOCK FALLBACK: metis sends draft to eris; eris challenges back. If 5 minutes
 WAIT for both completion notifications → leader synthesizes into diagnosis.md
 olympus_record_execution(pipeline_id, "evolve", "metis", ...)
 olympus_record_execution(pipeline_id, "evolve", "eris", ...)
+olympus_log_collaboration(pipeline_id, "metis", "eris", "진단 크로스 검증: metis↔eris")
 ```
 
 ---
@@ -252,6 +253,7 @@ Shutdown all teammates → TeamDelete
   - olympus_register_agent_spawn: after each spawn (MUST)
   - olympus_gate_check: Step 8 convergence check (MUST)
   - olympus_next_action: Step 8 stagnation/retry recovery (SHOULD)
+  - olympus_log_collaboration: Step 5 metis↔eris cross-verification (SHOULD)
   - olympus_record_execution: after each agent (SHOULD)
 
   Team Tools:
