@@ -122,7 +122,7 @@ if [[ -d "$CHECKPOINT_DIR" ]]; then
 
       if [[ "$TRANSITION_VALID" == "false" ]]; then
         emit_deny \
-          "STATE VIOLATION: invalid transition '${PREV_PHASE}' -> '${CURRENT_PHASE}'. Allowed: oracle->genesis|pantheon, genesis->pantheon, pantheon->planning, planning->execution, execution->tribunal, tribunal->completed|execution" \
+          "STATE VIOLATION: invalid transition '${PREV_PHASE}' -> '${CURRENT_PHASE}'. Allowed forward: oracle->genesis|pantheon, genesis->pantheon, pantheon->planning, planning->execution, execution->tribunal, tribunal->completed|execution. Rewinds (via transition.returnToPhase): tribunal->oracle|planning." \
           "rule" "invalid phase transition"
         exit 0
       fi
