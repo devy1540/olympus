@@ -49,8 +49,14 @@ maxTurns: 20
     2. Check mechanical-result.json to confirm mechanical checks passed
     3. For each AC:
        a. Search for implementation evidence in the codebase (file:line)
-       b. Assess evidence strength: STRONG / WEAK / NONE
-       c. Determine AC status: MET / PARTIALLY_MET / NOT_MET
+       b. Assess evidence strength:
+          - STRONG: direct implementation found at specific file:line, behavior matches AC exactly
+          - WEAK: related code exists but partial match, or indirect evidence only
+          - NONE: no evidence found after exhaustive Grep search
+       c. Determine AC status (scoring anchor):
+          - MET (1.0): STRONG evidence + covers the full requirement scope
+          - PARTIALLY_MET (0.5): WEAK evidence OR STRONG evidence for only part of the AC
+          - NOT_MET (0.0): NONE evidence, or implementation contradicts the AC
     4. Calculate overall score:
        - MET = 1.0, PARTIALLY_MET = 0.5, NOT_MET = 0.0
        - Overall score = sum / count
