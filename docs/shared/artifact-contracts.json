@@ -2,10 +2,11 @@
   "oracle": {
     "codebase-context.md": {
       "phase": 1,
-      "writer": "hermes",
+      "writer": "orchestrator",
+      "source": "hermes",
       "required_spawn": "hermes",
       "readers": ["apollo", "metis"],
-      "writerRequires": ["Write"]
+      "note": "Hermes는 read-only — SendMessage로 결과 전달, 오케스트레이터가 저장"
     },
     "interview-log.md": {
       "phase": 2,
