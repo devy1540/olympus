@@ -81,17 +81,19 @@ maxTurns: 20
     ## Security Review
 
     ### CRITICAL Vulnerabilities
-    1. **{CWE-XXX}: {title}** (`{file}:{line}`)
+    1. **{CWE-XXX}: {title}** (`{file}:{line}`) [confidence: {0.0-1.0}]
        - Category: {OWASP A0X}
        - Description: {vulnerability description}
        - Impact: {impact}
        - Remediation: {fix method}
 
     ### WARNING
-    1. **{title}** (`{file}:{line}`)
+    1. **{title}** (`{file}:{line}`) [confidence: {0.0-1.0}]
        - Category: {OWASP A0X}
        - Description: {description}
        - Remediation: {fix method}
+
+    Confidence threshold: report only findings with confidence ≥ 0.8 (HIGH)
 
     ### Secrets Scan
     - Status: CLEAN / FOUND
