@@ -95,6 +95,32 @@ test_hook "verify-art" "$SCRIPT_DIR/verify-artifacts.sh" \
 rm -rf "$(dirname "$(dirname "$(dirname "$PANTHEON_DIR")")")"
 
 # ============================================================
+echo "--- enforce-spawn-gate.sh ---"
+# ============================================================
+
+# Test: non-olympus file → allow (bypass)
+test_hook "spawn-gate" "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"/tmp/random.txt\",\"content\":\"hello\"}}" \
+  "allow" "Non-olympus file → allow"
+
+# Test: olympus file without required_spawn → allow
+test_hook "spawn-gate" "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/spec.md\",\"content\":\"# Spec\"}}" \
+  "allow" "Oracle spec.md (no required_spawn) → allow"
+
+# Test: file with required_spawn, agent not spawned → deny
+EVOLVE_DIR="${TEST_DIR}/.olympus/evolve-20260401-test1234"
+mkdir -p "$EVOLVE_DIR"
+test_hook "spawn-gate" "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${EVOLVE_DIR}/eval-matrix.md\",\"content\":\"# Eval\"}}" \
+  "deny" "Evolve eval-matrix.md (athena not spawned) → deny"
+
+# Test: oracle interview-log with required_spawn, agent not spawned → deny
+test_hook "spawn-gate" "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/interview-log.md\",\"content\":\"# Log\"}}" \
+  "deny" "Oracle interview-log (apollo not spawned) → deny"
+
+# ============================================================
 echo "--- validate-gate.sh ---"
 # ============================================================
 
