@@ -215,7 +215,9 @@ Run /olympus:audit on modified prompts:
 
 ```
 Update evolve-state.json:
-  { iteration, scores, changes, audit result }
+  { iteration, overall, scores: { specificity, evidence_density, role_adherence, efficiency, actionability }, changes, audit_result }
+  # Note: 'overall' is required for gate validation (validate-gate.sh checks .overall)
+  # 'scores' holds 5 dimension values (validate-gate.sh checks .scores.* >= 0.6)
 
 Convergence:
   olympus_gate_check(pipeline_id, "semantic", overall_score)

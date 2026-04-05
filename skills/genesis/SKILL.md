@@ -145,7 +145,9 @@ FOR each generation n:
 
      Hard cap: 30 generations → forced stop with warning
 
-  Save convergence.json after each generation.
+  Save convergence.json after each generation:
+  { "generation": n, "similarity": <value>, "converged": <bool>, "name_sim": <n>, "type_sim": <n>, "exact_sim": <n> }
+  # Note: 'similarity' field is required for validate-gate.sh gate check
 ```
 
 ---
