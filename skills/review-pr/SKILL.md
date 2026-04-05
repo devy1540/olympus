@@ -201,7 +201,8 @@ DEADLOCK FALLBACK: If 3 minutes elapse without both completing:
   → SendMessage(to: "poseidon", "Cross-reference timeout. Proceed without waiting for ares. Note 'ares consultation pending'.")
 
 WAIT for ALL completion notifications → leader aggregates into review-findings.md
-olympus_record_execution for each reviewer
+olympus_record_execution(pipeline_id, "review-pr", "ares", ...)
+olympus_record_execution(pipeline_id, "review-pr", "poseidon", ...)
 ```
 
 ---

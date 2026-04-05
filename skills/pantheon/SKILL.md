@@ -195,7 +195,9 @@ DEADLOCK FALLBACK: ares and poseidon each wait for the other's cross-reference r
   → Leader synthesizes findings from whichever responded; flags missing cross-reference in analyst-findings.md.
 
 WAIT for ALL completion notifications → leader aggregates into analyst-findings.md
-olympus_record_execution for each analyst
+olympus_record_execution(pipeline_id, "pantheon", "ares", ...)
+olympus_record_execution(pipeline_id, "pantheon", "poseidon", ...)
+IF architecture perspective: olympus_record_execution(pipeline_id, "pantheon", "zeus", ...)
 ```
 
 ---
