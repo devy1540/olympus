@@ -177,7 +177,7 @@ Agent(name: "ares", team_name: ${TEAM},
         MANDATORY CROSS-REFERENCE: After initial analysis, SendMessage(to: 'poseidon')
         with your key findings and ask for security perspective.
         Wait for poseidon's response, incorporate their feedback.
-        Output your full results as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'ares 리뷰 완료', '{full findings}')")
 olympus_register_agent_spawn(pipeline_id, "ares")
 
 Agent(name: "poseidon", team_name: ${TEAM},
@@ -193,7 +193,7 @@ Agent(name: "poseidon", team_name: ${TEAM},
         MANDATORY CROSS-REFERENCE: After initial analysis, SendMessage(to: 'ares')
         with your key security findings and ask for code quality perspective.
         Wait for ares's response, incorporate their feedback.
-        Output your full results as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'poseidon 리뷰 완료', '{full findings}')")
 olympus_register_agent_spawn(pipeline_id, "poseidon")
 
 olympus_pipeline_status(pipeline_id)  # verify ares + poseidon are registered as parallel reviewers

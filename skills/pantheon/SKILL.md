@@ -150,7 +150,7 @@ Agent(name: "ares", team_name: ${TEAM},
              1. Do any of these have security implications?
              2. Are there security concerns I should factor into priority?')
         Wait for poseidon's response. Incorporate security feedback into final report.
-        Output your full results as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'ares 분석 완료', '{full findings}')")
 olympus_register_agent_spawn(pipeline_id, "ares")
 
 Agent(name: "poseidon", team_name: ${TEAM},
@@ -169,7 +169,7 @@ Agent(name: "poseidon", team_name: ${TEAM},
              1. Do the code quality issues you found compound these risks?
              2. Any refactoring that could inadvertently fix/worsen security?')
         Wait for ares's response. Incorporate quality feedback into final report.
-        Output your full results as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'poseidon 분석 완료', '{full findings}')")
 olympus_register_agent_spawn(pipeline_id, "poseidon")
 
 IF architecture perspective:

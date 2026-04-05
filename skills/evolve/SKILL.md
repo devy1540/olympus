@@ -144,7 +144,7 @@ Agent(name: "metis", team_name: ${TEAM},
         Derive improvement proposals.
         MANDATORY CONSULTATION: Send your draft to 'eris' via SendMessage before finalizing.
         Incorporate eris's valid challenges.
-        Output your full results as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'metis 진단 완료', '{full diagnosis}')")
 olympus_register_agent_spawn(pipeline_id, "metis")
 
 Agent(name: "eris", team_name: ${TEAM},
@@ -160,7 +160,7 @@ Agent(name: "eris", team_name: ${TEAM},
           - Root causes or just symptoms?
         MANDATORY CONSULTATION: When metis sends you a draft, challenge each claim directly
         via SendMessage(to: 'metis').
-        Output your full results as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'eris 검증 완료', '{full evaluation}')")
 olympus_register_agent_spawn(pipeline_id, "eris")
 olympus_pipeline_status(pipeline_id)  # verify metis + eris are registered before waiting
 
