@@ -144,6 +144,49 @@ func TestRequiredAgents(t *testing.T) {
 	}
 }
 
+func TestRequiredAgentsWithRequiredSpawn(t *testing.T) {
+	dir := t.TempDir()
+	sharedDir := filepath.Join(dir, "docs", "shared")
+	os.MkdirAll(sharedDir, 0755)
+
+	writeFile(t, filepath.Join(sharedDir, "gate-thresholds.json"), `{
+		"ambiguity": {"threshold": 0.2, "operator": "<="},
+		"convergence": {"threshold": 0.95, "operator": ">="},
+		"consensus": {"threshold": 0.67, "operator": ">="},
+		"semantic": {"threshold": 0.8, "operator": ">="}
+	}`)
+
+	// Test that required_spawn takes priority over source
+	writeFile(t, filepath.Join(sharedDir, "artifact-contracts.json"), `{
+		"evolve": {
+			"eval-matrix.md":  {"phase": 3, "writer": "orchestrator", "source": "athena", "required_spawn": "athena"},
+			"diagnosis.md":    {"phase": 4, "writer": "orchestrator", "source": ["metis", "eris"], "required_spawn": ["metis", "eris"]},
+			"benchmark.md":    {"phase": 1, "writer": "orchestrator"}
+		}
+	}`)
+
+	cfg, err := Load(dir, t.TempDir())
+	if err != nil {
+		t.Fatalf("Load failed: %v", err)
+	}
+
+	required := cfg.RequiredAgents("evolve", "")
+	agentSet := make(map[string]bool)
+	for _, a := range required {
+		agentSet[a] = true
+	}
+
+	for _, expected := range []string{"athena", "metis", "eris"} {
+		if !agentSet[expected] {
+			t.Errorf("expected %s in required agents (from required_spawn), got %v", expected, required)
+		}
+	}
+
+	if len(required) != 3 {
+		t.Errorf("expected 3 required agents, got %d: %v", len(required), required)
+	}
+}
+
 func TestLoadMissingFiles(t *testing.T) {
 	dir := t.TempDir()
 	sharedDir := filepath.Join(dir, "docs", "shared")

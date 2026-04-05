@@ -98,6 +98,7 @@ Complexity assessment:
 hermes_result = Agent(name: "hermes", team_name: ${TEAM},
       subagent_type: "olympus:hermes",
       prompt: "You are Hermes in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        LEADER_NAME: ${LEADER_NAME}
         IMMEDIATE TASK: Explore codebase related to: {user_input}.
         DO NOT write files — you are read-only.
         Gather: project structure, relevant modules, existing patterns, dependencies.
@@ -149,6 +150,7 @@ ELSE IF rounds < 10:
     apollo_retry = Agent(name: "apollo", team_name: ${TEAM},
         subagent_type: "olympus:apollo",
         prompt: "You are Apollo. Artifact directory: ${ARTIFACT_DIR}/
+          LEADER_NAME: ${LEADER_NAME}
           Read ${ARTIFACT_DIR}/interview-log.md for previous rounds.
           Ambiguity still at {score}. Continue interview, focus on: {gap areas}.
           Output updated results as your final response.")
@@ -167,6 +169,7 @@ ELSE (rounds >= 10):
 metis_result = Agent(name: "metis", team_name: ${TEAM},
       subagent_type: "olympus:metis",
       prompt: "You are Metis in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+        LEADER_NAME: ${LEADER_NAME}
         IMMEDIATE TASK: Perform gap analysis on interview results.
         DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/interview-log.md and ${ARTIFACT_DIR}/codebase-context.md.
