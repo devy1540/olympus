@@ -85,9 +85,13 @@
             "contract",
             "evidence",
             "mode",
+            "calibration",
+            "spawn",
+            "da-required",
+            "consensus-required",
             "other"
           ],
-          "description": "Decision source. 'rule'/'hook'/'mode' from Claude Code. 'gate'/'contract'/'evidence' are olympus extensions."
+          "description": "Decision source. 'rule'/'hook'/'mode' from Claude Code. 'gate'/'contract'/'evidence'/'calibration'/'spawn'/'da-required'/'consensus-required' are olympus extensions."
         },
         "rule": {
           "type": "string",
