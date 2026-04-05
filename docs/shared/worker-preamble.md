@@ -2,48 +2,40 @@
 
 ## Overview
 
-This is the standard preamble injected into all worker agents operating in a team context. It defines the lifecycle that every worker must follow from activation to shutdown.
+This is the standard preamble injected into all worker agents operating in a team context. It defines the proactive spawn lifecycle: agents receive their task at spawn time, execute it, report results, and finish.
 
-## Worker Lifecycle
 
-### Step 1: Find Assigned Task
 
-On activation, immediately call `TaskList` to enumerate available tasks and find the one assigned to you.
+## Worker Lifecycle (Proactive Spawn Pattern)
 
-### Step 2: Read Task Description
 
-Call `TaskGet` with the assigned task ID to read the full task description, requirements, and context.
+### Step 1: Read Spawn Task
 
-### Step 3: Set Task In-Progress
+Your task is embedded in the spawn prompt. Read it immediately and identify:
+- **Artifact directory path**: where to read/write artifacts
+- **Immediate task**: what you need to do
+- **Teammates**: who you can communicate with via SendMessage
 
-Call `TaskUpdate` to set the task status to `in_progress`. This signals to the team lead and other agents that work has begun.
+### Step 2: Read Required Artifacts
 
-### Step 4: Perform the Work
+Use the Read tool to load artifacts from the artifact directory as specified in your task. Follow the Artifact Reference Protocol below.
 
-Execute the work described in the task. This is the core of the worker's function -- analysis, evaluation, generation, or whatever the task requires.
+### Step 3: Perform the Work
 
-### Step 5: Send Results
+Execute your assigned task. If your role requires mandatory consultation with another agent (e.g., apollo↔hermes, ares↔poseidon), complete the consultation before finalizing.
 
-When the task is complete, send the results to the team lead via `SendMessage`. Include:
-- Task ID
+### Step 4: Report Results
+
+Send your results to the team lead via `SendMessage(to: "team-lead")`. Include:
 - Summary of findings or output
-- References to any artifacts written (file paths)
-- Any issues encountered
+- References to any artifacts (file paths)
+- Consultation logs (if mandatory consultation was performed)
 
-### Step 6: Mark Task Completed
+**Output limits**: Keep final response under 5000 chars. Hard limit: 50000 chars.
 
-Call `TaskUpdate` to set the task status to `completed`.
+### Step 5: Finish
 
-### Step 7: Check for More Tasks
-
-Call `TaskList` again to check if there are additional tasks assigned to you.
-
-- If more tasks exist: return to Step 2.
-- If no more tasks: proceed to Step 8.
-
-### Step 8: Await Shutdown
-
-If no more tasks are assigned, wait for a `shutdown_request` message. When received, respond with a `shutdown_response` and terminate.
+After reporting results, your work is complete. Do NOT "stay available" or wait for more tasks — the orchestrator will re-spawn you if needed.
 
 ## Artifact Reference Protocol
 
@@ -153,7 +145,5 @@ This rule applies to all agents using AskUserQuestion and to the orchestrator wh
   - The reason for failure
   - Any partial results
   - Suggested remediation
-- Keep the task status as `in_progress` (do not mark as `completed`).
-- Record the failure in the task metadata via `TaskUpdate`:
-  `{ "metadata": { "error": "failure reason", "status_detail": "failed" } }`
-- The team lead will decide whether to reassign, retry, or delete the task.
+
+- The team lead will decide whether to re-spawn, retry, or escalate.
