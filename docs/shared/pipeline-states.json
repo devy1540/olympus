@@ -122,7 +122,7 @@
           "type": "object",
           "description": "Ported from query.ts maxOutputTokensRecoveryCount + hasAttemptedReactiveCompact pattern",
           "properties": {
-            "evaluationPass": { "type": "integer", "default": 0 },
+            "evaluationPass": { "type": "integer", "default": 0, "description": "Tribunal evaluation attempt counter. Circuit breaker fires when > maxPasses (strict greater-than). At = maxPasses: boundary allow. validate-state.sh enforces this." },
             "maxPasses": { "type": "integer", "default": 3 },
             "feedbackLoopCount": { "type": "integer", "default": 0 },
             "consecutiveFailures": { "type": "integer", "default": 0 },
