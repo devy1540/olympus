@@ -23,8 +23,8 @@ func TestLoadThresholds(t *testing.T) {
 	if cfg.Thresholds.Convergence.Threshold != 0.95 {
 		t.Errorf("convergence threshold: expected 0.95, got %f", cfg.Thresholds.Convergence.Threshold)
 	}
-	if cfg.Thresholds.Consensus.Threshold != 0.67 {
-		t.Errorf("consensus threshold: expected 0.67, got %f", cfg.Thresholds.Consensus.Threshold)
+	if cfg.Thresholds.Consensus.Threshold != 0.66 {
+		t.Errorf("consensus threshold: expected 0.66, got %f", cfg.Thresholds.Consensus.Threshold)
 	}
 	if cfg.Thresholds.Semantic.Threshold != 0.8 {
 		t.Errorf("semantic threshold: expected 0.8, got %f", cfg.Thresholds.Semantic.Threshold)
@@ -152,7 +152,7 @@ func TestRequiredAgentsWithRequiredSpawn(t *testing.T) {
 	writeFile(t, filepath.Join(sharedDir, "gate-thresholds.json"), `{
 		"ambiguity": {"threshold": 0.2, "operator": "<="},
 		"convergence": {"threshold": 0.95, "operator": ">="},
-		"consensus": {"threshold": 0.67, "operator": ">="},
+		"consensus": {"threshold": 0.66, "operator": ">="},
 		"semantic": {"threshold": 0.8, "operator": ">="}
 	}`)
 
@@ -196,7 +196,7 @@ func TestLoadMissingFiles(t *testing.T) {
 	writeFile(t, filepath.Join(sharedDir, "gate-thresholds.json"), `{
 		"ambiguity": {"threshold": 0.2, "operator": "<="},
 		"convergence": {"threshold": 0.95, "operator": ">="},
-		"consensus": {"threshold": 0.67, "operator": ">="},
+		"consensus": {"threshold": 0.66, "operator": ">="},
 		"semantic": {"threshold": 0.8, "operator": ">="}
 	}`)
 
@@ -221,7 +221,7 @@ func setupTestFiles(t *testing.T) string {
 	writeFile(t, filepath.Join(sharedDir, "gate-thresholds.json"), `{
 		"ambiguity": {"threshold": 0.2, "operator": "<="},
 		"convergence": {"threshold": 0.95, "operator": ">="},
-		"consensus": {"threshold": 0.67, "operator": ">="},
+		"consensus": {"threshold": 0.66, "operator": ">="},
 		"semantic": {"threshold": 0.8, "operator": ">="}
 	}`)
 

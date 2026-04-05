@@ -627,7 +627,7 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
       olympus_register_agent_spawn(pipeline_id, "hera")
       olympus_record_execution(pipeline_id, "tribunal", "hera", ...)
 
-   Tally votes: supermajority >= 67% (per gate-thresholds.json consensus threshold)
+   Tally votes: supermajority >= 66% (per gate-thresholds.json consensus threshold)
    Save consensus-record.json
 
 6. Final verdict processing:
@@ -711,7 +711,7 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
   All values from gate-thresholds.json (single source of truth):
   - Ambiguity: ≤ 0.2 (Oracle)
   - Convergence: ≥ 0.95 (Genesis)
-  - Consensus: ≥ 67% (Pantheon, Tribunal)
+  - Consensus: ≥ 66% (Pantheon, Tribunal)
   - Semantic: ≥ 0.8 (Tribunal)
   - Mechanical: PASS (Tribunal)
   - Themis: APPROVE (Planning)

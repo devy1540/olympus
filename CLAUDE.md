@@ -55,7 +55,7 @@ Oracle → Genesis → Pantheon → Plan → Execute → Tribunal
 ```
 
 각 단계는 수학적 임계값으로 게이트됨 (`docs/shared/gate-thresholds.json`):
-- Ambiguity ≤ 0.2 (Oracle) / Convergence ≥ 0.95 (Genesis) / Consensus ≥ 67% (Pantheon·Tribunal) / Semantic ≥ 0.8 (Tribunal)
+- Ambiguity ≤ 0.2 (Oracle) / Convergence ≥ 0.95 (Genesis) / Consensus ≥ 66% (Pantheon·Tribunal) / Semantic ≥ 0.8 (Tribunal)
 
 ### 에이전트 권한 모델
 

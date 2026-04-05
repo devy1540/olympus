@@ -10,7 +10,7 @@ func testThresholds() config.Thresholds {
 	return config.Thresholds{
 		Ambiguity:   config.ThresholdRule{Threshold: 0.2, Operator: "<="},
 		Convergence: config.ThresholdRule{Threshold: 0.95, Operator: ">="},
-		Consensus:   config.ThresholdRule{Threshold: 0.67, Operator: ">="},
+		Consensus:   config.ThresholdRule{Threshold: 0.66, Operator: ">="},
 		Semantic:    config.ThresholdRule{Threshold: 0.8, Operator: ">="},
 	}
 }
@@ -65,7 +65,7 @@ func TestConsensusGatePass(t *testing.T) {
 	calc := NewCalculator(testThresholds())
 	r := calc.Check("consensus", 0.75)
 	if !r.Passed {
-		t.Errorf("consensus 0.75 should pass (threshold >= 0.67)")
+		t.Errorf("consensus 0.75 should pass (threshold >= 0.66)")
 	}
 }
 
@@ -73,7 +73,7 @@ func TestConsensusGateFail(t *testing.T) {
 	calc := NewCalculator(testThresholds())
 	r := calc.Check("consensus", 0.50)
 	if r.Passed {
-		t.Errorf("consensus 0.50 should fail (threshold >= 0.67)")
+		t.Errorf("consensus 0.50 should fail (threshold >= 0.66)")
 	}
 }
 

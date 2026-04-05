@@ -185,8 +185,8 @@ assert_eq "ambiguity 0.12 ≤ 0.2 → pass" "true" "$(jq_field "$R5" "passed")"
 assert_eq "ambiguity 0.25 > 0.2 → fail" "false" "$(jq_field "$R6" "passed")"
 assert_eq "convergence 0.96 ≥ 0.95 → pass" "true" "$(jq_field "$R7" "passed")"
 assert_eq "convergence 0.90 < 0.95 → fail" "false" "$(jq_field "$R8" "passed")"
-assert_eq "consensus 0.75 ≥ 0.67 → pass" "true" "$(jq_field "$R9" "passed")"
-assert_eq "consensus 0.50 < 0.67 → fail" "false" "$(jq_field "$R10" "passed")"
+assert_eq "consensus 0.75 ≥ 0.66 → pass" "true" "$(jq_field "$R9" "passed")"
+assert_eq "consensus 0.50 < 0.66 → fail" "false" "$(jq_field "$R10" "passed")"
 
 # 11-12. Execution history
 R11=$(get_mcp_result 11)

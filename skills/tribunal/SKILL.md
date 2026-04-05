@@ -195,13 +195,16 @@ WHEN triggered:
 
 3. Tally votes:
    Extract APPROVE/REJECT from each response.
-   Supermajority >= 67%:
-     - 2+ approve → APPROVED
-     - 1 approve → REJECTED + dissent recorded
-     - 0 approve → REJECTED
+   consensus_pct = approve_count / total_voters  # 3 voters: 0/3=0.0, 1/3=0.33, 2/3=0.6667, 3/3=1.0
+   olympus_gate_check(pipeline_id, "consensus", consensus_pct)
+   # Note: threshold is 0.66 (not 0.67) so 2/3=0.6667 passes the >= 0.66 check
+   Gate result:
+     - PASS (2+ approve): → APPROVED
+     - FAIL (1 approve): → REJECTED + dissent recorded
+     - FAIL (0 approve): → REJECTED
 
 4. Save consensus-record.json:
-   { votes: { ares, eris, hera }, result, dissent }
+   { votes: { ares, eris, hera }, consensus_pct, gate_result, dissent }
 ```
 
 ---
