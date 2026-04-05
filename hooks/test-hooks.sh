@@ -179,6 +179,16 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/mechanical-result.json\",\"content\":\"{\\\"overall\\\":\\\"ENV_UNAVAILABLE\\\",\\\"results\\\":{\\\"build\\\":{\\\"status\\\":\\\"SKIP\\\"},\\\"test\\\":{\\\"status\\\":\\\"SKIP\\\"}}}\"}}" \
   "allow" "Mechanical result ENV_UNAVAILABLE → allow"
 
+# Test: consensus-record.json above threshold → allow
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/consensus-record.json\",\"content\":\"{\\\"level\\\":\\\"working\\\",\\\"percentage\\\":0.6667}\"}}" \
+  "allow" "Consensus record 0.6667 (2/3) → allow"
+
+# Test: consensus-record.json below threshold → deny
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/consensus-record.json\",\"content\":\"{\\\"level\\\":\\\"partial\\\",\\\"percentage\\\":0.5}\"}}" \
+  "deny" "Consensus record 0.5 < 0.66 → deny"
+
 # Test: non-gate file → silent
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/random.txt\",\"content\":\"hello\"}}" \
