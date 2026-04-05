@@ -164,7 +164,7 @@ FOR each round (max 3):
          Read ${ARTIFACT_DIR}/debate-frame.json.
          Present: preferred option + rationale + pros/cons of others.
          Include evidence (file:line if applicable).
-         Output your position as your final response.")
+         When done: SendMessage(to: 'team-lead', summary: 'zeus-r{n} 포지션', '{full position}')")
 
      Agent(name: "ares-r{n}", team_name: ${TEAM}, subagent_type: "olympus:ares",
        run_in_background: true,
@@ -172,7 +172,7 @@ FOR each round (max 3):
          DO NOT write files — you are read-only.
          Read ${ARTIFACT_DIR}/debate-frame.json.
          Present: preferred option from technical perspective + evidence.
-         Output your position as your final response.")
+         When done: SendMessage(to: 'team-lead', summary: 'ares-r{n} 포지션', '{full position}')")
 
      Agent(name: "ux-r{n}", team_name: ${TEAM},
        run_in_background: true,
@@ -180,7 +180,7 @@ FOR each round (max 3):
          DO NOT write files — you are read-only.
          Read ${ARTIFACT_DIR}/debate-frame.json.
          Present: preferred option from UX perspective + evidence.
-         Output your position as your final response.")
+         When done: SendMessage(to: 'team-lead', summary: 'ux-r{n} 포지션', '{full position}')")
 
      olympus_register_agent_spawn(pipeline_id, "zeus-r{n}")
      olympus_register_agent_spawn(pipeline_id, "ares-r{n}")
