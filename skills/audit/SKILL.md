@@ -20,6 +20,8 @@ Hephaestus and Athena operate as teammates for cross-phase context sharing.
 - MANDATORY CONSULTATION (§7): Athena MUST read hephaestus results before reporting.
   Athena's report without reference to audit-mechanical.json is incomplete.
 - RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
+- RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
+  Orchestrator writes artifacts from these results. Write-capable agents write files directly.
 </Execution_Policy>
 
 <Team_Structure>

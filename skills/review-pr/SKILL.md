@@ -23,6 +23,8 @@ Supports interactive and fully automated (--auto) modes.
 - MANDATORY CONSULTATION (§7): Agents with peer paths must exchange at least one consultation
   round before reporting to leader. Reports without consultation evidence are incomplete.
 - RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
+- RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
+  Orchestrator writes artifacts from these results. Write-capable agents write files directly.
 </Execution_Policy>
 
 <Modes>
@@ -193,6 +195,10 @@ Agent(name: "poseidon", team_name: ${TEAM},
 olympus_register_agent_spawn(pipeline_id, "poseidon")
 
 olympus_log_collaboration(pipeline_id, "ares", "poseidon", "코드품질↔보안 크로스레퍼런스")
+
+DEADLOCK FALLBACK: If 3 minutes elapse without both completing:
+  → SendMessage(to: "ares", "Cross-reference timeout. Proceed without waiting for poseidon. Note 'poseidon consultation pending'.")
+  → SendMessage(to: "poseidon", "Cross-reference timeout. Proceed without waiting for ares. Note 'ares consultation pending'.")
 
 WAIT for ALL completion notifications → leader aggregates into review-findings.md
 olympus_record_execution for each reviewer

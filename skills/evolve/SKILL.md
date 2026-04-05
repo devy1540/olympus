@@ -23,6 +23,8 @@ All agents operate as teammates for iterative evaluation and refinement with con
   metis sends gap analysis to eris; eris challenges it; metis revises before reporting to leader.
   Reports without evidence of cross-verification are incomplete.
 - RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
+- RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
+  Orchestrator writes artifacts from these results. Write-capable agents write files directly.
 </Execution_Policy>
 
 <Team_Structure>

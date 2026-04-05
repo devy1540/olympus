@@ -21,6 +21,8 @@ Metis and Eris operate as persistent teammates who remember previous generations
   Eris receives metis's wonder in its spawn prompt and challenges it.
   Both deliver results as final text output — orchestrator writes artifacts.
 - RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
+- RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
+  Orchestrator writes artifacts from these results. Write-capable agents write files directly.
 </Execution_Policy>
 
 <Team_Structure>

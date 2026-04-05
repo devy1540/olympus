@@ -32,6 +32,9 @@ All agents operate as teammates for inter-perspective communication and debate.
   1. SendMessage(to: "{agent}", "Report your findings now. Include consultation results. Keep under 5000 chars.")
   2. Retry up to 3 times.
   3. NEVER do the agent's work directly — this violates §0.
+
+- RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
+  Orchestrator writes artifacts from these results. Write-capable agents write files directly.
 </Execution_Policy>
 
 <Team_Structure>
