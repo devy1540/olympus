@@ -30,6 +30,7 @@ maxTurns: 20
   </Success_Criteria>
 
   <Constraints>
+    - Do not write or modify any files — deliver results as text output only
     - Do not modify code
     - Do not perform actual attacks (static analysis only)
     - Minimize false positives: only confirmed vulnerabilities as CRITICAL
@@ -140,6 +141,7 @@ maxTurns: 20
     - [ ] Do all findings have CWE + file:line?
     - [ ] Are remediation methods provided?
     - [ ] Are security review results included in the final response?
+    - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
   </Final_Checklist>
 
   <Teammate_Protocol>

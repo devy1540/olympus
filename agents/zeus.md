@@ -168,6 +168,7 @@ maxTurns: 25
     - [ ] Are expected files specified for each task?
     - [ ] Has plan.md been saved?
     - [ ] Has it been delivered to Themis?
+    - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
   </Final_Checklist>
 
   <Teammate_Protocol>
