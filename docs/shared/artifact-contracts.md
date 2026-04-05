@@ -37,10 +37,10 @@ The short UUID is generated via `uuidgen` and truncated to 8 characters.
 
 | File                  | Phase | Writer        | Reader            |
 |-----------------------|-------|---------------|-------------------|
-| codebase-context.md   | 1     | Hermes        | Apollo, Metis     |
-| interview-log.md      | 2     | Apollo        | Metis             |
-| ambiguity-scores.json | 2     | Apollo        | Gate check        |
-| gap-analysis.md       | 4     | Metis         | Zeus, Helios      |
+| codebase-context.md   | 1     | Orchestrator (from Hermes) | Apollo, Metis     |
+| interview-log.md      | 2     | Orchestrator (from Apollo) | Metis             |
+| ambiguity-scores.json | 2     | Orchestrator (from Apollo) | Gate check        |
+| gap-analysis.md       | 4     | Orchestrator (from Metis) | Zeus, Helios      |
 | spec.md               | 5     | Orchestrator  | All downstream    |
 
 ### File Descriptions
@@ -60,10 +60,10 @@ The short UUID is generated via `uuidgen` and truncated to 8 characters.
 | source-catalog.md       | 0     | Orchestrator    | All agents        |
 | source-scope-analyst.md | 0     | Orchestrator    | Analyst agents    |
 | source-scope-da.md      | 0     | Orchestrator    | Eris              |
-| perspectives.md         | 2     | Helios          | All agents        |
+| perspectives.md         | 2     | Orchestrator (from Helios) | All agents        |
 | context.md              | 2     | Orchestrator    | All agents        |
-| analyst-findings.md     | 3     | Analyst agents  | Eris              |
-| da-evaluation.md        | 4     | Eris            | Consensus stage   |
+| analyst-findings.md     | 3     | Orchestrator (from analysts) | Eris              |
+| da-evaluation.md        | 4     | Orchestrator (from Eris) | Consensus stage   |
 | prior-iterations.md     | 5     | Orchestrator    | Re-entry          |
 | analysis.md             | 5     | Orchestrator    | Downstream        |
 
@@ -86,7 +86,7 @@ The short UUID is generated via `uuidgen` and truncated to 8 characters.
 | File                    | Stage | Writer        | Reader            |
 |-------------------------|-------|---------------|-------------------|
 | mechanical-result.json  | 1     | Hephaestus    | Athena            |
-| semantic-matrix.md      | 2     | Athena         | Stage 3           |
+| semantic-matrix.md      | 2     | Orchestrator (from Athena) | Stage 3           |
 | consensus-record.json   | 3     | Orchestrator  | Final verdict     |
 | verdict.md              | 3     | Orchestrator  | User              |
 
@@ -105,8 +105,8 @@ The short UUID is generated via `uuidgen` and truncated to 8 characters.
 |-------------------------|-------|---------------|---------------------|
 | gen-{n}/ontology.json   | 3     | Orchestrator  | Convergence check   |
 | gen-{n}/spec.md         | 3     | Orchestrator  | Next generation     |
-| gen-{n}/wonder.md       | 1     | Metis         | Reflect             |
-| gen-{n}/reflect.md      | 2     | Eris          | Seed                |
+| gen-{n}/wonder.md       | 1     | Orchestrator (from Metis) | Reflect             |
+| gen-{n}/reflect.md      | 2     | Orchestrator (from Eris) | Seed                |
 | lineage.json            | 5     | Orchestrator  | Rewind              |
 | convergence.json        | 4     | Orchestrator  | Evolution halt      |
 
@@ -126,8 +126,8 @@ The short UUID is generated via `uuidgen` and truncated to 8 characters.
 | File                    | Phase | Writer        | Reader            |
 |-------------------------|-------|---------------|-------------------|
 | debate-frame.json       | 1     | Orchestrator  | All committee     |
-| committee-positions.md  | 3     | Committee     | Eris, Orchestrator|
-| da-challenges.md        | 4     | Eris          | Committee         |
+| committee-positions.md  | 3     | Orchestrator (from Committee) | Eris, Orchestrator|
+| da-challenges.md        | 4     | Orchestrator (from Eris) | Committee         |
 | decision.md             | 5     | Orchestrator  | User              |
 
 ### File Descriptions
