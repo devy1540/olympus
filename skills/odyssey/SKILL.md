@@ -496,6 +496,7 @@ Implement the approved plan. **Teammate mode shines here — agents collaborate 
        IMMEDIATE TASK: Run full build, lint, test, and type-check.
        Output results as your final response.")
    olympus_register_agent_spawn(pipeline_id, "hephaestus")
+   olympus_record_execution(pipeline_id, "execution", "hephaestus", ...)
 
 5. Debug cycle (if build fails, max 3 cycles):
 
@@ -508,6 +509,7 @@ Implement the approved plan. **Teammate mode shines here — agents collaborate 
          Fix the failures. You CAN write files directly.
          Output your fix report as your final response.")
      olympus_register_agent_spawn(pipeline_id, "prometheus")
+     olympus_record_execution(pipeline_id, "execution", "prometheus-debug", ...)
 
      → Re-run hephaestus verification (FOREGROUND)
 
@@ -572,6 +574,7 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
          Include file:line evidence for every claim.
          Output your full position as your final response.")
       olympus_register_agent_spawn(pipeline_id, "ares")
+      olympus_record_execution(pipeline_id, "tribunal", "ares", ...)
       olympus_log_collaboration(pipeline_id, "ares", "eris", "Tribunal debate: ares opening")
 
    b. Eris challenges — SEES ares's full argument (FOREGROUND):
@@ -584,6 +587,7 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
          IMPORTANT: Respond SPECIFICALLY to ares's points — do not make independent arguments.
          Output your full rebuttal as your final response.")
       olympus_register_agent_spawn(pipeline_id, "eris")
+      olympus_record_execution(pipeline_id, "tribunal", "eris", ...)
       olympus_log_collaboration(pipeline_id, "eris", "ares", "Tribunal debate: eris rebuttal")
 
    c. OPTIONAL: Ares rebuttal (if eris raised substantive new points, FOREGROUND):
@@ -595,6 +599,7 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
          Concede where eris is right. Defend where you have stronger evidence.
          Output your rebuttal as your final response.")
       olympus_register_agent_spawn(pipeline_id, "ares")
+      olympus_record_execution(pipeline_id, "tribunal", "ares-rebuttal", ...)
 
    d. Hera synthesizes — SEES the full debate transcript (FOREGROUND):
       hera_verdict = Agent(name: "hera", team_name: ${TEAM},
@@ -608,6 +613,7 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
          Produce final verdict: APPROVE / REJECT with reasoned synthesis.
          Output your verdict as your final response.")
       olympus_register_agent_spawn(pipeline_id, "hera")
+      olympus_record_execution(pipeline_id, "tribunal", "hera", ...)
 
    Tally votes: supermajority >= 67% (per gate-thresholds.json consensus threshold)
    Save consensus-record.json
