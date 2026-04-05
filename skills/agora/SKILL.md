@@ -214,6 +214,7 @@ FOR each round (max 3):
      olympus_register_agent_spawn(pipeline_id, "zeus-cross")
      olympus_record_execution(pipeline_id, "agora", "ares-cross", ...)
      olympus_record_execution(pipeline_id, "agora", "zeus-cross", ...)
+     olympus_log_collaboration(pipeline_id, "ares", "zeus", "교차 반박: ares↔zeus 논거 충돌")
 
   olympus_record_execution(pipeline_id, "agora", "zeus-r{n}", ...)
   olympus_record_execution(pipeline_id, "agora", "ares-r{n}", ...)
@@ -314,6 +315,7 @@ ELSE:
   - olympus_register_agent_spawn: after each spawn (MUST)
   - olympus_gate_check: Step 6 consensus (MUST)
   - olympus_next_action: consensus failure recovery (SHOULD)
+  - olympus_log_collaboration: after each cross-questioning exchange between members (SHOULD)
   - olympus_record_execution: after each round (SHOULD)
 
   Team Tools:
