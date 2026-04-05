@@ -185,6 +185,7 @@ FOR each round (max 3):
      olympus_register_agent_spawn(pipeline_id, "zeus-r{n}")
      olympus_register_agent_spawn(pipeline_id, "ares-r{n}")
      olympus_register_agent_spawn(pipeline_id, "ux-r{n}")
+     olympus_pipeline_status(pipeline_id)  # verify all round debaters are registered
      DEADLOCK FALLBACK: If 3 minutes elapse without all members completing:
        → SendMessage(to: non-responding member, "Round timeout. Submit your current position now.")
        → After 1 additional minute: proceed with available responses, note missing positions in committee-positions.md.
@@ -315,6 +316,7 @@ ELSE:
   - olympus_register_agent_spawn: after each spawn (MUST)
   - olympus_gate_check: Step 6 consensus (MUST)
   - olympus_next_action: consensus failure recovery (SHOULD)
+  - olympus_pipeline_status: after parallel debater spawn per round (SHOULD)
   - olympus_log_collaboration: after each cross-questioning exchange between members (SHOULD)
   - olympus_record_execution: after each round (SHOULD)
 
