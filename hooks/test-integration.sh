@@ -562,6 +562,50 @@ RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
 check_result "Review-PR: verdict.md without da-evaluation.md → DA warning" "$RESULT" "allow"
 
 # ============================================================
+echo ""
+echo "--- Phase 11: Audit Pipeline (self-audit artifact chain) ---"
+# ============================================================
+
+AUDIT_DIR="${TEST_DIR}/.olympus/audit-20260401-inttest12"
+mkdir -p "$AUDIT_DIR/.checkpoints"
+
+# Step 1: audit-mechanical.json (hephaestus writes)
+echo "  [audit] Hephaestus → audit-mechanical.json"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${AUDIT_DIR}/audit-mechanical.json" '{"status":"PASS","violations":[],"warnings":[]}')
+check_result "Audit: audit-mechanical.json (hephaestus, phase 1) → allow" "$RESULT" "allow"
+
+# Step 2: audit-semantic.json without audit-mechanical.json → predecessor warning
+echo "  [audit] Athena → audit-semantic.json (missing predecessor)"
+AUDIT_NOPRED_DIR="${TEST_DIR}/.olympus/audit-20260401-inttest13"
+mkdir -p "$AUDIT_NOPRED_DIR/.checkpoints"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${AUDIT_NOPRED_DIR}/audit-semantic.json" '{"scores":{"specificity":0.9}}')
+check_result "Audit: audit-semantic.json without audit-mechanical.json → predecessor warning" "$RESULT" "allow"
+
+# Step 3: audit-semantic.json WITH audit-mechanical.json present → allow
+echo "  [audit] Athena → audit-semantic.json (with predecessor)"
+echo '{"status":"PASS"}' > "${AUDIT_DIR}/audit-mechanical.json"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${AUDIT_DIR}/audit-semantic.json" '{"scores":{"specificity":0.9}}')
+check_result "Audit: audit-semantic.json with audit-mechanical.json → allow" "$RESULT" "allow"
+
+# Step 4: audit-report.md with all predecessors → allow
+echo "  [audit] Orchestrator → audit-report.md"
+echo '{"scores":{}}' > "${AUDIT_DIR}/audit-semantic.json"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${AUDIT_DIR}/audit-report.md" "## Audit Report\n### Status: PASS")
+check_result "Audit: audit-report.md with all predecessors → allow" "$RESULT" "allow"
+
+# Step 5: spawn gate — audit-mechanical.json without hephaestus registered → deny
+echo "  [audit] Spawn gate: audit-mechanical.json before hephaestus spawn → deny"
+AUDIT_SPAWN_DIR="${TEST_DIR}/.olympus/audit-20260401-inttest14"
+mkdir -p "$AUDIT_SPAWN_DIR/.checkpoints"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${AUDIT_SPAWN_DIR}/audit-mechanical.json" '{"status":"PASS"}')
+check_result "Audit: audit-mechanical.json spawn gate (hephaestus not spawned) → deny" "$RESULT" "deny"
+
+# ============================================================
 # Cleanup
 rm -rf "$TEST_DIR"
 
