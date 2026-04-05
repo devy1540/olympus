@@ -193,6 +193,7 @@ Agents are spawned SEQUENTIALLY with IMMEDIATE TASKS — not all at once.
        apollo_retry = Agent(name: "apollo", team_name: ${TEAM},
            subagent_type: "olympus:apollo",
            prompt: "You are Apollo. Artifact directory: ${ARTIFACT_DIR}/
+             LEADER_NAME: team-lead
              Read ${ARTIFACT_DIR}/interview-log.md for previous rounds.
              Ambiguity still at {score}. Continue interview, focus on: {gap areas}.
              Output updated results as your final response.")
@@ -673,6 +674,7 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
   - olympus_validate_plan: Step 5 before planning (SHOULD call)
   - olympus_next_action: gate failure recovery + debug cycle strategy (SHOULD call)
   - olympus_pipeline_status: phase transition validation (SHOULD call)
+  - olympus_log_collaboration: inter-agent exchange recording (SHOULD call)
 
   Team Tools:
   - TeamCreate: Step 1 (create team once)
@@ -695,6 +697,7 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
   | gap-analysis.md | Oracle | Leader (from metis) | zeus, helios |
   | spec.md | Oracle | Leader | All downstream |
   | gen-{n}/*.md | Genesis | Leader | metis, eris |
+  | ontology.json | Genesis | Leader | convergence check |
   | perspectives.md | Pantheon | Leader (from helios) | analysts |
   | analyst-findings.md | Pantheon | Leader (from analysts) | eris |
   | da-evaluation.md | Pantheon | Leader (from eris) | consensus |
