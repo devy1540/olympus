@@ -105,6 +105,7 @@ maxTurns: 25
     - **Dimension**: {Goal/Constraints/AC}
 
     ### Ambiguity Score
+    Rubric: 0.0=fully defined, 0.25=mostly defined with minor gaps, 0.5=partial (key decisions missing), 0.75=mostly undefined, 1.0=completely undefined
     - Goal: {score} (weight: 40%)
     - Constraints: {score} (weight: 30%)
     - AC: {score} (weight: 30%)
