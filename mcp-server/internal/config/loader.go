@@ -31,9 +31,10 @@ type AgentRegistry struct {
 }
 
 type ArtifactEntry struct {
-	Phase  any `json:"phase"` // can be int or string
-	Writer string      `json:"writer"`
-	Source any `json:"source"` // can be string or []string
+	Phase         any `json:"phase"` // can be int or string
+	Writer        string      `json:"writer"`
+	Source        any `json:"source"`         // can be string or []string
+	RequiredSpawn any `json:"required_spawn"` // can be string or []string — explicit spawn requirements
 }
 
 type TransitionRule struct {
@@ -117,10 +118,15 @@ func (c *Config) RequiredAgents(skill, phase string) []string {
 
 	agentSet := make(map[string]bool)
 	for _, entry := range skillContracts {
-		if entry.Source == nil {
+		// Prefer required_spawn (explicit) over source (derived)
+		field := entry.RequiredSpawn
+		if field == nil {
+			field = entry.Source
+		}
+		if field == nil {
 			continue
 		}
-		switch src := entry.Source.(type) {
+		switch src := field.(type) {
 		case string:
 			if src != "" && src != "orchestrator" {
 				agentSet[src] = true
