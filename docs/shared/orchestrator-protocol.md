@@ -404,6 +404,15 @@ CONSULTATION EXCHANGE (minimum 2 turns):
        "... Consultation with {agent_b}: {what changed based on feedback}"
 ```
 
+**Peer Non-Response Fallback:**
+When a mandatory consultation peer does not respond:
+1. Retry SendMessage up to 2 times
+2. If still no response, proceed with available information
+3. Note "{peer} consultation pending" in the output
+4. Special case: hera without hephaestus → run tests directly via Bash
+
+This prevents infinite waiting while preserving evidence that consultation was attempted.
+
 **Why Mandatory Consultation matters:**
 - Isolated agents produce narrow findings. Cross-pollination catches blind spots.
 - Ares finds a God Class but misses its security implications → Poseidon catches it.
