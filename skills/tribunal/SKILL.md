@@ -34,6 +34,8 @@ All agents operate as teammates. Stage 3 debate uses direct inter-agent SendMess
 
 - RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
   Orchestrator writes artifacts from these results. Write-capable agents write files directly.
+- SEQUENTIAL SPAWN: hephaestus first → athena after hephaestus → Stage 3: ares → eris → hera.
+  Wait for prerequisite agent results before spawning dependent agents.
 </Execution_Policy>
 
 <Team_Structure>

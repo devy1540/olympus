@@ -25,6 +25,8 @@ Supports interactive and fully automated (--auto) modes.
 - RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
 - RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
   Orchestrator writes artifacts from these results. Write-capable agents write files directly.
+- SEQUENTIAL SPAWN: hermes first → helios after hermes → ares+poseidon parallel → eris DA → nemesis synthesis.
+  Wait for prerequisite agent results before spawning dependent agents.
 </Execution_Policy>
 
 <Modes>
@@ -314,6 +316,7 @@ Shutdown all teammates → TeamDelete
   - olympus_next_action: consensus failure recovery (SHOULD)
   - olympus_pipeline_status: parallel reviewer spawn verification (SHOULD)
   - olympus_record_execution: after each agent (SHOULD)
+  - olympus_log_collaboration: Step 6 parallel reviewer coordination (SHOULD)
 
   Team Tools:
   - TeamCreate: Step 1

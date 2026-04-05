@@ -23,6 +23,8 @@ Metis and Eris operate as persistent teammates who remember previous generations
 - RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
 - RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
   Orchestrator writes artifacts from these results. Write-capable agents write files directly.
+- SEQUENTIAL SPAWN: metis (wonder) first → eris (reflect) after metis completes, per generation.
+  Wait for prerequisite agent results before spawning dependent agents.
 </Execution_Policy>
 
 <Team_Structure>

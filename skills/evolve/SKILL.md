@@ -25,6 +25,8 @@ All agents operate as teammates for iterative evaluation and refinement with con
 - RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
 - RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
   Orchestrator writes artifacts from these results. Write-capable agents write files directly.
+- SEQUENTIAL SPAWN: athena (Step 4) first → metis+eris parallel (Step 5) → prometheus after diagnosis (Step 6).
+  Wait for prerequisite agent results before spawning dependent agents.
 </Execution_Policy>
 
 <Team_Structure>

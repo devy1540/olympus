@@ -24,6 +24,8 @@ Committee members operate as teammates for multi-round debate with context reten
 - RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
 - RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
   Orchestrator writes artifacts from these results. Write-capable agents write files directly.
+- SEQUENTIAL SPAWN: committee members spawned in Step 3 → debate rounds sequential (Step 4).
+  Wait for prerequisite agent results before spawning dependent agents.
 </Execution_Policy>
 
 <Team_Structure>
@@ -106,6 +108,7 @@ IF "ares" not in team:
         run_in_background: false,
         prompt: "You are Ares, engineering critic in a committee debate.
           LEADER_NAME: team-lead
+          Artifact directory: ${ARTIFACT_DIR}/
           IMMEDIATE TASK: You will evaluate options from technical feasibility, maintainability, scalability.
           CONSULTATION: In Round 2+, you MUST explicitly reference zeus's or eris's prior argument
           and either agree, rebut, or qualify it with technical evidence. Independent opinions are incomplete.
@@ -119,6 +122,7 @@ IF "eris" not in team:
         run_in_background: false,
         prompt: "You are Eris, devil's advocate in a committee debate.
           LEADER_NAME: team-lead
+          Artifact directory: ${ARTIFACT_DIR}/
           IMMEDIATE TASK: You will challenge ALL positions using fallacy-catalog.md.
           CONSULTATION: You MUST target specific claims made by zeus or ares — not abstract positions.
           Quote the claim you are challenging, then deliver your challenge.
@@ -131,11 +135,17 @@ Spawn UX critic (general-purpose, always fresh):
         run_in_background: false,
         prompt: "You are a UX critic in a committee debate.
           LEADER_NAME: team-lead
+          Artifact directory: ${ARTIFACT_DIR}/
           IMMEDIATE TASK: You will evaluate options from user experience, accessibility, usability.
           CONSULTATION: In Round 2+, you MUST reference a prior speaker's claim and respond to it
           from a UX lens. Independent opinions without engagement are incomplete.
           Output your results as your final response.")
   olympus_register_agent_spawn(pipeline_id, "ux-critic")
+
+olympus_record_execution(pipeline_id, "agora", "zeus", ...)
+olympus_record_execution(pipeline_id, "agora", "ares", ...)
+olympus_record_execution(pipeline_id, "agora", "eris", ...)
+olympus_record_execution(pipeline_id, "agora", "ux-critic", ...)
 ```
 
 ---

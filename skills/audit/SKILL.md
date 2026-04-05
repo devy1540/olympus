@@ -22,6 +22,8 @@ Hephaestus and Athena operate as teammates for cross-phase context sharing.
 - RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly.
 - RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
   Orchestrator writes artifacts from these results. Write-capable agents write files directly.
+- SEQUENTIAL SPAWN: hephaestus first → athena after hephaestus completes.
+  Wait for prerequisite agent results before spawning dependent agents.
 </Execution_Policy>
 
 <Team_Structure>
@@ -72,6 +74,11 @@ olympus_register_agent_spawn(pipeline_id, "hephaestus")
 
 → Write audit-mechanical.json from heph_result
 olympus_record_execution(pipeline_id, "audit", "hephaestus", ...)
+
+Decision:
+  All PASS → proceed to Step 3
+  Any FAIL → note failures, proceed to Step 3 (audit reports findings, does not block)
+  ENV_UNAVAILABLE → proceed to Step 3 with caveat (audit-mechanical.json notes environment unavailable)
 ```
 
 ---

@@ -275,6 +275,7 @@ ELSE:
   - olympus_next_action: consensus failure recovery (SHOULD)
   - olympus_pipeline_status: parallel agent spawn verification (SHOULD)
   - olympus_record_execution: after each analyst (SHOULD)
+  - olympus_log_collaboration: Step 5 parallel analyst coordination (SHOULD)
 
   Team Tools:
   - TeamCreate: Step 1 (standalone only)
