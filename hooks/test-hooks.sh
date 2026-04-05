@@ -283,6 +283,16 @@ test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"execution\\\",\\\"retryTracking\\\":{\\\"evaluationPass\\\":4,\\\"maxPasses\\\":3}}\"}}" \
   "deny" "evaluationPass > maxPasses → deny"
 
+# Test: consecutiveDebugFailures > maxDebugCycles → deny
+test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"execution\\\",\\\"retryTracking\\\":{\\\"consecutiveDebugFailures\\\":4,\\\"maxDebugCycles\\\":3}}\"}}" \
+  "deny" "consecutiveDebugFailures > maxDebugCycles → deny"
+
+# Test: consecutiveDebugFailures == maxDebugCycles → allow (boundary: exactly at limit is ok)
+test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"execution\\\",\\\"retryTracking\\\":{\\\"consecutiveDebugFailures\\\":3,\\\"maxDebugCycles\\\":3}}\"}}" \
+  "allow" "consecutiveDebugFailures == maxDebugCycles boundary → allow"
+
 # Test: Terminal rewind — tribunal→oracle via returnToPhase
 echo '{"phase":"tribunal"}' > "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.1.json"
 test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
