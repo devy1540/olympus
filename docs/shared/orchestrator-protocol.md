@@ -283,6 +283,13 @@ The old pattern (`Agent(prompt: "Wait for messages")` → later `SendMessage(tas
 - Task delivery failures when SendMessage doesn't reach the idle agent
 - Leader falling back to direct execution (§0 violation)
 
+**Exception: Dialog agents (Apollo)** operate in a message-driven loop by design.
+Apollo conducts multi-round interviews where the leader relays user answers back to Apollo.
+In this pattern, Apollo DOES wait for messages between rounds — this is NOT "passive waiting" but
+structured dialog. The distinction: dialog agents always have an active task (interviewing), they
+just need user input relayed by the leader to continue. Spawn Apollo with the initial interview task;
+subsequent rounds are driven by leader SendMessage with user answers.
+
 **CRITICAL: Leader name must be injected at spawn time.**
 
 The leader's name varies by CC version ("team-lead", "main", etc.). Hard-coding any name will break.
