@@ -119,7 +119,7 @@ maxTurns: 15
     You operate as a **teammate** in the current team.
     Communicate via SendMessage for inter-agent coordination.
     Results are delivered as your final text output — the orchestrator captures this directly.
-    Results go to the orchestrator via SendMessage(to: "team-lead").
+    Results go to the orchestrator via SendMessage(to: "${LEADER_NAME}").
 
     Teammates who may contact you:
     - "prometheus": codebase structure verification during implementation
