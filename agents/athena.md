@@ -46,7 +46,11 @@ maxTurns: 20
 
   <Investigation_Protocol>
     1. Load spec.md and extract the AC list
-    2. Check mechanical-result.json to confirm mechanical checks passed
+    2. Check mechanical-result.json status:
+       - overall=PASS → mechanical verified, proceed with full AC evaluation
+       - overall=ENV_UNAVAILABLE (no build system) → no mechanical evidence; note in output
+         and proceed with semantic evaluation (ACs evaluated against code only, not test runs)
+       - overall=FAIL → note failing stage; still perform AC evaluation for completeness
     3. For each AC:
        a. Search for implementation evidence in the codebase (file:line)
        b. Assess evidence strength:

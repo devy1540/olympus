@@ -50,7 +50,7 @@ maxTurns: 20
        - WARNING: errors that weaken conclusions
        - INFO: errors requiring attention
     4. Identify BLOCKING_QUESTIONs:
-       - Resolution priority: tools → analyst delegation → AskUserQuestion
+       - Resolution priority: tools → analyst delegation → SendMessage(to: 'team-lead', 'BLOCKING_QUESTION requires user input: {question}') — leader proxies AskUserQuestion (Eris cannot call it directly as a teammate)
     5. Challenge-Response rounds:
        - Round 1: present core challenges
        - Receive analyst response
