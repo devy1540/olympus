@@ -491,6 +491,24 @@ test_hook "compact-ctx" "$SCRIPT_DIR/compact-context.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"tribunal\\\"}\"}}" \
   "allow" "execution→tribunal transition → compaction instruction"
 
+# Test: pantheon→planning transition → compaction instruction
+echo '{"phase":"pantheon"}' > "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.002b.json"
+test_hook "compact-ctx" "$SCRIPT_DIR/compact-context.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"planning\\\"}\"}}" \
+  "allow" "pantheon→planning transition → compaction instruction"
+
+# Test: planning→execution → no compaction needed (plan.md already compact), just timing reminder
+echo '{"phase":"planning"}' > "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.002c.json"
+test_hook "compact-ctx" "$SCRIPT_DIR/compact-context.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"execution\\\"}\"}}" \
+  "allow" "planning→execution transition → timing reminder only (no compaction)"
+
+# Test: tribunal→execution retry → compaction instruction with retry count
+echo '{"phase":"tribunal"}' > "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.002d.json"
+test_hook "compact-ctx" "$SCRIPT_DIR/compact-context.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"execution\\\",\\\"retryTracking\\\":{\\\"evaluationPass\\\":2}}\"}}" \
+  "allow" "tribunal→execution retry → compaction instruction with retry count"
+
 # Test: tribunal→completed (terminal) → timing only, no crash
 echo '{"phase":"tribunal"}' > "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.003.json"
 test_hook "compact-ctx" "$SCRIPT_DIR/compact-context.sh" \
