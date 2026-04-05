@@ -100,7 +100,9 @@ maxTurns: 20
     ### OWASP Coverage
     | Category | Status | Findings |
     |---|---|---|
-    | A01-A10 | PASS/WARNING/FAIL | {finding count} |
+    | A01-A10 | PASS/WARNING/FAIL/N/A | {finding count or "not applicable"} |
+
+    Note: N/A = category not applicable to analyzed code type (e.g., A10 SSRF in a CLI tool with no outbound HTTP).
   </Output_Format>
 
   <Failure_Modes_To_Avoid>

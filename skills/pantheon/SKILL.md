@@ -184,6 +184,12 @@ Note: ares and poseidon run IN PARALLEL with CROSS-REFERENCE via SendMessage.
 Results come via background completion notifications.
 olympus_log_collaboration(pipeline_id, "ares", "poseidon", "코드품질↔보안 크로스레퍼런스")
 
+DEADLOCK FALLBACK: ares and poseidon each wait for the other's cross-reference response.
+  If 3 minutes elapse without both completing:
+  → SendMessage(to: "ares", "Cross-reference timeout. Proceed without waiting for poseidon. Note 'poseidon consultation pending' in report.")
+  → SendMessage(to: "poseidon", "Cross-reference timeout. Proceed without waiting for ares. Note 'ares consultation pending' in report.")
+  → Leader synthesizes findings from whichever responded; flags missing cross-reference in analyst-findings.md.
+
 WAIT for ALL completion notifications → leader aggregates into analyst-findings.md
 olympus_record_execution for each analyst
 ```

@@ -154,6 +154,7 @@ ELSE IF rounds < 10:
           Read ${ARTIFACT_DIR}/interview-log.md for previous rounds.
           Ambiguity still at {score}. Continue interview, focus on: {gap areas}.
           Output updated results as your final response.")
+    olympus_register_agent_spawn(pipeline_id, "apollo")
   → re-check gate after completion
 
 ELSE (rounds >= 10):

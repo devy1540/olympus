@@ -89,6 +89,9 @@ Decision:
   All PASS → proceed to Step 3
   Any FAIL → BLOCKED verdict
     Write verdict.md with detailed error report → exit
+  ENV_UNAVAILABLE (no build system / environment not set up) → MANUAL_REVIEW_REQUIRED verdict
+    Write verdict.md noting "build environment unavailable — mechanical verification skipped"
+    → proceed to Step 3 with caveat (semantic evaluation still runs)
 ```
 
 ---

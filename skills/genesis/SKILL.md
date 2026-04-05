@@ -111,6 +111,7 @@ FOR each generation n:
         Validate logical soundness per fallacy-catalog.md.
         Challenge weak points in metis's wonder analysis.
         Output your reflect results as your final response.")
+     olympus_register_agent_spawn(pipeline_id, "eris")
      → Write gen-{n}/reflect.md from eris_reflect
      olympus_record_execution(pipeline_id, "genesis", "eris", ...)
 
