@@ -175,6 +175,10 @@ FOR each round (max 3):
      olympus_register_agent_spawn(pipeline_id, "zeus-r{n}")
      olympus_register_agent_spawn(pipeline_id, "ares-r{n}")
      olympus_register_agent_spawn(pipeline_id, "ux-r{n}")
+     DEADLOCK FALLBACK: If 3 minutes elapse without all members completing:
+       → SendMessage(to: non-responding member, "Round timeout. Submit your current position now.")
+       → After 1 additional minute: proceed with available responses, note missing positions in committee-positions.md.
+
      WAIT for all completion notifications → leader collects positions
      → Write committee-positions.md (aggregate all round positions)
 
