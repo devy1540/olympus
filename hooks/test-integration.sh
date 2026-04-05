@@ -264,6 +264,14 @@ RESULT=$(run_hook "$SCRIPT_DIR/validate-state.sh" \
   "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"completed","gates":{"mechanicalPass":false}}')
 check_result "Odyssey: completed with mechanicalPass=false → deny" "$RESULT" "deny"
 
+# Gate precondition: completed phase without gates key → allow (null-safe: no gates = no precondition violation)
+echo '{"phase":"tribunal"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.011b.json"
+echo "  [odyssey] completed without gates key → allow"
+RESULT=$(run_hook "$SCRIPT_DIR/validate-state.sh" \
+  "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"completed"}')
+check_result "Odyssey: completed without gates key → allow (no gate precondition)" "$RESULT" "allow"
+rm -f "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.011b.json"
+
 # Retry tracking: evaluationPass > maxPasses → deny (validate-state enforces retry limit)
 echo '{"phase":"execution"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.012.json"
 echo "  [odyssey] tribunal→execution retry evaluationPass=4 > maxPasses=3 → deny"
