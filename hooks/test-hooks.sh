@@ -62,6 +62,11 @@ test_hook "enforce-perm" "$SCRIPT_DIR/enforce-permissions.sh" \
   '{"tool_input":{"file_path":"/tmp/random.txt","content":"hello"}}' \
   "allow" "Non-.olympus file passes through"
 
+# Test: olympus file NOT in contracts → allow (unknown files not enforced)
+test_hook "enforce-perm" "$SCRIPT_DIR/enforce-permissions.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/not-in-contracts.md\",\"content\":\"custom file\"}}" \
+  "allow" "Olympus file not in artifact-contracts.json → allow (not enforced)"
+
 # Test: orchestrator-written file → silent (allow)
 test_hook "enforce-perm" "$SCRIPT_DIR/enforce-permissions.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/spec.md\",\"content\":\"# Spec\"}}" \
