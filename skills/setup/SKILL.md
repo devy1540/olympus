@@ -179,7 +179,7 @@ PLUGIN_ROOT="${CLAUDE_SKILL_DIR}/../.."
 |-----------|--------|-------|
 | Agents | OK | 15/15 |
 | Skills | OK | 11/11 |
-| Hooks | OK | 7/7 |
+| Hooks | OK | 8/8 |
 | Schemas | OK | 5/5 |
 
 ## Available Skills
