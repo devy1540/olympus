@@ -256,6 +256,20 @@ RESULT=$(run_hook "$SCRIPT_DIR/validate-state.sh" \
   "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"completed","gates":{"mechanicalPass":false}}')
 check_result "Odyssey: completed with mechanicalPass=false → deny" "$RESULT" "deny"
 
+# Retry tracking: evaluationPass > maxPasses → deny (validate-state enforces retry limit)
+echo '{"phase":"execution"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.012.json"
+echo "  [odyssey] tribunal→execution retry evaluationPass=4 > maxPasses=3 → deny"
+RESULT=$(run_hook "$SCRIPT_DIR/validate-state.sh" \
+  "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"execution","retryTracking":{"evaluationPass":4,"maxPasses":3}}')
+check_result "Odyssey: execution with evaluationPass=4 > maxPasses=3 → deny" "$RESULT" "deny"
+
+# Retry tracking: evaluationPass == maxPasses → allow (boundary: exactly at limit is ok)
+echo '{"phase":"execution"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.013.json"
+echo "  [odyssey] tribunal→execution retry evaluationPass=3 == maxPasses=3 → allow"
+RESULT=$(run_hook "$SCRIPT_DIR/validate-state.sh" \
+  "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"execution","retryTracking":{"evaluationPass":3,"maxPasses":3}}')
+check_result "Odyssey: execution with evaluationPass=3 == maxPasses=3 → allow (boundary)" "$RESULT" "allow"
+
 # ============================================================
 echo ""
 echo "--- Phase 4: Agent Schema Validation ---"
