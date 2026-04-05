@@ -238,8 +238,9 @@ FOR each round (max 3):
 eris_challenge = Agent(name: "eris-da", team_name: ${TEAM},
     subagent_type: "olympus:eris",
     prompt: "LEADER_NAME: team-lead
+      Artifact directory: ${ARTIFACT_DIR}/
       DO NOT write files — you are read-only.
-      Read all committee positions from previous rounds.
+      Read ${ARTIFACT_DIR}/committee-positions.md for all prior round positions.
       Challenge each claim by name — do not issue abstract challenges.
       Challenge areas:
         - Weaknesses of the consensus option
@@ -263,6 +264,7 @@ Committee response (MANDATORY — FOREGROUND sequential):
   olympus_register_agent_spawn(pipeline_id, "ares-resp")
   olympus_record_execution(pipeline_id, "agora", "zeus-resp", ...)
   olympus_record_execution(pipeline_id, "agora", "ares-resp", ...)
+  olympus_log_collaboration(pipeline_id, "eris", "zeus", "DA Challenge: eris↔committee 응답")
   → Write da-challenges.md from eris_challenge + committee responses
   → Re-measure consensus if changed
 ```
