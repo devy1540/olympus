@@ -34,8 +34,10 @@ func (c *Calculator) Check(gateType string, score float64) *GateResult {
 		rule = c.thresholds.Consensus
 	case "semantic":
 		rule = c.thresholds.Semantic
+	case "evolve_dimension_minimum":
+		rule = c.thresholds.EvolveDimensionMinimum
 	default:
-		return &GateResult{Passed: false, Message: fmt.Sprintf("unknown gate type: %s", gateType)}
+		return &GateResult{Passed: false, Message: fmt.Sprintf("unknown gate type: %s. Note: 'mechanical' gate uses status-based checks, not numeric gate_check.", gateType)}
 	}
 
 	passed := false

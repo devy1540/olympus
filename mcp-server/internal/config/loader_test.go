@@ -29,6 +29,12 @@ func TestLoadThresholds(t *testing.T) {
 	if cfg.Thresholds.Semantic.Threshold != 0.8 {
 		t.Errorf("semantic threshold: expected 0.8, got %f", cfg.Thresholds.Semantic.Threshold)
 	}
+	if cfg.Thresholds.EvolveDimensionMinimum.Threshold != 0.6 {
+		t.Errorf("evolve_dimension_minimum threshold: expected 0.6, got %f", cfg.Thresholds.EvolveDimensionMinimum.Threshold)
+	}
+	if cfg.Thresholds.EvolveDimensionMinimum.Operator != ">=" {
+		t.Errorf("evolve_dimension_minimum operator: expected >=, got %s", cfg.Thresholds.EvolveDimensionMinimum.Operator)
+	}
 }
 
 func TestLoadAgentRegistry(t *testing.T) {
@@ -153,7 +159,8 @@ func TestRequiredAgentsWithRequiredSpawn(t *testing.T) {
 		"ambiguity": {"threshold": 0.2, "operator": "<="},
 		"convergence": {"threshold": 0.95, "operator": ">="},
 		"consensus": {"threshold": 0.66, "operator": ">="},
-		"semantic": {"threshold": 0.8, "operator": ">="}
+		"semantic": {"threshold": 0.8, "operator": ">="},
+		"evolve_dimension_minimum": {"threshold": 0.6, "operator": ">="}
 	}`)
 
 	// Test that required_spawn takes priority over source
@@ -197,7 +204,8 @@ func TestLoadMissingFiles(t *testing.T) {
 		"ambiguity": {"threshold": 0.2, "operator": "<="},
 		"convergence": {"threshold": 0.95, "operator": ">="},
 		"consensus": {"threshold": 0.66, "operator": ">="},
-		"semantic": {"threshold": 0.8, "operator": ">="}
+		"semantic": {"threshold": 0.8, "operator": ">="},
+		"evolve_dimension_minimum": {"threshold": 0.6, "operator": ">="}
 	}`)
 
 	cfg, err := Load(dir, t.TempDir())
@@ -222,7 +230,8 @@ func setupTestFiles(t *testing.T) string {
 		"ambiguity": {"threshold": 0.2, "operator": "<="},
 		"convergence": {"threshold": 0.95, "operator": ">="},
 		"consensus": {"threshold": 0.66, "operator": ">="},
-		"semantic": {"threshold": 0.8, "operator": ">="}
+		"semantic": {"threshold": 0.8, "operator": ">="},
+		"evolve_dimension_minimum": {"threshold": 0.6, "operator": ">="}
 	}`)
 
 	writeFile(t, filepath.Join(sharedDir, "agent-schema.json"), `{

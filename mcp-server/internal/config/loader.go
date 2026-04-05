@@ -13,10 +13,13 @@ type ThresholdRule struct {
 }
 
 type Thresholds struct {
-	Ambiguity   ThresholdRule `json:"ambiguity"`
-	Convergence ThresholdRule `json:"convergence"`
-	Consensus   ThresholdRule `json:"consensus"`
-	Semantic    ThresholdRule `json:"semantic"`
+	Ambiguity             ThresholdRule `json:"ambiguity"`
+	Convergence           ThresholdRule `json:"convergence"`
+	Consensus             ThresholdRule `json:"consensus"`
+	Semantic              ThresholdRule `json:"semantic"`
+	EvolveDimensionMinimum ThresholdRule `json:"evolve_dimension_minimum"`
+	// Note: "mechanical" gate uses string threshold ("PASS"/"FAIL"), not numeric.
+	// It is handled by hephaestus directly, not via olympus_gate_check.
 }
 
 type AgentConfig struct {

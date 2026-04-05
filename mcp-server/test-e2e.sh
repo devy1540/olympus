@@ -489,6 +489,21 @@ for l in sys.stdin:
 " 2>/dev/null)
 assert_eq "flow: log_collaboration" "true" "$(jq_field "$F109" "logged")"
 
+# Flow Step 5b: validate_plan
+F_VPLAN=$(printf '%s\n%s\n' "$INIT" '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_validate_plan","arguments":{"pipeline_id":"flow-001","skill":"oracle","phase":"execution","agent":"prometheus","estimated_calls":15}}}' | "$BIN" serve 2>/dev/null)
+F111=$(echo "$F_VPLAN" | python3 -c "
+import sys,json
+for l in sys.stdin:
+    try:
+        m=json.loads(l.strip())
+        if m.get('id')==1:
+            for x in m.get('result',{}).get('content',[]):
+                if x.get('type')=='text': print(x['text']); break
+            break
+    except: pass
+" 2>/dev/null)
+assert_contains "flow: validate_plan" "realistic" "$F111"
+
 # Flow Step 6: final status
 F_STATUS=$(printf '%s\n%s\n' "$INIT" '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"olympus_pipeline_status","arguments":{"pipeline_id":"flow-001"}}}' | "$BIN" serve 2>/dev/null)
 F110=$(echo "$F_STATUS" | python3 -c "

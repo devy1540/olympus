@@ -8,10 +8,11 @@ import (
 
 func testThresholds() config.Thresholds {
 	return config.Thresholds{
-		Ambiguity:   config.ThresholdRule{Threshold: 0.2, Operator: "<="},
-		Convergence: config.ThresholdRule{Threshold: 0.95, Operator: ">="},
-		Consensus:   config.ThresholdRule{Threshold: 0.66, Operator: ">="},
-		Semantic:    config.ThresholdRule{Threshold: 0.8, Operator: ">="},
+		Ambiguity:              config.ThresholdRule{Threshold: 0.2, Operator: "<="},
+		Convergence:            config.ThresholdRule{Threshold: 0.95, Operator: ">="},
+		Consensus:              config.ThresholdRule{Threshold: 0.66, Operator: ">="},
+		Semantic:               config.ThresholdRule{Threshold: 0.8, Operator: ">="},
+		EvolveDimensionMinimum: config.ThresholdRule{Threshold: 0.6, Operator: ">="},
 	}
 }
 
@@ -90,6 +91,30 @@ func TestSemanticGateFail(t *testing.T) {
 	r := calc.Check("semantic", 0.60)
 	if r.Passed {
 		t.Errorf("semantic 0.60 should fail (threshold >= 0.8)")
+	}
+}
+
+func TestEvolveDimensionMinimumGatePass(t *testing.T) {
+	calc := NewCalculator(testThresholds())
+	r := calc.Check("evolve_dimension_minimum", 0.75)
+	if !r.Passed {
+		t.Errorf("evolve_dimension_minimum 0.75 should pass (threshold >= 0.6)")
+	}
+}
+
+func TestEvolveDimensionMinimumGateFail(t *testing.T) {
+	calc := NewCalculator(testThresholds())
+	r := calc.Check("evolve_dimension_minimum", 0.45)
+	if r.Passed {
+		t.Errorf("evolve_dimension_minimum 0.45 should fail (threshold >= 0.6)")
+	}
+}
+
+func TestEvolveDimensionMinimumGateBoundary(t *testing.T) {
+	calc := NewCalculator(testThresholds())
+	r := calc.Check("evolve_dimension_minimum", 0.6)
+	if !r.Passed {
+		t.Errorf("evolve_dimension_minimum 0.6 should pass (threshold >= 0.6, boundary)")
 	}
 }
 
