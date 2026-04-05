@@ -110,6 +110,7 @@ olympus_register_agent_spawn(pipeline_id, "hermes")
 
 → Write codebase-context.md from hermes_result
 olympus_record_execution(pipeline_id, "oracle", "hermes", ...)
+olympus_log_collaboration(pipeline_id, "hermes", "apollo", "코드베이스 컨텍스트 인계: hermes→apollo")
 ```
 
 ---
@@ -245,6 +246,7 @@ ELSE:
   - olympus_gate_check: Step 5 ambiguity gate (MUST)
   - olympus_next_action: Step 5 gate failure recovery (SHOULD)
   - olympus_calculate_ambiguity: Step 5 ambiguity cross-reference (SHOULD)
+  - olympus_log_collaboration: after hermes→apollo context handoff (SHOULD)
   - olympus_record_execution: after each agent completes (SHOULD)
 
   Team Tools:
