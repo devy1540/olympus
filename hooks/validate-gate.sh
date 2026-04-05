@@ -206,7 +206,9 @@ case "$FILENAME" in
     fi
 
     FAILED_STAGES=$(echo "$CONTENT" | jq -r '
-      [.. | objects | select(.status != null and .status != "PASS" and .status != "SKIP") | .stage // .name // "unknown"]
+      [(.results // {}) | to_entries[]
+      | select(.value.status != null and .value.status != "PASS" and .value.status != "SKIP")
+      | .key]
       | if length > 0 then join(", ") else empty end
     ' 2>/dev/null || true)
 
