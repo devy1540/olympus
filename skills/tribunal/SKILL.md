@@ -151,7 +151,9 @@ WHEN triggered:
           Argue for APPROVE or REJECT from quality perspective.
           Include file:line evidence for every claim.
           Output your full position as your final response.")
+      olympus_register_agent_spawn(pipeline_id, "ares")
       olympus_log_collaboration(pipeline_id, "ares", "eris", "Tribunal debate: ares opening")
+      olympus_record_execution(pipeline_id, "tribunal", "ares", ...)
 
    b. Eris counter-argues — SEES ares's full argument (FOREGROUND):
       eris_counter = Agent(name: "eris", team_name: ${TEAM},
@@ -162,7 +164,9 @@ WHEN triggered:
           Use fallacy-catalog.md. Include file:line counter-evidence.
           IMPORTANT: Respond SPECIFICALLY to ares's points — do not make independent arguments.
           Output your full rebuttal as your final response.")
+      olympus_register_agent_spawn(pipeline_id, "eris")
       olympus_log_collaboration(pipeline_id, "eris", "ares", "Tribunal debate: eris rebuttal")
+      olympus_record_execution(pipeline_id, "tribunal", "eris", ...)
 
    c. OPTIONAL: Ares rebuttal (if eris raised substantive new points, FOREGROUND):
       ares_rebuttal = Agent(name: "ares", team_name: ${TEAM},
@@ -172,6 +176,8 @@ WHEN triggered:
           Respond ONLY to new points eris raised. Do not repeat your opening.
           Concede where eris is right. Defend where you have stronger evidence.
           Output your rebuttal as your final response.")
+      olympus_register_agent_spawn(pipeline_id, "ares")
+      olympus_record_execution(pipeline_id, "tribunal", "ares-rebuttal", ...)
 
    d. Hera synthesizes — SEES the full debate transcript (FOREGROUND):
       hera_verdict = Agent(name: "hera", team_name: ${TEAM},
@@ -184,6 +190,8 @@ WHEN triggered:
           Synthesize the debate. Where ares and eris disagree, determine who has stronger evidence.
           Produce final synthesized verdict: APPROVE or REJECT with reasoned synthesis.
           Output your verdict as your final response.")
+      olympus_register_agent_spawn(pipeline_id, "hera")
+      olympus_record_execution(pipeline_id, "tribunal", "hera", ...)
 
 3. Tally votes:
    Extract APPROVE/REJECT from each response.
