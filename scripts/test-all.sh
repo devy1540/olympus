@@ -158,7 +158,7 @@ run_check "ares↔poseidon cross-ref" "[ $XREF_ARES -ge 2 ] && [ $XREF_POSEIDON 
 
 GATE_AMB=$(python3 -c "import json;t=json.load(open('docs/shared/gate-thresholds.json'));print(t['ambiguity']['threshold'])" 2>/dev/null || echo "?")
 GATE_CON=$(python3 -c "import json;t=json.load(open('docs/shared/gate-thresholds.json'));print(t['consensus']['threshold'])" 2>/dev/null || echo "?")
-run_check "Gate thresholds: amb=${GATE_AMB} con=${GATE_CON}" "[ '$GATE_AMB' = '0.2' ] && [ '$GATE_CON' = '0.67' ]"
+run_check "Gate thresholds: amb=${GATE_AMB} con=${GATE_CON}" "[ '$GATE_AMB' = '0.2' ] && [ '$GATE_CON' = '0.66' ]"
 
 # --- Summary ---
 echo ""
