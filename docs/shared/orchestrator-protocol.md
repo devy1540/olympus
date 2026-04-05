@@ -344,7 +344,7 @@ Apollo: processes answers → next question or completion
 |:-------|:-------------|:-----------------------------|
 | Spawn prompt | "Wait for messages" | Concrete task + LEADER_NAME injection |
 | Result delivery | `SendMessage(to: "leader")` ❌ | `SendMessage(to: "team-lead")` ✅ |
-| Leader name | Hard-coded | Read from team config at runtime |
+| Leader name | Hard-coded wrong value ("leader") ❌ | Literal "team-lead" — no config read needed ✅ |
 | User interaction | Agent uses AskUserQuestion ❌ | Leader proxies AskUserQuestion ✅ |
 | Inter-agent | SendMessage(to: "{peer}") | Same ✅ |
 
