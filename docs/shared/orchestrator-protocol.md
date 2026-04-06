@@ -153,7 +153,7 @@ When external dependencies (MCP, web, etc.) fail:
 ```
 - MCP sources unavailable → skip Source Scope Mapping (soft dependency)
 - WebFetch fails → proceed with local sources only
-- Agent timeout → apply the timeout protocol from team-teardown.md
+- Agent timeout → apply the timeout protocol from docs/shared/team-teardown.md
 ```
 
 ---
