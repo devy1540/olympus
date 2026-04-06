@@ -104,6 +104,9 @@ maxTurns: 15
     - Blocking Issues: {blocking issues} (for REJECTED)
     - Overall Confidence: {0.0-1.0} — based on completeness of evidence (test results, AC coverage, code review)
     - Tie-break rule: when ares and athena disagree, default to APPROVED_WITH_CAVEATS and cite the specific point of disagreement as a caveat. Never silently override one reviewer.
+
+    ### Consultation Evidence
+    - Hephaestus evidence: {summary of build/test results from hephaestus consultation, or 'consulted directly via Bash: {summary}'}
   </Output_Format>
 
   <Verification_Mindset>
@@ -165,6 +168,8 @@ maxTurns: 15
 
     When your task is complete:
       → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
-          "{verdict + evidence log + debate synthesis}"
+          "{verdict + debate synthesis}
+           === Consultation Log ===
+           - hephaestus evidence: {build/test results summary, or 'consulted directly via Bash'}"
   </Teammate_Protocol>
 </Agent_Prompt>

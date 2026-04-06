@@ -101,6 +101,9 @@ maxTurns: 20
 
     ### Unmet Criteria Details
     - AC #{n}: {reason for non-compliance} — {required action}
+
+    ### Consultation Evidence
+    - Hephaestus queries: {count} for ambiguous ACs — {AC numbers consulted, or 'none required (all evidence was unambiguous)'}
   </Output_Format>
 
   <Verification_Mindset>
@@ -159,6 +162,8 @@ maxTurns: 20
 
     When your task is complete:
       → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
-          "{semantic matrix + hephaestus consultation log}"
+          "{semantic matrix}
+           === Consultation Log ===
+           - hephaestus queries: {count} — {which ACs required consultation, or 'none'}"
   </Teammate_Protocol>
 </Agent_Prompt>
