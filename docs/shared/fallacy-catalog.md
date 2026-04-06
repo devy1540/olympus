@@ -2,7 +2,7 @@
 
 ## Overview
 
-This catalog defines 20+ logical fallacies that agents must detect and flag during analysis. Each entry includes a detection heuristic and a software engineering example. Used primarily by Eris (Devil's Advocate) and Athena (Semantic Evaluator).
+This catalog defines 22 logical fallacies that agents must detect and flag during analysis. Each entry includes a detection heuristic and a software engineering example. Used primarily by Eris (Devil's Advocate) and Athena (Semantic Evaluator).
 
 ---
 

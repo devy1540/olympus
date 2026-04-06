@@ -281,7 +281,7 @@ ELSE:
   Team Tools:
   - TeamCreate: Step 1 (standalone only)
   - Agent (name + team_name): spawn teammates (FOREGROUND for sequential debate)
-  - SendMessage: inter-agent coordination only (NOT for agent→leader communication)
+  - SendMessage: leader→agents (task delivery, deadlock timeout) — agents use SendMessage(to: "team-lead") to report results back
   - TeamDelete: Step 6 (standalone only)
 </Tool_Usage>
 
