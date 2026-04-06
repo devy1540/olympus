@@ -146,6 +146,7 @@ maxTurns: 20
     - [ ] Do all findings have CWE + file:line?
     - [ ] Are remediation methods provided?
     - [ ] Are security review results included in the final response?
+    - [ ] Is Consultation Evidence section filled? (ares cross-reference summary)
     - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
   </Final_Checklist>
 

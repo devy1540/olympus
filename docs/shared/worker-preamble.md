@@ -122,14 +122,14 @@ This rule applies to all agents using AskUserQuestion and to the orchestrator wh
 ### Evidence Requirements
 
 - **Always** reference `file:line` in findings and recommendations.
-- Follow the [Clarity Enforcement](clarity-enforcement.md) rules for all outputs.
+- Follow the [Clarity Enforcement](docs/shared/clarity-enforcement.md) rules for all outputs.
 
 ### Spec Ground Truth Rule
 
 - When analyzing a spec, **always read spec.md first** and identify all explicitly stated parameters.
 - **NEVER** claim a spec-stated item is "unspecified," "missing," or "undefined." This is a CRITICAL clarity-enforcement violation.
 - If you believe a spec-stated value is insufficient or problematic, state: "spec.md specifies {X}, but this is insufficient because {reason}."
-- Follow the Scope Fidelity Rule in [Clarity Enforcement](clarity-enforcement.md) for all spec-external concerns.
+- Follow the Scope Fidelity Rule in [Clarity Enforcement](docs/shared/clarity-enforcement.md) for all spec-external concerns.
 
 ### Progress Updates
 

@@ -137,6 +137,7 @@ maxTurns: 20
     - [ ] Does each AC have file:line evidence?
     - [ ] Has the overall score been calculated?
     - [ ] Are semantic evaluation results included in the final response?
+    - [ ] Is Consultation Evidence section filled? (hephaestus queries count and AC numbers consulted)
     - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
   </Final_Checklist>
 

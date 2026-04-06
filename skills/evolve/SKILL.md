@@ -109,7 +109,7 @@ Save to ${ARTIFACT_DIR}/dogfood-result.md
 ```
 athena_result = Agent(name: "athena", team_name: ${TEAM},
       subagent_type: "olympus:athena",
-      prompt: "You are Athena, quality evaluator. Artifact directory: ${ARTIFACT_DIR}/
+      prompt: "You are Athena in team ${TEAM}, quality evaluator. Artifact directory: ${ARTIFACT_DIR}/
         LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/benchmark.md and dogfood-result.md.
@@ -136,7 +136,7 @@ Spawn metis + eris IN PARALLEL (BACKGROUND, with cross-consultation):
 Agent(name: "metis", team_name: ${TEAM},
       subagent_type: "olympus:metis",
       run_in_background: true,
-      prompt: "You are Metis, gap analyst. Artifact directory: ${ARTIFACT_DIR}/
+      prompt: "You are Metis in team ${TEAM}, gap analyst. Artifact directory: ${ARTIFACT_DIR}/
         LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/eval-matrix.md, dogfood-result.md, and agents/*.md.
@@ -153,7 +153,7 @@ olympus_register_agent_spawn(pipeline_id, "metis")
 Agent(name: "eris", team_name: ${TEAM},
       subagent_type: "olympus:eris",
       run_in_background: true,
-      prompt: "You are Eris, evaluation challenger. Artifact directory: ${ARTIFACT_DIR}/
+      prompt: "You are Eris in team ${TEAM}, evaluation challenger. Artifact directory: ${ARTIFACT_DIR}/
         LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/eval-matrix.md and dogfood-result.md.
@@ -190,7 +190,7 @@ Present diagnosis.md to user:
 IF user approves:
   prometheus_result = Agent(name: "prometheus", team_name: ${TEAM},
         subagent_type: "olympus:prometheus",
-        prompt: "You are Prometheus, prompt improver. Artifact directory: ${ARTIFACT_DIR}/
+        prompt: "You are Prometheus in team ${TEAM}, prompt improver. Artifact directory: ${ARTIFACT_DIR}/
           LEADER_NAME: team-lead
           IMMEDIATE TASK: Read ${ARTIFACT_DIR}/diagnosis.md — find all Improvement Proposals.
           Apply each proposal to the target files (agents/*.md and/or skills/*/SKILL.md as specified).

@@ -130,9 +130,10 @@ maxTurns: 20
   <Final_Checklist>
     - [ ] Have all changed files been reviewed?
     - [ ] Do all findings have file:line references?
-    - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
     - [ ] Is the severity classification appropriate?
     - [ ] Are code review results included in the final response?
+    - [ ] Is Consultation Evidence section filled? (poseidon cross-reference summary)
+    - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
   </Final_Checklist>
 
   <Teammate_Protocol>

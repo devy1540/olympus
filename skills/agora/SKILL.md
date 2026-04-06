@@ -177,7 +177,7 @@ FOR each round (max 3):
   olympus_record_execution(pipeline_id, "agora", "zeus-r{n}", ...)
   olympus_record_execution(pipeline_id, "agora", "ares-r{n}", ...)
 
-  4. Measure consensus (per consensus-levels.md):
+  4. Measure consensus (per docs/shared/consensus-levels.md):
      - Strong (3/3): unanimous → exit
      - Working (2/3): majority → record dissent, exit
      - Partial: next round needed

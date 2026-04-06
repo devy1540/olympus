@@ -123,7 +123,7 @@ Effect: downstream agents also read spec-context.md for strategic review.
 ```
 hermes_result = Agent(name: "hermes", team_name: ${TEAM},
       subagent_type: "olympus:hermes",
-      prompt: "You are Hermes. Artifact directory: ${ARTIFACT_DIR}/
+      prompt: "You are Hermes in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
         LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/pr-diff.patch and explore affected codebase areas.
@@ -144,7 +144,7 @@ olympus_record_execution(pipeline_id, "review-pr", "hermes", ...)
 ```
 helios_result = Agent(name: "helios", team_name: ${TEAM},
       subagent_type: "olympus:helios",
-      prompt: "You are Helios. Artifact directory: ${ARTIFACT_DIR}/
+      prompt: "You are Helios in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
         LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/pr-context.md and generate 3-5 review perspectives.
@@ -170,7 +170,7 @@ Spawn ares + poseidon IN PARALLEL (BACKGROUND, with cross-reference):
 Agent(name: "ares", team_name: ${TEAM},
       subagent_type: "olympus:ares",
       run_in_background: true,
-      prompt: "You are Ares, code quality reviewer. Artifact directory: ${ARTIFACT_DIR}/
+      prompt: "You are Ares in team ${TEAM}, code quality reviewer. Artifact directory: ${ARTIFACT_DIR}/
         LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/pr-context.md, review-perspectives.md.
@@ -186,7 +186,7 @@ olympus_register_agent_spawn(pipeline_id, "ares")
 Agent(name: "poseidon", team_name: ${TEAM},
       subagent_type: "olympus:poseidon",
       run_in_background: true,
-      prompt: "You are Poseidon, security reviewer. Artifact directory: ${ARTIFACT_DIR}/
+      prompt: "You are Poseidon in team ${TEAM}, security reviewer. Artifact directory: ${ARTIFACT_DIR}/
         LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/pr-context.md, review-perspectives.md.
@@ -205,6 +205,7 @@ olympus_log_collaboration(pipeline_id, "ares", "poseidon", "코드품질↔보�
 DEADLOCK FALLBACK: If 3 minutes elapse without both completing:
   → SendMessage(to: "ares", "Cross-reference timeout. Proceed without waiting for poseidon. Note 'poseidon consultation pending'.")
   → SendMessage(to: "poseidon", "Cross-reference timeout. Proceed without waiting for ares. Note 'ares consultation pending'.")
+  → Leader synthesizes findings from whichever responded; flags missing cross-reference in review-findings.md.
 
 WAIT for ALL completion notifications → leader aggregates into review-findings.md
 olympus_record_execution(pipeline_id, "review-pr", "ares", ...)
@@ -218,7 +219,7 @@ olympus_record_execution(pipeline_id, "review-pr", "poseidon", ...)
 ```
 eris_result = Agent(name: "eris", team_name: ${TEAM},
       subagent_type: "olympus:eris",
-      prompt: "You are Eris. Artifact directory: ${ARTIFACT_DIR}/
+      prompt: "You are Eris in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
         LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/review-findings.md.
@@ -250,7 +251,7 @@ BLOCKING_QUESTION resolution:
 ```
 nemesis_result = Agent(name: "nemesis", team_name: ${TEAM},
       subagent_type: "olympus:nemesis",
-      prompt: "You are Nemesis. Artifact directory: ${ARTIFACT_DIR}/
+      prompt: "You are Nemesis in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
         LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ALL agent results:

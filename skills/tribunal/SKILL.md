@@ -149,7 +149,7 @@ olympus_pipeline_status(pipeline_id)  # confirm stage 1+2 completed before enter
    a. Ares proposes (FOREGROUND):
       ares_position = Agent(name: "ares", team_name: ${TEAM},
         subagent_type: "olympus:ares",
-        prompt: "You are Ares. Artifact directory: ${ARTIFACT_DIR}/
+        prompt: "You are Ares in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
           LEADER_NAME: team-lead
           IMMEDIATE TASK: Read ${ARTIFACT_DIR}/semantic-matrix.md and explore relevant code.
           Argue for APPROVE or REJECT from quality perspective.
@@ -162,7 +162,8 @@ olympus_pipeline_status(pipeline_id)  # confirm stage 1+2 completed before enter
    b. Eris counter-argues — SEES ares's full argument (FOREGROUND):
       eris_counter = Agent(name: "eris", team_name: ${TEAM},
         subagent_type: "olympus:eris",
-        prompt: "LEADER_NAME: team-lead
+        prompt: "You are Eris in team ${TEAM}.
+          LEADER_NAME: team-lead
           IMMEDIATE TASK: Tribunal Stage 3 rebuttal — challenge Ares's argument with evidence.
           ARES ARGUES: {ares_position}.
           Your job: find logical fallacies, unsupported claims, overlooked evidence.
@@ -176,7 +177,8 @@ olympus_pipeline_status(pipeline_id)  # confirm stage 1+2 completed before enter
    c. OPTIONAL: Ares rebuttal (if eris raised substantive new points, FOREGROUND):
       ares_rebuttal = Agent(name: "ares", team_name: ${TEAM},
         subagent_type: "olympus:ares",
-        prompt: "LEADER_NAME: team-lead
+        prompt: "You are Ares in team ${TEAM}.
+          LEADER_NAME: team-lead
           IMMEDIATE TASK: Tribunal Stage 3 rebuttal — respond to Eris's specific counter-arguments.
           ERIS COUNTERS: {eris_counter}.
           Respond ONLY to new points eris raised. Do not repeat your opening.
@@ -188,9 +190,9 @@ olympus_pipeline_status(pipeline_id)  # confirm stage 1+2 completed before enter
    d. Hera synthesizes — SEES the full debate transcript (FOREGROUND):
       hera_verdict = Agent(name: "hera", team_name: ${TEAM},
         subagent_type: "olympus:hera",
-        prompt: "LEADER_NAME: team-lead
+        prompt: "You are Hera in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+          LEADER_NAME: team-lead
           IMMEDIATE TASK: Synthesize the Tribunal debate and render final APPROVE/REJECT verdict.
-          Artifact directory: ${ARTIFACT_DIR}/
           DEBATE TRANSCRIPT:
           === ARES OPENING === {ares_position}
           === ERIS REBUTTAL === {eris_counter}

@@ -94,7 +94,7 @@ The short UUID is generated via `uuidgen` and truncated to 8 characters.
 
 - **mechanical-result.json** -- Automated mechanical checks (linting, type checking, test results, coverage) produced by Hephaestus.
 - **semantic-matrix.md** -- Athena's semantic evaluation matrix assessing code quality across multiple dimensions.
-- **consensus-record.json** -- Structured record of the consensus process per [Consensus Levels](consensus-levels.md).
+- **consensus-record.json** -- Structured record of the consensus process per [Consensus Levels](docs/shared/consensus-levels.md).
 - **verdict.md** -- The final human-readable verdict combining mechanical and semantic evaluations.
 
 ---

@@ -119,6 +119,9 @@ maxTurns: 25
     Note: The orchestrator saves this JSON from your final output. The validate-gate.sh hook
     reads .goal, .constraints, .ac (or .acceptanceCriteria) for threshold enforcement.
 
+    ### Consultation Evidence
+    - Hermes queries: {count} — {topics queried, or 'none required (all codebase facts were available)'}
+
     NOTE: When referencing codebase findings from hermes, include file:line (e.g., "hermes confirmed at src/auth.ts:12 — uses passport.js").
   </Output_Format>
 
@@ -161,6 +164,7 @@ maxTurns: 25
     - [ ] Has the latest ambiguity score been delivered to the orchestrator?
     - [ ] Does ambiguity pass the gate? (Read gate-thresholds.json for threshold)
     - [ ] Were no questions asked about codebase-verifiable facts?
+    - [ ] Is Consultation Evidence section filled? (hermes queries count and topics)
     - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
   </Final_Checklist>
 

@@ -102,6 +102,10 @@ maxTurns: 20
 
     NOTE: Total items across all sections must not exceed 40. Deduplicate across sections — each gap should appear in exactly one section.
     NOTE: Include file:line references where gaps relate to existing codebase code (e.g., "src/auth.ts:42 — no token refresh logic").
+
+    ### Consultation Evidence
+    - Hermes queries: {count} — {assumptions verified, or 'none required'}
+    - Eris dialogue: {summary of challenges received/responded, or 'N/A: not in genesis context'}
   </Output_Format>
 
   <Verification_Mindset>
@@ -133,6 +137,7 @@ maxTurns: 20
     - [ ] Are there at least 3 edge cases?
     - [ ] Are assumptions explicitly tagged?
     - [ ] Have analysis results been delivered to the orchestrator via SendMessage?
+    - [ ] Is Consultation Evidence section filled? (hermes verification log + eris dialogue if in genesis context)
     - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
   </Final_Checklist>
 

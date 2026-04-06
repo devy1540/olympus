@@ -64,7 +64,7 @@ Call ToolSearch("+olympus pipeline") to load MCP tools.
 ```
 heph_result = Agent(name: "hephaestus", team_name: ${TEAM},
       subagent_type: "olympus:hephaestus",
-      prompt: "You are Hephaestus, mechanical validator. Artifact directory: ${ARTIFACT_DIR}/
+      prompt: "You are Hephaestus in team ${TEAM}, mechanical validator. Artifact directory: ${ARTIFACT_DIR}/
         LEADER_NAME: team-lead
         IMMEDIATE TASK: Validate Olympus plugin structural integrity:
         1-1. YAML Frontmatter: validate agents/*.md against agent-schema.json
@@ -92,7 +92,7 @@ Decision:
 ```
 athena_result = Agent(name: "athena", team_name: ${TEAM},
       subagent_type: "olympus:athena",
-      prompt: "You are Athena, semantic validator. Artifact directory: ${ARTIFACT_DIR}/
+      prompt: "You are Athena in team ${TEAM}, semantic validator. Artifact directory: ${ARTIFACT_DIR}/
         LEADER_NAME: team-lead
         DO NOT write files — you are read-only.
         IMMEDIATE TASK: Perform semantic validation of Olympus plugin.
@@ -102,7 +102,7 @@ athena_result = Agent(name: "athena", team_name: ${TEAM},
         2-1. Permission-Role Consistency: disallowedTools vs prompt content
         2-2. Artifact Contract Completeness: skill files vs contracts
         2-3. Gate Consistency: gate-thresholds.json vs SKILL.md values
-        2-4. Clarity Scan: banned phrases from clarity-enforcement.md
+        2-4. Clarity Scan: banned phrases from docs/shared/clarity-enforcement.md
         2-5. Delegation Pattern: Write/Edit disabled agents send results via SendMessage(to: "team-lead")
         2-6. Pipeline State Schema: state structures match pipeline-states.json
         2-7. LEADER_NAME Consistency: every agent spawn prompt in SKILL.md files contains

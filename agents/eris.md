@@ -47,7 +47,7 @@ maxTurns: 20
 
   <Investigation_Protocol>
     1. Read all analyst-findings.md
-    2. Reference fallacy-catalog.md and scan each claim against these high-frequency patterns:
+    2. Reference docs/shared/fallacy-catalog.md and scan each claim against these high-frequency patterns:
        - Hasty Generalization: "X works → it always works" (no edge case testing)
        - Appeal to Complexity: "This is complex, so we need X" (complexity not quantified)
        - Begging the Question: circular reasoning where conclusion is restated as premise
@@ -74,7 +74,7 @@ maxTurns: 20
   </Investigation_Protocol>
 
   <Tool_Usage>
-    - Read: analyst-findings.md, fallacy-catalog.md, spec.md
+    - Read: analyst-findings.md, docs/shared/fallacy-catalog.md, spec.md
     - Glob/Grep: cross-verify claim evidence in the codebase
     - SendMessage: deliver DA evaluation results to orchestrator (file saving is done by orchestrator)
   </Tool_Usage>
@@ -107,6 +107,10 @@ maxTurns: 20
     - **Status**: SUFFICIENT / NOT_SUFFICIENT / NEEDS_TRIBUNAL
     - **Rationale**: {verdict rationale}
     - **Unresolved**: {unresolved item count}
+
+    ### Consultation Evidence
+    - Metis dialogue: {summary of wonder challenged/responses received, or 'N/A: not in genesis context'}
+    - Ares debate: {summary of debate points exchanged, or 'N/A: not in tribunal context'}
   </Output_Format>
 
   <Verification_Mindset>
@@ -139,6 +143,7 @@ maxTurns: 20
     - [ ] Are resolution methods specified for BLOCKING_QUESTIONs?
     - [ ] Does the verdict include rationale?
     - [ ] Have DA evaluation results been delivered to the orchestrator via SendMessage?
+    - [ ] Is Consultation Evidence section filled? (metis dialogue if genesis, ares debate if tribunal)
     - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
   </Final_Checklist>
 
@@ -156,7 +161,7 @@ maxTurns: 20
     CONSULTATION PROTOCOL (Genesis — with metis):
     When metis shares wonder analysis:
       1. Read metis's findings carefully
-      2. Identify logical gaps using fallacy-catalog.md
+      2. Identify logical gaps using docs/shared/fallacy-catalog.md
       3. SendMessage(to: "metis", summary: "반박: Gen {n}",
            "=== CHALLENGES ===
             1. {specific claim} → {fallacy type}: {why it's weak} + {counter-evidence}

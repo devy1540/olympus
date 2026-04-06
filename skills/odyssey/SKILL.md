@@ -273,6 +273,8 @@ When enabled:
                 Read ${ARTIFACT_DIR}/gen-{n}/spec.md and ontology.json.
                 {If n > 1: Read gen-{n-1}/reflect.md for prior generation reflection context.}
                 Answer 4 questions: Essence, Root Cause, Preconditions, Hidden Assumptions.
+                SEQUENTIAL CONTEXT: Eris is spawned AFTER you complete — skip peer SendMessage to eris.
+                Deliver wonder directly to team-lead.
                 When done: SendMessage(to: 'team-lead', summary: 'metis wonder gen-{n} 완료', '{wonder analysis}')")
         olympus_register_agent_spawn(pipeline_id, "metis")
         olympus_record_execution(pipeline_id, "genesis", "metis", ...)
@@ -286,6 +288,8 @@ When enabled:
                 {If n > 1: Read gen-{n-1}/wonder.md to track question evolution across generations.}
                 === METIS WONDER ===
                 {metis_wonder}
+                SEQUENTIAL CONTEXT: Metis has already completed — do NOT SendMessage to metis expecting a reply.
+                Challenge the wonder above directly. Deliver reflection to team-lead.
                 When done: SendMessage(to: 'team-lead', summary: 'eris reflect gen-{n} 완료', '{challenges}')")
         olympus_register_agent_spawn(pipeline_id, "eris")
         olympus_record_execution(pipeline_id, "genesis", "eris", ...)
@@ -524,7 +528,8 @@ Implement the approved plan. **Teammate mode shines here — agents collaborate 
 3. Build verification (FOREGROUND):
    heph_result = Agent(name: "hephaestus", team_name: ${TEAM},
      subagent_type: "olympus:hephaestus",
-     prompt: "LEADER_NAME: team-lead
+     prompt: "You are Hephaestus in team ${TEAM}.
+       LEADER_NAME: team-lead
        IMMEDIATE TASK: Run full build, lint, test, and type-check.
        When done: SendMessage(to: 'team-lead', summary: 'hephaestus 빌드검증 완료', '{PASS/FAIL + details}')")
    olympus_register_agent_spawn(pipeline_id, "hephaestus")
@@ -537,7 +542,8 @@ Implement the approved plan. **Teammate mode shines here — agents collaborate 
 
      debug_result = Agent(name: "prometheus", team_name: ${TEAM},
        subagent_type: "olympus:prometheus",
-       prompt: "LEADER_NAME: team-lead
+       prompt: "You are Prometheus in team ${TEAM}.
+         LEADER_NAME: team-lead
          IMMEDIATE TASK: Fix build/test failures reported by hephaestus.
          Build/test failed: {hephaestus SendMessage summary}.
          Fix the failures. You CAN write files directly.
@@ -572,7 +578,8 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
 3. Stage 1 — Hephaestus mechanical verification (FOREGROUND):
    mech_result = Agent(name: "hephaestus", team_name: ${TEAM},
      subagent_type: "olympus:hephaestus",
-     prompt: "LEADER_NAME: team-lead
+     prompt: "You are Hephaestus in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+       LEADER_NAME: team-lead
        IMMEDIATE TASK: Run build, lint, test, type-check.
        Write results to ${ARTIFACT_DIR}/mechanical-result.json directly (you have Write access).
        When done: SendMessage(to: 'team-lead', summary: 'hephaestus 검증 완료', '{PASS/FAIL summary}')")
@@ -586,8 +593,8 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
 4. Stage 2 — Athena semantic evaluation (FOREGROUND):
    athena_result = Agent(name: "athena", team_name: ${TEAM},
      subagent_type: "olympus:athena",
-     prompt: "LEADER_NAME: team-lead
-       You are Athena. Artifact directory: ${ARTIFACT_DIR}/
+     prompt: "You are Athena in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+       LEADER_NAME: team-lead
        IMMEDIATE TASK: Evaluate AC compliance.
        Read ${ARTIFACT_DIR}/spec.md and mechanical-result.json.
        Evaluate each AC with file:line evidence.
@@ -606,7 +613,8 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
    a. Ares opens (FOREGROUND):
       ares_position = Agent(name: "ares", team_name: ${TEAM},
         subagent_type: "olympus:ares",
-        prompt: "LEADER_NAME: team-lead
+        prompt: "You are Ares in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+         LEADER_NAME: team-lead
          IMMEDIATE TASK: Tribunal Stage 3 opening — argue APPROVE or REJECT from quality perspective.
          Read ${ARTIFACT_DIR}/semantic-matrix.md. Argue for APPROVE or REJECT from quality perspective.
          Include file:line evidence for every claim.
@@ -618,7 +626,8 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
    b. Eris challenges — SEES ares's full argument (FOREGROUND):
       eris_counter = Agent(name: "eris", team_name: ${TEAM},
         subagent_type: "olympus:eris",
-        prompt: "LEADER_NAME: team-lead
+        prompt: "You are Eris in team ${TEAM}.
+         LEADER_NAME: team-lead
          IMMEDIATE TASK: Tribunal Stage 3 rebuttal — challenge Ares's argument with evidence.
          ARES ARGUES: {ares_position}.
          Your job: find logical fallacies, unsupported claims, overlooked evidence.
@@ -632,7 +641,8 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
    c. OPTIONAL: Ares rebuttal (if eris raised substantive new points, FOREGROUND):
       ares_rebuttal = Agent(name: "ares", team_name: ${TEAM},
         subagent_type: "olympus:ares",
-        prompt: "LEADER_NAME: team-lead
+        prompt: "You are Ares in team ${TEAM}.
+         LEADER_NAME: team-lead
          IMMEDIATE TASK: Tribunal Stage 3 rebuttal — respond specifically to Eris's counter-arguments.
          ERIS COUNTERS: {eris_counter}.
          Respond ONLY to new points eris raised. Do not repeat your opening.
@@ -644,9 +654,9 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
    d. Hera synthesizes — SEES the full debate transcript (FOREGROUND):
       hera_verdict = Agent(name: "hera", team_name: ${TEAM},
         subagent_type: "olympus:hera",
-        prompt: "LEADER_NAME: team-lead
+        prompt: "You are Hera in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
+         LEADER_NAME: team-lead
          IMMEDIATE TASK: Synthesize the Tribunal debate and render final APPROVE/REJECT verdict.
-         Artifact directory: ${ARTIFACT_DIR}/
          DEBATE TRANSCRIPT:
          === ARES OPENING === {ares_position}
          === ERIS REBUTTAL === {eris_counter}
@@ -752,9 +762,9 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
 </Gate_Thresholds>
 
 <Protocol_References>
-  - orchestrator-protocol.md — §0 mandatory spawn rule, §6 full teammate mode
-  - pipeline-states.json — state machine schema
-  - gate-thresholds.json — gate values
-  - context-management.md — compaction per phase transition
-  - agent-context.md — worker isolation rules
+  - docs/shared/orchestrator-protocol.md — §0 mandatory spawn rule, §6 full teammate mode
+  - docs/shared/pipeline-states.json — state machine schema
+  - docs/shared/gate-thresholds.json — gate values
+  - docs/shared/context-management.md — compaction per phase transition
+  - docs/shared/agent-context.md — worker isolation rules
 </Protocol_References>

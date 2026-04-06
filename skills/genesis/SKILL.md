@@ -89,7 +89,7 @@ FOR each generation n:
   b. Wonder (Metis — FOREGROUND):
      metis_wonder = Agent(name: "metis", team_name: ${TEAM},
        subagent_type: "olympus:metis",
-       prompt: "You are Metis. Artifact directory: ${ARTIFACT_DIR}/
+       prompt: "You are Metis in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
         LEADER_NAME: team-lead
         IMMEDIATE TASK: Wonder analysis for generation {n} — answer the 4 fundamental questions.
         Generation {n}. DO NOT write files — you are read-only.
@@ -100,6 +100,8 @@ FOR each generation n:
           2. Root Cause: Are we addressing root causes or symptoms?
           3. Preconditions: What must be true for this to work?
           4. Hidden Assumptions: What unvalidated assumptions exist?
+        SEQUENTIAL CONTEXT: Eris is spawned AFTER you complete — skip peer SendMessage to eris.
+        Your wonder analysis is handed to Eris via wonder.md. Deliver directly to team-lead.
         When done: SendMessage(to: 'team-lead', summary: 'metis wonder gen-{n} 완료', '{wonder analysis}')")
      olympus_register_agent_spawn(pipeline_id, "metis")
      → Write gen-{n}/wonder.md from metis SendMessage
@@ -110,15 +112,17 @@ FOR each generation n:
 
      eris_reflect = Agent(name: "eris", team_name: ${TEAM},
        subagent_type: "olympus:eris",
-       prompt: "You are Eris. Artifact directory: ${ARTIFACT_DIR}/
+       prompt: "You are Eris in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
         LEADER_NAME: team-lead
         IMMEDIATE TASK: Reflect on Metis's wonder analysis for generation {n} — challenge weak points.
         Generation {n}. DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/gen-{n}/wonder.md (metis's analysis).
-        Compare gen-{n-1}/ontology.json vs gen-{n}/ontology.json.
-        {If n > 1: 'Previous wonder: Read gen-{n-1}/wonder.md to track question evolution.'}
+        {If n > 1: 'Compare gen-{n-1}/ontology.json vs gen-{n}/ontology.json to identify mutations. Read gen-{n-1}/wonder.md to track question evolution.'}
+        {If n == 1: 'First generation — no previous ontology to compare. Focus on challenging the initial wonder analysis.'}
         Read docs/shared/fallacy-catalog.md. Validate logical soundness per the 22 fallacy patterns.
         Challenge weak points in metis's wonder analysis.
+        SEQUENTIAL CONTEXT: Metis has already completed — do NOT SendMessage to metis expecting a reply.
+        Challenge wonder.md directly. Deliver reflection to team-lead.
         When done: SendMessage(to: 'team-lead', summary: 'eris reflect gen-{n} 완료', '{reflect results}')")
      olympus_register_agent_spawn(pipeline_id, "eris")
      → Write gen-{n}/reflect.md from eris SendMessage

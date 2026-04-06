@@ -33,8 +33,8 @@ bash hooks/validate-agents.sh    # 에이전트 정의 스키마 검증
 bash hooks/validate-gate.sh      # 게이트 임계값 검증
 bash hooks/validate-state.sh     # 상태 전이 검증
 bash hooks/verify-artifacts.sh   # 아티팩트 계약 검증
-bash hooks/test-hooks.sh         # 훅 단위 테스트 (42건)
-bash hooks/test-integration.sh   # 파이프라인 통합 테스트 (51건: 9개 파이프라인)
+bash hooks/test-hooks.sh         # 훅 단위 테스트 (102건)
+bash hooks/test-integration.sh   # 파이프라인 통합 테스트 (97건: 9개 파이프라인)
 cd mcp-server && go test ./...   # MCP 서버 Go 테스트 (config, gate, store, history)
 bash scripts/verify-all.sh       # 전체 검증 원커맨드 (위 3개 + 에이전트 일관성)
 
@@ -61,7 +61,7 @@ Oracle → Genesis → Pantheon → Plan → Execute → Tribunal
 ### 에이전트 권한 모델
 
 - **Write/Edit 금지 (10)**: Hermes, Apollo, Metis, Ares, Poseidon, Athena, Themis, Eris, Helios, Nemesis — 최종 텍스트 출력으로 결과 반환, 오케스트레이터가 Agent tool 반환값에서 캡처하여 파일 기록. Hermes·Poseidon은 Bash 허용 (디렉토리 탐색·보안 스캔 목적)
-- **Write, Edit 금지 (1)**: Hera (테스트 실행·품질 판정, Edit 불가)
+- **Edit 금지, Write 허용 (1)**: Hera (테스트 실행·품질 판정, Write 가능, Edit 불가)
 - **Full (4)**: Zeus (계획), Prometheus (구현), Artemis (디버깅), Hephaestus (빌드/테스트 실행)
 
 위임 패턴 (`Read-only → SendMessage → Orchestrator → Write`)은 보안 경계. `hooks/enforce-permissions.sh`가 강제.

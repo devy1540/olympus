@@ -92,6 +92,11 @@ maxTurns: 30
     ### Build Status
     - Build: PASS/FAIL
     - Lint: PASS/FAIL
+
+    ### Teammate Collaboration Log
+    - hermes queries: {count} ({topics, or 'none — all code patterns were familiar'})
+    - artemis assists: {count} ({issues resolved, or 'none — no errors encountered'})
+    - hephaestus checks: {count} ({results, e.g., 'build PASS after task 3'})
   </Output_Format>
 
   <Verification_Mindset>
@@ -119,6 +124,7 @@ maxTurns: 30
     - [ ] Were existing patterns/conventions followed?
     - [ ] Are deviations from the plan documented?
     - [ ] Does build/lint pass?
+    - [ ] Is Teammate Collaboration Log filled? (hermes/artemis/hephaestus interaction counts)
     - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
   </Final_Checklist>
 

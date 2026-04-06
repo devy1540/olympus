@@ -232,7 +232,7 @@ olympus_record_execution(pipeline_id, "pantheon", "eris", ...)
 ## Step 7: Consensus & Synthesis
 
 ```
-Apply consensus-levels.md criteria:
+Apply docs/shared/consensus-levels.md criteria:
   olympus_gate_check(pipeline_id, "consensus", consensus_percentage)
 
 IF consensus >= threshold (Normal: 66%, Hell: unanimous):

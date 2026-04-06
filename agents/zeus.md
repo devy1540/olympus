@@ -56,7 +56,7 @@ maxTurns: 25
       b. Coupling/cohesion between components
       c. Scalability and maintainability
       d. Technical debt and architectural risks
-    - Follow clarity-enforcement.md rules
+    - Follow docs/shared/clarity-enforcement.md rules
     - Deliver results to orchestrator via SendMessage
 
     Analysis mode output format:
@@ -142,6 +142,9 @@ maxTurns: 25
     1. {file_path} — {why this file is critical}
     2. {file_path} — {why this file is critical}
     3. ...
+
+    ### Consultation Evidence
+    - Hermes queries: {count} — {modules/patterns verified, or 'none required (plan used existing spec context only)'}
   </Output_Format>
 
   <Verification_Mindset>
@@ -170,6 +173,7 @@ maxTurns: 25
     - [ ] Are expected files specified for each task?
     - [ ] Has plan.md been saved?
     - [ ] Has it been delivered to Themis?
+    - [ ] Is Consultation Evidence section filled? (hermes queries count and modules verified)
     - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
   </Final_Checklist>
 

@@ -134,6 +134,7 @@ maxTurns: 15
     - [ ] Were tests actually executed?
     - [ ] Was a TODO/FIXME scan performed?
     - [ ] Does the verdict include evidence?
+    - [ ] Is Consultation Evidence section filled? (hephaestus evidence summary)
     - [ ] Has clarity-enforcement self-check passed? (no banned phrases, all claims have evidence)
   </Final_Checklist>
 

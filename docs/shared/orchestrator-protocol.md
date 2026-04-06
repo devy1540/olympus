@@ -212,10 +212,12 @@ genesis → pantheon
 pantheon → planning
 planning → execution
 execution → tribunal
-tribunal → completed | execution (retry)
+tribunal → completed | execution (REJECTED_IMPLEMENTATION retry)
+         | oracle (REJECTED_SPEC — requirement defect, rewind)
+         | pantheon (REJECTED_ARCHITECTURE — structural issue, rewind)
 ```
 
-Reverse transitions (e.g., Tribunal → Oracle) are not handled by modifying the phase in `state.json` directly. Instead, they are processed by re-executing the target skill (e.g., re-run `/olympus:oracle` → creates a new artifact directory).
+Reverse transitions (e.g., Tribunal → Oracle, Tribunal → Pantheon) are not handled by modifying the phase in `state.json` directly. Instead, they are processed by re-executing the target skill (e.g., re-run `/olympus:oracle` → creates a new artifact directory). The `returnToPhase` field in the transition object signals which phase to rewind to.
 
 ### 5.3 Checkpoint & Recovery
 
