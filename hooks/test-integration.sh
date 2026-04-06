@@ -194,6 +194,20 @@ RESULT=$(run_hook "$SCRIPT_DIR/compact-context.sh" \
   "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"pantheon"}')
 check_result "Odyssey: oracle→pantheon triggers compaction" "$RESULT" "allow"
 
+# Compaction trigger: tribunal→oracle rewind
+echo "  [odyssey] tribunal→oracle rewind compaction trigger"
+echo '{"phase":"tribunal"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.001b.json"
+RESULT=$(run_hook "$SCRIPT_DIR/compact-context.sh" \
+  "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"oracle"}')
+check_result "Odyssey: tribunal→oracle rewind triggers compaction" "$RESULT" "allow"
+
+# Compaction trigger: tribunal→pantheon rewind
+echo "  [odyssey] tribunal→pantheon rewind compaction trigger"
+RESULT=$(run_hook "$SCRIPT_DIR/compact-context.sh" \
+  "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"pantheon"}')
+check_result "Odyssey: tribunal→pantheon rewind triggers compaction" "$RESULT" "allow"
+rm -f "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.001b.json"
+
 # Invalid transition: oracle → execution (skipping phases)
 echo '{"phase":"oracle"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.002.json"
 echo "  [odyssey] oracle → execution (INVALID skip)"
