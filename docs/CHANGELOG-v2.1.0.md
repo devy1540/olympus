@@ -1,0 +1,209 @@
+# Olympus v2.1.0
+
+Released: 2026-04-06
+
+## Changes
+
+- fix: Release workflow에도 테스트 전 Go 빌드 추가 — spawn-gate 바이너리 의존 해결
+- 버그 수정: Pantheon source-scope 아티팩트 optional 마킹 + validate-gate CONTENT 재할당 제거
+- fix: CI Validate job에 Go 빌드 추가 — spawn-gate 테스트 바이너리 의존 해결
+- chore: ralph-loop 상태 파일 제거 + test-e2e.sh 테스트 메시지 명확화
+- test: verify-artifacts.sh odyssey-state.json 회귀 테스트 추가
+- fix: verify-artifacts.sh의 PARENT_DIR 미정의 변수 오류 수정
+- fix: validator.go의 절대 실행 불가 avgCalls 체크 제거
+- docs: context-management.md에 tribunal 리와인드 컴팩션 포인트 추가
+- test: compact-context.sh genesis→pantheon, tribunal 리와인드 단위 테스트 추가
+- test: compact-context.sh tribunal 리와인드 전환 컴팩션 테스트 추가
+- compact-context.sh: tribunal 리와인드 전환 컴팩션 지침 추가
+- hermes.md: Investigation_Protocol step 5 파일 쓰기 오해 소지 수정
+- apollo.md: Investigation_Protocol 모호성 용어 → 명확성 용어로 통일
+- apollo.md: 모호성 점수 규칙 수정 — 명확성 척도로 변경
+- enforce-spawn-gate.sh: {n} 와일드카드 패턴 처리 버그 수정
+- CLAUDE.md: test-hooks.sh 테스트 수 102건→103건 업데이트
+- 훅 개선: review-pr optional artifact 처리 및 verdict.md 게이트 수정
+- 문서 링크 경로 전체화: artifact-contracts.md + orchestrator-protocol.md
+- 하네스 일관성 개선: 문서 경로 전체화 + 에이전트 체크리스트 보강
+- odyssey oracle 단계: apollo 인터뷰 DEADLOCK FALLBACK 추가
+- metis/eris: DIALOGUE PROTOCOL → CONSULTATION PROTOCOL 용어 통일
+- athena/hera Output_Format: Consultation Evidence 섹션 추가
+- REJECTED_ARCHITECTURE 리와인드: planning→pantheon 수정 + 테스트 추가
+- odyssey genesis 페이즈: 이전 세대 컨텍스트 참조 추가
+- artifact-contracts.json: evolve refinement-log.md에 required_spawn: prometheus 추가
+- odyssey 실행 단계: prometheus 팀메이트 협업 프롬프트 명시
+- 에이전트 협업 증거 강화: ares/poseidon Output_Format에 Consultation Evidence 섹션 추가
+- 하네스 일관성 강화: MANDATORY CONSULTATION 통일 + RESPONSE RULE 상세화 + isReadOnly 검증
+- 스폰 게이트 통합 테스트 확장(72→83) + olympus_register 커버리지 검사 추가
+- fallacy-catalog 카탈로그 수 정확화(20+→22) + tribunal SendMessage 코멘트 명확화
+- 에이전트 gate-thresholds.json 단일진실원천 노트 전체 추가 + 테스트 273/273
+- orchestrator-protocol.md: FOREGROUND 스폰 결과 전달 패턴 수정
+- SKILL.md 전체 스폰 프롬프트 품질 강화 + 테스트 271/271
+- Evolve I97-I100: MCP 동적 에이전트명 검증 + agora 비올림푸스 에이전트 수정 + 266/266 테스트
+- iter 96: hook-responses.json decisionReason.type에 calibration/spawn/da-required/consensus-required 추가
+- iter 95: compact-context.sh 페이즈 전환 테스트 3건 추가 (80건) - pantheon→planning, planning→execution, tribunal→execution retry
+- iter 94: enforce-permissions 미등록 파일 allow 테스트 추가 (77건)
+- iter 93: consensus-levels.md 필드명 변형 명세 추가 (percentage/consensus_pct/consensusPercentage)
+- iter 92: agora decision.md DA mandatory 체크 추가 + integration test 2건 (69건)
+- iter 91: ambiguity-scoring.md JSON 필드명 명세 추가 (ac vs acceptanceCriteria 호환성 문서화)
+- iter 90: pipeline-states.json evaluationPass 경계값 설명 추가 (> strict, = boundary allow)
+- iter 89: poseidon+zeus Final_Checklist에 clarity-enforcement self-check 추가
+- iter 88: completed 페이즈 mechanicalPass=null 엣지케이스 integration test 추가 (67건)
+- iter 87: validate-agents.sh maxTurns 범위 검증 추가 + 테스트 2건 (76건)
+- iter 86: ambiguity round-count 불일치 + verdict.md spec 존재 테스트 추가 (74건)
+- iter 85: semantic-matrix.md validate-gate 테스트 4건 추가 (precondition + file:line)
+- iter 84: mechanical-result.json SKIP 스테이지 테스트 추가
+- iter 83: apollo.md ambiguity-scores.json 형식 명세 추가
+- iter 82: evolve/genesis SKILL.md 아티팩트 형식 명세 보완
+- iter 81: consensus_pct 필드 버그 수정 + 테스트 추가
+- iter 80: pipeline-states.json 회로차단기 설명 수정 + agora ux-critic 등록 정리
+- iter 79: evolve-state.json 게이트 통합 테스트 추가 (3개 케이스)
+- iter 78: agora SKILL.md Step 5 개선 — eris 프롬프트 + log_collaboration 추가
+- iter 77: audit SKILL.md — olympus_log_collaboration + DEADLOCK FALLBACK 추가
+- iter 76: audit 스킬 통합 테스트 추가 (아티팩트 체인 + 스폰 게이트)
+- iter 75: enforce-permissions 미검증 경로 테스트 추가 (gen-{n}/, full-perm, read-only deny)
+- iter 73: 에이전트 파일 품질 개선 (read-only constraint, 출력 형식 개선) + MCP spawns test 추가
+- iter 72: odyssey ares+poseidon background prompts에 SendMessage(to: team-lead) 추가
+- iter 71: background 에이전트 prompts에 SendMessage(to: team-lead) 지시 추가 (review-pr, pantheon, evolve)
+- iter 70: agora 배경 토론 에이전트에 SendMessage(to: team-lead) 지시 추가
+- iter 69: validate-state.sh error message에 rewind 전이 정보 추가
+- iter 68: setup SKILL.md 훅 카운트 수정 (7→8개)
+- iter 67: tribunal Stage3 미실행 경고 integration test 추가 (58케이스)
+- iter 66: completed→oracle terminal deny + same-phase allow 경계값 테스트 추가 (61/57)
+- iter 65: debug cycle circuit breaker 경계값 테스트 추가 (59/57 pass)
+- iter 64: integration test - evaluationPass 한계 초과 경계값 테스트 추가 (57→57케이스)
+- MCP 서버: evolve_dimension_minimum 게이트 지원 + validate_plan E2E 테스트 + mechanical 게이트 문서화
+- iter 62: evolve Step 5 olympus_pipeline_status 추가 (metis+eris parallel 확인)
+- iter 61: agora Step 4 olympus_pipeline_status 추가 (병렬 토론자 등록 검증)
+- iter 60: odyssey Step 4 olympus_pipeline_status 추가 (ares+poseidon parallel 확인)
+- iter 59: pantheon/tribunal/review-pr Steps에 olympus_pipeline_status 실제 호출 추가
+- iter 58: oracle Step 4 apollo deadlock fallback 추가
+- review-pr Artifact_Contracts에 review-pr-state.json 추가
+- Odyssey 일관성 수정: apollo-retry LEADER_NAME + olympus_log_collaboration 선언 + ontology.json 계약 추가
+- iter 57: evolve Step 5 olympus_log_collaboration 추가 (metis↔eris 크로스 검증)
+- iter 56: oracle SKILL.md olympus_log_collaboration 추가 (hermes→apollo 컨텍스트 인계)
+- iter 55: genesis SKILL.md olympus_log_collaboration 추가 (metis↔eris Wonder/Reflect 교환 추적)
+- 프로토콜 §6.4 통신경로 보완: zeus→hermes + hephaestus 서비스응답 경로 + athena↔hephaestus 방향성 명확화
+- iter 54: agora SKILL.md olympus_log_collaboration 추가 (교차 반박 교환 추적)
+- 에이전트 프롬프트 구체화: Hera TODO분류기준 + Nemesis 블라인드스팟 위험도 정량화
+- 에이전트 Investigation_Protocol 구체화: Ares 패턴탐지 + Poseidon OWASP 우선순위 + Zeus 태스크사이징 + Metis 에지케이스 적용기준
+- iter 53: planning phase consensus gate 통합 테스트 추가 (0.5 → deny, 0.6667 → allow) + 체크포인트 번호 순서 수정
+- iter 52: review-pr/tribunal SKILL.md olympus_next_action 실제 Step에 추가 (gate 실패 복구)
+- 문서 수정: 15번째 에이전트 Nemesis 누락 보완 + review-pr 스킬 CLAUDE.md 추가
+- iter 51: evolve/oracle SKILL.md olympus_next_action 누락 수정 (gate 실패 복구 경로)
+- iter 50: ambiguity-scoring.md 예시 보강 (경계값 0.2 및 실패 케이스 추가)
+- iter 48: write-level agent (hera) permission 검증 테스트 추가
+- SKILL 일관성 강화: SEQUENTIAL SPAWN 9/9 + Agora 아티팩트/record + Pantheon/ReviewPR log_collaboration + Audit ENV_UNAVAILABLE
+- iter 47: compact-context 페이즈 전환 테스트 추가 (execution→tribunal, tribunal→completed)
+- iter 46: genesis convergence FAIL 통합 테스트 추가 (0.8 < 0.95 → deny)
+- iter 45: verify-artifacts 포맷 수정 + DA mandatory 통합 테스트 추가 (analysis.md without da-evaluation.md)
+- iter 44: evolve-state.json 게이트 테스트 추가 (overall, dim-min 경계값)
+- iter 43: ambiguity 경계값 테스트 추가 (0.2 at boundary → allow, 0.21 → deny)
+- iter 42: consensus 경계값 테스트 추가 (0.66 at boundary → allow, 0.659 → deny)
+- iter 41: 모든 파일에서 consensus 67% → 66% 수정 (orchestrator-protocol, README, SKILL.md, docs)
+- verify-all.sh — agent schema 배치 검증 수정 (/dev/null → 실제 에이전트 파일 검증)
+- I24: Tribunal/Evolve gate_check 누락 + agent-context Proactive Spawn Rule
+- test-hooks.sh — convergence.json 게이트 테스트 추가 (통과/차단 케이스)
+- validate-agents.sh — write 권한 레벨 검사 추가 (Edit 금지 필수, Write는 허용)
+- CLAUDE.md 테스트 수 업데이트 (42+51건)
+- test-hooks.sh — consensus-record.json 게이트 테스트 추가 (2/3=0.6667 통과, 0.5 차단)
+- I23: 합의 게이트 threshold 버그 수정 (0.67→0.66)
+- scripts/test-all.sh — consensus 게이트 임계값 검사 0.67→0.66 수정
+- consensus 임계값 0.67→0.66 일관성 수정 — 2/3=0.6667 정확히 통과하도록 hardcoded fallback 및 문서 통일
+- validate-state.sh — mechanicalPass=false JQ boolean 버그 수정 + gate-thresholds.json consensus 0.67→0.66 수정 (2/3=0.6667 정확히 통과)
+- ambiguity-scoring.md — 명확도 점수(1=명확) 기반 루브릭으로 수정, validate-gate.sh 공식과 일치
+- test-hooks.sh — mechanical-result stage명 정확성 검증 테스트 추가
+- validate-gate.sh — mechanical-result 실패 stage명 JQ 쿼리 버그 수정 (unknown→실제 stage명)
+- I22: apollo/metis Output_Format에 file:line 증거 가이드 추가
+- test-integration.sh — execution/rewind/mechanicalPass 통합 테스트 케이스 추가
+- test-hooks.sh — validate-state themisVerdict 게이트 테스트 케이스 추가
+- CLAUDE.md: Verification_Mindset 패턴 설명 추가
+- I21: Agora SKILL에 병렬 토론 DEADLOCK FALLBACK 추가
+- validate-state.sh — execution 단계 themisVerdict 게이트 프리컨디션 검증 추가
+- orchestrator-protocol.md — Leader name 행 오해 표현 명확화
+- artifact-contracts.md — read-only 에이전트 Writer 표기를 Orchestrator(from agent)로 수정
+- I20: Odyssey apollo-retry에 record_execution 추가
+- Odyssey SKILL.md — Pantheon/Planning/Tribunal 단계 record_execution 누락 10개 수정
+- I19: LEADER_NAME 누락 수정 + record_execution 일관성 개선
+- Pantheon/Review-PR SKILL.md — record_execution 'for each' 구문 명시적 호출로 교체
+- Tribunal SKILL.md — Stage 3 debate 에이전트 register_agent_spawn + record_execution 누락 수정
+- CLAUDE.md 테스트 수 업데이트 (39+47건)
+- I18: 나머지 10개 에이전트에 Verification_Mindset 섹션 추가 (15/15 완료)
+- 이터레이션 22: Odyssey SKILL.md — 실행/Tribunal 스테이지 record_execution 누락 수정
+- 이터레이션 21: agora SKILL.md — 크로스 질문 + 위원회 응답에 record_execution 추가
+- 이터레이션 20: test-integration.sh — review-pr 파이프라인 시나리오 추가
+- I17: 4개 핵심 에이전트에 Verification_Mindset 섹션 추가
+- 이터레이션 19: test-hooks.sh — ENV_UNAVAILABLE + review-pr DA 체크 테스트 추가
+- 이터레이션 18: eris/athena — BLOCKING_QUESTION 리더 프록시 + ENV_UNAVAILABLE 처리
+- I15-I16: orchestrator-protocol MCP 문서 완비 + Odyssey 인라인 next_action
+- 이터레이션 16: poseidon.md — Output_Format에 confidence 필드 추가
+- 이터레이션 15: Odyssey SKILL.md — zeus/themis 재스폰 시 LEADER_NAME + register_agent_spawn 추가
+- I13-I14: 미활용 MCP 도구 (next_action, pipeline_status) 7개 SKILL 통합
+- 이터레이션 14: verify-artifacts.sh — review-pr verdict.md DA 필수 체크 추가
+- I12: Oracle SKILL에 olympus_calculate_ambiguity MCP 도구 통합
+- 이터레이션 13: validate-gate.sh 버그 수정 + odyssey 기록 개선
+- 이터레이션 12: confidence 일관성 + LEADER_NAME 감사 + 실행 기록
+- 이터레이션 11: agora/SKILL.md 누락 수정 + context-management 개선
+- 이터레이션 10: orchestrator-protocol.md 일관성 수정
+- CLAUDE.md: 훅 테스트 수 36→37 업데이트
+- I10: worker-preamble.md를 proactive spawn 패턴으로 업데이트
+- 이터레이션 9: odyssey/SKILL.md 누락 MCP 등록 + 데드락 + ENV 처리
+- 이터레이션 8: 오케스트레이터 루프·데드락·ENV_UNAVAILABLE 개선
+- I9: agent-schema.json에 isReadOnly/isConcurrencySafe/maxTurns 추가
+- I8: tribunal 되감기 전이 테스트 추가 (37/37)
+- CLAUDE.md: verify-all.sh + 테스트 수 업데이트 (42건 통합, 4 Go pkg)
+- verify-all.sh: 전체 검증 원커맨드 스크립트
+- I7: tribunal 되감기(rewind) 전이 허용 — 상태 검증 버그 수정
+- Go 테스트: history/validator 4건 추가 (3→4 패키지)
+- I6: artifact-contracts.json hermes writer 권한 버그 수정
+- Iteration 7: REVISE 카운트 정렬·게이트 스키마 완성·review-pr 교착 방지
+- I5: orchestrator-protocol.md의 LEADER_NAME 동적 조회 → 리터럴 "team-lead" 반영
+- 통합 테스트: agora 파이프라인 4건 추가 (38→42)
+- I4: 8개 파이프라인 SKILL에 RESULT CAPTURE RULE 추가
+- release.sh: Go 테스트 + MCP ���이너리 리빌드 추가
+- 통합 테스트: pantheon 파이프라인 4건 추가 (34→38)
+- Iteration 6: Odyssey·Agora 일관성 — REVISE 카운트·등록 누락·LEADER_NAME
+- 통합 테스트: genesis 파이프라인 4건 추가 (30→34)
+- I3: 모든 Wait-for 구문에 retry/timeout 폴백 추가
+- 통합 테스트: evolve 파이프라인 4건 추가 (26→30)
+- Iteration 5: 판정 명확화·중복 측정·엣지케이스 다양성·타임아웃 방어
+- 통합 테스트: review-pr 파이프라인 4건 추가 (22→26)
+- Iteration 4: 스킬 견고성 — 등록 누락·교착·환경 불가 처리
+- CLAUDE.md: 이번 세션 개선사항 반영
+- upgrade-agents.sh: Pass 2 추가 (출력 가이드 + LEADER_NAME 리터럴)
+- P3: 13개 비게이트 에이전트에서 gate-thresholds 보일러플레이트 제거
+- P1: LEADER_NAME/TEAM 템플릿 변수 → 리터럴 값 통합
+- ares.md: 심각도 기준 명확화 + 증거 임계값 (파일:라인 없는 발견사항 미보고)
+- poseidon.md: OWASP 스캔 범위(변경 파일만) + 신뢰도 임계값(HIGH≥0.8) 명확화
+- artemis.md: 디버깅 에스컬레이션 경로 추가 (3회 가설 소진 후 리더 보고)
+- zeus.md: 마지막 team-lead 잔존분 수정 — 15/15 에이전트 완전 통일
+- athena.md: 증거 강도 + AC 상태 판정 기준 scoring anchor 추가
+- 에이전트 품질 개선: nemesis 방어로직 + hera 신뢰도 + zeus 에스컬레이션
+- oracle LEADER_NAME 3→6 + Go TestRequiredAgentsWithRequiredSpawn
+- hermes.md: Success_Criteria 측정 가능 기준 + Deep Read Trap 실패 패턴 추가
+- apollo.md: ambiguity 스코어링 rubric 추가 (0.0~1.0 5단계 기준)
+- orchestrator-protocol §6.3: 대화형 에이전트(Apollo) Wait 예외 명시
+- zeus.md: Themis REVISE 2회 시 리더 에스컬레이션 명시
+- odyssey SKILL.md: LEADER_NAME 3→20건 주입 (17건 추가)
+- evolve 수렴 기준 강화 + inter-agent 메시지 크기 제한 추가
+- 에이전트 프롬프트 품질 개선: multi-domain 규칙 + fallback 패턴
+- MCP 서버: RequiredAgents()가 required_spawn 필드 우선 사용
+- enforce-spawn-gate.sh 테스트 4건 추가: 32→36 (§0 커버리지)
+- §6.5 Teardown 프로토콜 강화: 타임아웃+재시도+git 복원
+- orchestrator-protocol §6.4: 피어 무응답 fallback 프로토콜 문서화
+- genesis required_spawn 추가: metis(wonder)+eris(reflect)
+- artifact-contracts.json required_spawn 보강: 9→20건 (§0 강제 확대)
+- 에이전트 런타임 안정성 강화: 출력 크기 가이드 + 피어 무응답 fallback
+- Teammate_Protocol 헤더 통일: 5에이전트 ${TEAM} + LEADER_NAME 복원
+- hermes.md LEADER_NAME 마지막 잔존분 수정
+- LEADER_NAME 리그레션 수정: prometheus 병렬 작업 충돌 복구
+- SKILL.md LEADER_NAME 하드코딩→동적 전환 (§6.3 준수)
+- Apollo 도메인 체크리스트 3→9 확장 + Hephaestus/Hera 제약조건 명확화
+- LEADER_NAME 전면 통일: 15에이전트 + 7스킬 (22파일, +59/-24)
+- Tribunal 발견 수정: regex 하이픈 + oracle Apollo 프록시
+- LEADER_NAME 동적 주입 + Apollo AskUserQuestion 프록시 패턴
+- Hook: 모든 조기 exit에 { behavior: allow } 응답 추가
+- 에이전트 결과 전달: SendMessage(to: "team-lead") 확정
+- 에이전트 결과 전달: Agent 반환값 + 피어 SendMessage만 사용
+- SendMessage(to: "leader") → "team-lead" 전환
+- fix/trans-issue 반영: SendMessage(to:leader) → Agent 반환값 패턴 전환
+- 구조적 §0 강제: enforce-spawn-gate Hook + MCP next_phase 차단
+- evolve: athena→hephaestus consultation On-demand→Mandatory 강화
