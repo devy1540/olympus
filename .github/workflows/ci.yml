@@ -14,6 +14,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: mcp-server/go.sum
+
+      - name: Build olympus-mcp binary
+        run: |
+          cd mcp-server
+          go build -o ../bin/olympus-mcp ./cmd/olympus-mcp/
+
       - name: Install jq
         run: sudo apt-get install -y jq
 
