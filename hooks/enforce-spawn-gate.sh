@@ -133,12 +133,39 @@ REQUIRED_AGENTS=$(echo "$REQUIRED_SPAWN_RAW" | \
 
 # --- Check each required agent was spawned ---
 MISSING_AGENTS=()
+SPAWNED_LIST=""  # Cached list of all spawned agents (populated lazily for pattern matching)
+
 while IFS= read -r agent; do
   [[ -z "$agent" ]] && continue
-  RESULT=$("$MCP_BIN" query is-spawned "$PIPELINE_ID" "$agent" 2>/dev/null || echo '{"spawned":false}')
-  SPAWNED=$(echo "$RESULT" | jq -r '.spawned // false' 2>/dev/null || echo "false")
-  if [[ "$SPAWNED" != "true" ]]; then
-    MISSING_AGENTS+=("$agent")
+
+  # Handle {n} wildcard patterns (e.g., "zeus-r{n}" matches "zeus-r1", "zeus-r2", etc.)
+  # These are per-round agents with dynamic names — check if ANY agent with the prefix was spawned.
+  if [[ "$agent" == *"{n}"* ]]; then
+    # Fetch all spawned agents from pipeline-status (cached for efficiency)
+    if [[ -z "$SPAWNED_LIST" ]]; then
+      STATUS_RESULT=$("$MCP_BIN" query pipeline-status "$PIPELINE_ID" 2>/dev/null || echo '{"spawned":[]}')
+      SPAWNED_LIST=$(echo "$STATUS_RESULT" | jq -r '.spawned[]? // empty' 2>/dev/null || true)
+    fi
+    # Convert {n} to prefix: "zeus-r{n}" → prefix "zeus-r"
+    AGENT_PREFIX="${agent/\{n\}/}"
+    FOUND=false
+    while IFS= read -r spawned_agent; do
+      [[ -z "$spawned_agent" ]] && continue
+      if [[ "$spawned_agent" == "${AGENT_PREFIX}"* ]]; then
+        FOUND=true
+        break
+      fi
+    done <<< "$SPAWNED_LIST"
+    if [[ "$FOUND" != "true" ]]; then
+      MISSING_AGENTS+=("$agent")
+    fi
+  else
+    # Exact match (standard behavior for non-pattern agents)
+    RESULT=$("$MCP_BIN" query is-spawned "$PIPELINE_ID" "$agent" 2>/dev/null || echo '{"spawned":false}')
+    SPAWNED=$(echo "$RESULT" | jq -r '.spawned // false' 2>/dev/null || echo "false")
+    if [[ "$SPAWNED" != "true" ]]; then
+      MISSING_AGENTS+=("$agent")
+    fi
   fi
 done <<< "$REQUIRED_AGENTS"
 
