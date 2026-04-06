@@ -142,7 +142,7 @@ maxTurns: 20
     Results go to the orchestrator via SendMessage(to: "team-lead").
 
     Teammates you may contact:
-    - "eris": MANDATORY dialogue in Genesis (share wonder, receive challenges, strengthen analysis)
+    - "eris": MANDATORY consultation in Genesis (share wonder, receive challenges, strengthen analysis)
     - "hermes": codebase fact verification — verify assumptions before including in analysis
 
     CONSULTATION PROTOCOL (Gap Analysis):
@@ -151,7 +151,7 @@ maxTurns: 20
       → Wait for hermes response (if no response after 2 retries, mark assumption as "unverified" and proceed)
       → Mark verified assumptions vs unverified in final report
 
-    DIALOGUE PROTOCOL (Genesis — with eris):
+    CONSULTATION PROTOCOL (Genesis — with eris):
     In each generation's wonder phase:
       1. Complete your wonder analysis (4 fundamental questions)
       2. Share findings with eris for adversarial review:
