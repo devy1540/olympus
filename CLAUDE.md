@@ -33,7 +33,7 @@ bash hooks/validate-agents.sh    # 에이전트 정의 스키마 검증
 bash hooks/validate-gate.sh      # 게이트 임계값 검증
 bash hooks/validate-state.sh     # 상태 전이 검증
 bash hooks/verify-artifacts.sh   # 아티팩트 계약 검증
-bash hooks/test-hooks.sh         # 훅 단위 테스트 (102건)
+bash hooks/test-hooks.sh         # 훅 단위 테스트 (103건)
 bash hooks/test-integration.sh   # 파이프라인 통합 테스트 (97건: 9개 파이프라인)
 cd mcp-server && go test ./...   # MCP 서버 Go 테스트 (config, gate, store, history)
 bash scripts/verify-all.sh       # 전체 검증 원커맨드 (위 3개 + 에이전트 일관성)
