@@ -193,14 +193,7 @@ jobs:
             exit 1
           fi
 
-      # ── Build MCP server binaries ──
-
-      - name: Setup Go
-        if: inputs.dry_run == false || github.event_name == 'push'
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
-          cache-dependency-path: mcp-server/go.sum
+      # ── Build MCP server binaries (Go already set up above for tests) ──
 
       - name: Build MCP server (cross-compile)
         if: inputs.dry_run == false || github.event_name == 'push'
