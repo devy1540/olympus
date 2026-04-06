@@ -34,6 +34,7 @@ fi
 
 FILENAME=$(basename "$FILE_PATH")
 ARTIFACT_DIR=$(dirname "$FILE_PATH")
+PARENT_DIR=$(basename "$ARTIFACT_DIR")
 
 # Load contracts from plugin root
 PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$(dirname "$(dirname "$0")")}"
@@ -62,7 +63,6 @@ CURRENT_PHASE=$(jq -r --arg skill "$SKILL_NAME" --arg file "$FILENAME" \
 # Handle gen-{n}/ pattern: gen-{n}/wonder.md
 if [[ -z "$CURRENT_PHASE" ]]; then
   # Try genesis gen-{n} pattern
-  PARENT_DIR=$(basename "$(dirname "$FILE_PATH")")
   if [[ "$PARENT_DIR" =~ ^gen-[0-9]+$ ]]; then
     GEN_FILENAME="gen-{n}/${FILENAME}"
     CURRENT_PHASE=$(jq -r --arg skill "$SKILL_NAME" --arg file "$GEN_FILENAME" \
