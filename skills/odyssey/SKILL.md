@@ -294,13 +294,14 @@ When enabled:
         olympus_register_agent_spawn(pipeline_id, "eris")
         olympus_record_execution(pipeline_id, "genesis", "eris", ...)
 
-        → Write gen-{n}/wonder.md from metis+eris SendMessage dialogue
+        → Write gen-{n}/wonder.md from metis SendMessage
+        → Write gen-{n}/reflect.md from eris SendMessage
         olympus_log_collaboration(pipeline_id, "metis", "eris", "Gen {n} wonder/reflect dialogue")
 
-     c. Seed: Update ontology + spec from wonder + reflect dialogue
+     d. Seed: Update ontology + spec from wonder + reflect dialogue
         Save gen-{n+1}/ontology.json and gen-{n+1}/spec.md
 
-     d. Convergence check:
+     e. Convergence check:
         similarity = name_sim * 0.5 + type_sim * 0.3 + exact_sim * 0.2
         olympus_gate_check(pipeline_id, "convergence", similarity)
         → IF similarity >= 0.95: BREAK → proceed to Step 4
