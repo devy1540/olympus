@@ -176,6 +176,13 @@ RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
 check_result "Tribunal: verdict.md with semantic-matrix but no consensus-record → Stage3 warning" "$RESULT" "allow"
 rm -f "${TRIBUNAL_DIR}/semantic-matrix.md"
 
+# Step: verify-artifacts.sh allows odyssey-state.json (phase="all", no source)
+# Regression test: previously crashed with "PARENT_DIR: unbound variable"
+echo "  [odyssey] verify-artifacts.sh on odyssey-state.json (no source, phase=all)"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"oracle"}')
+check_result "Odyssey: verify-artifacts.sh allows odyssey-state.json (no unbound variable)" "$RESULT" "allow"
+
 # ============================================================
 echo ""
 echo "--- Phase 3: Odyssey State Machine ---"
