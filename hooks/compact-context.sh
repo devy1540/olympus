@@ -93,6 +93,12 @@ case "${PREV_PHASE}→${CURRENT_PHASE}" in
   "tribunal→completed")
     # Terminal state; no compaction needed
     ;;
+  "tribunal→oracle")
+    COMPACT_MSG="CONTEXT COMPACTION: Tribunal -> Oracle rewind (REJECTED_SPEC). Drop all implementation/execution history. Carry only: rejection reason, unmet ACs, and spec defects to fix. Restart Oracle with clear focus on identified gaps."
+    ;;
+  "tribunal→pantheon")
+    COMPACT_MSG="CONTEXT COMPACTION: Tribunal -> Pantheon rewind (REJECTED_ARCHITECTURE). Drop all implementation/execution history. Carry only: rejection reason, architectural issues, and analysis gaps to address. Restart Pantheon with architectural focus."
+    ;;
 esac
 
 # --- Phase timing reminder ---
