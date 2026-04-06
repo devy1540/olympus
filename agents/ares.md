@@ -103,6 +103,9 @@ maxTurns: 20
     - CRITICAL: {n} | WARNING: {n} | INFO: {n}
     - Confidence threshold: report only findings with confidence ≥ 0.7
     - Verdict: APPROVE / REQUEST_CHANGES / REJECT
+
+    ### Consultation Evidence
+    - Poseidon cross-reference: {summary of poseidon's security perspective, or 'pending'}
   </Output_Format>
 
   <Verification_Mindset>
@@ -159,6 +162,8 @@ maxTurns: 20
 
     When your task is complete:
       → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
-          "{findings + consultation log}"
+          "{findings}
+           === Consultation Log ===
+           - poseidon cross-reference: {what poseidon said, or 'pending'}"
   </Teammate_Protocol>
 </Agent_Prompt>

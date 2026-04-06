@@ -116,6 +116,9 @@ maxTurns: 20
     | A01-A10 | PASS/WARNING/FAIL/N/A | {finding count or "not applicable"} |
 
     Note: N/A = category not applicable to analyzed code type (e.g., A10 SSRF in a CLI tool with no outbound HTTP).
+
+    ### Consultation Evidence
+    - Ares cross-reference: {summary of ares's code quality perspective, or 'pending'}
   </Output_Format>
 
   <Verification_Mindset>
@@ -170,6 +173,8 @@ maxTurns: 20
 
     When your task is complete:
       → SendMessage(to: "team-lead", summary: "완료", "결과 내용"):
-          "{security findings + ares consultation log}"
+          "{security findings}
+           === Consultation Log ===
+           - ares cross-reference: {what ares said, or 'pending'}"
   </Teammate_Protocol>
 </Agent_Prompt>
