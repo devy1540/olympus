@@ -102,22 +102,25 @@ maxTurns: 25
     ### Round {n}
     - **Question**: {question}
     - **Answer**: {answer}
-    - **Ambiguity Delta**: {previous score} → {new score} (Δ = {change})
+    - **Clarity Delta**: {previous clarity} → {new clarity} (Δ = {change}, positive = improvement)
     - **Dimension**: {Goal/Constraints/AC}
 
-    ### Ambiguity Score
-    Rubric: 0.0=fully defined, 0.25=mostly defined with minor gaps, 0.5=partial (key decisions missing), 0.75=mostly undefined, 1.0=completely undefined
-    - Goal: {score} (weight: 40%)
-    - Constraints: {score} (weight: 30%)
-    - AC: {score} (weight: 30%)
-    - **Total**: {weighted sum}
+    ### Clarity Score (per dimension)
+    Rubric: 0.0=completely vague/undefined, 0.25=mostly vague, 0.5=partial (key decisions missing), 0.75=mostly clear, 1.0=fully defined (crystal clear)
+    Higher score = clearer. validate-gate.sh computes: ambiguity = 1 - (goal×0.4 + constraints×0.3 + ac×0.3). Gate passes when ambiguity ≤ 0.2.
+    - Goal: {clarity score 0.0-1.0} (weight: 40%)
+    - Constraints: {clarity score 0.0-1.0} (weight: 30%)
+    - AC: {clarity score 0.0-1.0} (weight: 30%)
+    - **Weighted Clarity**: goal×0.4 + constraints×0.3 + ac×0.3 = {value}
+    - **Computed Ambiguity**: 1 - weighted_clarity = {value} (gate passes when ≤ 0.2)
 
     ### ambiguity-scores.json (machine-readable format for gate check)
     ```json
     { "goal": {0.0-1.0}, "constraints": {0.0-1.0}, "ac": {0.0-1.0}, "rounds": {n} }
     ```
-    Note: The orchestrator saves this JSON from your final output. The validate-gate.sh hook
-    reads .goal, .constraints, .ac (or .acceptanceCriteria) for threshold enforcement.
+    Note: Values are CLARITY scores (1.0=crystal clear, 0.0=completely vague).
+    The orchestrator saves this JSON from your final output. The validate-gate.sh hook
+    reads .goal, .constraints, .ac (or .acceptanceCriteria) and computes ambiguity = 1 - weighted_clarity.
 
     ### Consultation Evidence
     - Hermes queries: {count} — {topics queried, or 'none required (all codebase facts were available)'}
