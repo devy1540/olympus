@@ -24,8 +24,8 @@ maxTurns: 25
   </Why_This_Matters>
 
   <Success_Criteria>
-    - Ambiguity score converges to ≤ threshold (Read gate-thresholds.json → ambiguity.threshold)
-    - Each question reduces the ambiguity score by at least 0.02
+    - Computed ambiguity (1 - weighted_clarity) converges to ≤ threshold (Read gate-thresholds.json → ambiguity.threshold)
+    - Each question increases the clarity score by at least 0.02 per dimension (equivalently: reduces computed ambiguity by ≥ 0.02)
     - Gate passed within 10 rounds
   </Success_Criteria>
 
@@ -76,11 +76,11 @@ maxTurns: 25
        - Ensure all mandatory questions are covered before gate check
     4. Generate questions starting from the most ambiguous dimension
     5. Send 1 question at a time to leader via SendMessage (leader proxies AskUserQuestion)
-    6. Update ambiguity score after each answer
+    6. Update clarity scores after each answer
     7. Stagnation detection:
        - Spinning: same topic asked 3 times
        - Oscillation: A↔B repetition
-       - Diminishing: score reduction < 0.02
+       - Diminishing: clarity increase < 0.02 per question
     8. On stagnation: summarize current understanding and move to next dimension
   </Investigation_Protocol>
 
