@@ -31,16 +31,6 @@ func ValidatePlan(st *store.Store, skill, phase, agent string, estimatedCalls in
 		Historical: stats,
 	}
 
-	// Check if estimated calls are suspiciously low
-	avgCalls := float64(stats.Count) / float64(stats.Count) // This would need per-pipeline grouping
-	if estimatedCalls > 0 && float64(estimatedCalls) < avgCalls*0.5 {
-		result.Warnings = append(result.Warnings, fmt.Sprintf(
-			"과소 예측 의심: 계획 %d회, 과거 평균 %.1f회",
-			estimatedCalls, avgCalls,
-		))
-		result.Realistic = false
-	}
-
 	if stats.AvgDuration > 300000 { // > 5 minutes average
 		result.Warnings = append(result.Warnings, fmt.Sprintf(
 			"이 유형의 작업 평균 소요시간: %.0f초 — 장시간 작업 예상",
