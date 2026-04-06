@@ -116,7 +116,7 @@ if [[ -d "$CHECKPOINT_DIR" ]]; then
       [[ "$PREV_PHASE" == "$CURRENT_PHASE" ]] && TRANSITION_VALID=true
 
       # Terminal rewind: tribunal rejection can rewind to any earlier phase
-      # via Terminal.returnToPhase (REJECTED_SPEC→oracle, REJECTED_ARCHITECTURE→planning)
+      # via Terminal.returnToPhase (REJECTED_SPEC→oracle, REJECTED_ARCHITECTURE→pantheon)
       if [[ "$TRANSITION_VALID" == "false" ]]; then
         RETURN_TO=$(echo "$CONTENT" | jq -r '.transition.returnToPhase // empty' 2>/dev/null || true)
         if [[ -n "$RETURN_TO" && "$RETURN_TO" == "$CURRENT_PHASE" ]]; then
@@ -126,7 +126,7 @@ if [[ -d "$CHECKPOINT_DIR" ]]; then
 
       if [[ "$TRANSITION_VALID" == "false" ]]; then
         emit_deny \
-          "STATE VIOLATION: invalid transition '${PREV_PHASE}' -> '${CURRENT_PHASE}'. Allowed forward: oracle->genesis|pantheon, genesis->pantheon, pantheon->planning, planning->execution, execution->tribunal, tribunal->completed|execution. Rewinds (via transition.returnToPhase): tribunal->oracle|planning." \
+          "STATE VIOLATION: invalid transition '${PREV_PHASE}' -> '${CURRENT_PHASE}'. Allowed forward: oracle->genesis|pantheon, genesis->pantheon, pantheon->planning, planning->execution, execution->tribunal, tribunal->completed|execution. Rewinds (via transition.returnToPhase): tribunal->oracle|pantheon." \
           "rule" "invalid phase transition"
         exit 0
       fi

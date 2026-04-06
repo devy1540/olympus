@@ -448,6 +448,13 @@ test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
   "allow" "Terminal rewind tribunal→oracle via returnToPhase → allow"
 rm -f "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.1.json"
 
+# Test: Terminal rewind — tribunal→pantheon via returnToPhase (REJECTED_ARCHITECTURE)
+echo '{"phase":"tribunal"}' > "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.1.json"
+test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/odyssey-state.json\",\"content\":\"{\\\"phase\\\":\\\"pantheon\\\",\\\"transition\\\":{\\\"status\\\":\\\"terminal\\\",\\\"reason\\\":\\\"rejected\\\",\\\"returnToPhase\\\":\\\"pantheon\\\"}}\"}}" \
+  "allow" "Terminal rewind tribunal→pantheon via returnToPhase (REJECTED_ARCHITECTURE) → allow"
+rm -f "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.1.json"
+
 # Test: completed → oracle (invalid - completed is terminal) → deny
 echo '{"phase":"completed"}' > "${ARTIFACT_DIR}/.checkpoints/odyssey-state.json.1.json"
 test_hook "validate-state" "$SCRIPT_DIR/validate-state.sh" \

@@ -257,6 +257,14 @@ RESULT=$(run_hook "$SCRIPT_DIR/validate-state.sh" \
   "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"oracle","transition":{"status":"terminal","reason":"rejected","returnToPhase":"oracle"}}')
 check_result "Odyssey: tribunal→oracle rewind (returnToPhase) → allow" "$RESULT" "allow"
 
+# Rewind transition: tribunal→pantheon via returnToPhase (REJECTED_ARCHITECTURE)
+echo '{"phase":"tribunal"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.010b.json"
+echo "  [odyssey] tribunal→pantheon rewind (REJECTED_ARCHITECTURE via returnToPhase)"
+RESULT=$(run_hook "$SCRIPT_DIR/validate-state.sh" \
+  "${ODYSSEY_DIR}/odyssey-state.json" '{"phase":"pantheon","transition":{"status":"terminal","reason":"rejected","returnToPhase":"pantheon"}}')
+check_result "Odyssey: tribunal→pantheon rewind (returnToPhase) → allow" "$RESULT" "allow"
+rm -f "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.010b.json"
+
 # Gate precondition: completed phase with mechanicalPass=false → deny
 echo '{"phase":"tribunal"}' > "${ODYSSEY_DIR}/.checkpoints/odyssey-state.json.011.json"
 echo "  [odyssey] tribunal→completed without mechanical pass"
@@ -782,6 +790,129 @@ echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial
 RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
   "${ORACLE_SPAWN2_DIR}/codebase-context.md" '# Codebase Context')
 check_result "Oracle: codebase-context.md spawn gate (hermes not spawned) → deny" "$RESULT" "deny"
+
+# ============================================================
+# Phase 13: Spawn Gate — Remaining Artifact Coverage
+echo ""
+echo "--- Phase 13: Spawn Gate — Remaining Artifacts ---"
+# ============================================================
+
+# oracle/interview-log.md → apollo
+echo "  [oracle] Spawn gate: interview-log.md before apollo spawn → deny"
+ORACLE_SPAWN3_DIR="${TEST_DIR}/.olympus/oracle-20260401-inttest29"
+mkdir -p "$ORACLE_SPAWN3_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${ORACLE_SPAWN3_DIR}/interview-log.md" '## Round 1')
+check_result "Oracle: interview-log.md spawn gate (apollo not spawned) → deny" "$RESULT" "deny"
+
+# oracle/ambiguity-scores.json → apollo
+echo "  [oracle] Spawn gate: ambiguity-scores.json before apollo spawn → deny"
+ORACLE_SPAWN4_DIR="${TEST_DIR}/.olympus/oracle-20260401-inttest30"
+mkdir -p "$ORACLE_SPAWN4_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${ORACLE_SPAWN4_DIR}/ambiguity-scores.json" '{"goal":0.9}')
+check_result "Oracle: ambiguity-scores.json spawn gate (apollo not spawned) → deny" "$RESULT" "deny"
+
+# pantheon/perspectives.md → helios
+echo "  [pantheon] Spawn gate: perspectives.md before helios spawn → deny"
+PANTHEON_SPAWN_DIR="${TEST_DIR}/.olympus/pantheon-20260401-inttest31"
+mkdir -p "$PANTHEON_SPAWN_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${PANTHEON_SPAWN_DIR}/perspectives.md" '## Perspectives')
+check_result "Pantheon: perspectives.md spawn gate (helios not spawned) → deny" "$RESULT" "deny"
+
+# pantheon/analyst-findings.md → ares+poseidon
+echo "  [pantheon] Spawn gate: analyst-findings.md before ares+poseidon spawn → deny"
+PANTHEON_SPAWN2_DIR="${TEST_DIR}/.olympus/pantheon-20260401-inttest32"
+mkdir -p "$PANTHEON_SPAWN2_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${PANTHEON_SPAWN2_DIR}/analyst-findings.md" '## Findings')
+check_result "Pantheon: analyst-findings.md spawn gate (ares+poseidon not spawned) → deny" "$RESULT" "deny"
+
+# pantheon/da-evaluation.md → eris
+echo "  [pantheon] Spawn gate: da-evaluation.md before eris spawn → deny"
+PANTHEON_SPAWN3_DIR="${TEST_DIR}/.olympus/pantheon-20260401-inttest33"
+mkdir -p "$PANTHEON_SPAWN3_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${PANTHEON_SPAWN3_DIR}/da-evaluation.md" '## DA Evaluation')
+check_result "Pantheon: da-evaluation.md spawn gate (eris not spawned) → deny" "$RESULT" "deny"
+
+# agora/committee-positions.md → zeus-r{n}+ares-r{n}
+echo "  [agora] Spawn gate: committee-positions.md before zeus-r1+ares-r1 spawn → deny"
+AGORA_SPAWN_DIR="${TEST_DIR}/.olympus/agora-20260401-inttest34"
+mkdir -p "$AGORA_SPAWN_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${AGORA_SPAWN_DIR}/committee-positions.md" '## Positions')
+check_result "Agora: committee-positions.md spawn gate (zeus-r1+ares-r1 not spawned) → deny" "$RESULT" "deny"
+
+# agora/da-challenges.md → eris-da
+echo "  [agora] Spawn gate: da-challenges.md before eris-da spawn → deny"
+AGORA_SPAWN2_DIR="${TEST_DIR}/.olympus/agora-20260401-inttest35"
+mkdir -p "$AGORA_SPAWN2_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${AGORA_SPAWN2_DIR}/da-challenges.md" '## Challenges')
+check_result "Agora: da-challenges.md spawn gate (eris-da not spawned) → deny" "$RESULT" "deny"
+
+# odyssey/implementation-report.md → prometheus
+echo "  [odyssey] Spawn gate: implementation-report.md before prometheus spawn → deny"
+ODYSSEY_SPAWN3_DIR="${TEST_DIR}/.olympus/odyssey-20260401-inttest36"
+mkdir -p "$ODYSSEY_SPAWN3_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${ODYSSEY_SPAWN3_DIR}/implementation-report.md" '## Report')
+check_result "Odyssey: implementation-report.md spawn gate (prometheus not spawned) → deny" "$RESULT" "deny"
+
+# audit/audit-mechanical.json → hephaestus
+echo "  [audit] Spawn gate: audit-mechanical.json before hephaestus spawn → deny"
+AUDIT_SPAWN3_DIR="${TEST_DIR}/.olympus/audit-20260401-inttest37"
+mkdir -p "$AUDIT_SPAWN3_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${AUDIT_SPAWN3_DIR}/audit-mechanical.json" '{"build":"PASS"}')
+check_result "Audit: audit-mechanical.json spawn gate (hephaestus not spawned) → deny" "$RESULT" "deny"
+
+# review-pr/pr-context.md → hermes
+echo "  [review-pr] Spawn gate: pr-context.md before hermes spawn → deny"
+REVIEWPR_SPAWN2_DIR="${TEST_DIR}/.olympus/review-pr-20260401-inttest38"
+mkdir -p "$REVIEWPR_SPAWN2_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${REVIEWPR_SPAWN2_DIR}/pr-context.md" '## PR Context')
+check_result "Review-PR: pr-context.md spawn gate (hermes not spawned) → deny" "$RESULT" "deny"
+
+# review-pr/review-perspectives.md → helios
+echo "  [review-pr] Spawn gate: review-perspectives.md before helios spawn → deny"
+REVIEWPR_SPAWN3_DIR="${TEST_DIR}/.olympus/review-pr-20260401-inttest39"
+mkdir -p "$REVIEWPR_SPAWN3_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${REVIEWPR_SPAWN3_DIR}/review-perspectives.md" '## Review Perspectives')
+check_result "Review-PR: review-perspectives.md spawn gate (helios not spawned) → deny" "$RESULT" "deny"
+
+# review-pr/review-findings.md → ares+poseidon
+echo "  [review-pr] Spawn gate: review-findings.md before ares+poseidon spawn → deny"
+REVIEWPR_SPAWN4_DIR="${TEST_DIR}/.olympus/review-pr-20260401-inttest40"
+mkdir -p "$REVIEWPR_SPAWN4_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${REVIEWPR_SPAWN4_DIR}/review-findings.md" '## Findings')
+check_result "Review-PR: review-findings.md spawn gate (ares+poseidon not spawned) → deny" "$RESULT" "deny"
+
+# review-pr/da-evaluation.md → eris
+echo "  [review-pr] Spawn gate: da-evaluation.md before eris spawn → deny"
+REVIEWPR_SPAWN5_DIR="${TEST_DIR}/.olympus/review-pr-20260401-inttest41"
+mkdir -p "$REVIEWPR_SPAWN5_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${REVIEWPR_SPAWN5_DIR}/da-evaluation.md" '## DA Evaluation')
+check_result "Review-PR: da-evaluation.md spawn gate (eris not spawned) → deny" "$RESULT" "deny"
 
 # ============================================================
 # Cleanup
