@@ -273,7 +273,7 @@ case "$FILENAME" in
     fi
 
     # file:line reference validation: at least 1 valid reference required
-    CONTENT=$(echo "$INPUT" | jq -r '.tool_input.content // empty')
+    # Note: CONTENT is already set at the top of the script (handles both Write and Edit)
     if [[ -n "$CONTENT" ]]; then
       # Extract file:line patterns (e.g., src/auth.ts:42, ./lib/utils.js:15)
       FILE_REFS=$(echo "$CONTENT" | grep -oE '[a-zA-Z0-9_./-]+\.[a-zA-Z]+:[0-9]+' || true)

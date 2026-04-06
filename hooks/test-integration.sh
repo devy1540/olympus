@@ -53,6 +53,31 @@ check_result() {
   fi
 }
 
+# check_clean_allow: verify behavior=allow AND no additionalContext (no spurious warnings)
+check_clean_allow() {
+  local test_name="$1"
+  local output="$2"
+
+  TOTAL=$((TOTAL + 1))
+  local behavior=""
+  local has_context=""
+  if [[ -z "$output" ]]; then
+    behavior="allow"
+    has_context="false"
+  else
+    behavior=$(echo "$output" | jq -r '.behavior // "text"' 2>/dev/null || echo "text")
+    has_context=$(echo "$output" | jq -r 'if .additionalContext then "true" else "false" end' 2>/dev/null || echo "false")
+  fi
+
+  if [[ "$behavior" == "allow" && "$has_context" == "false" ]]; then
+    echo "  PASS  $test_name"
+    PASS=$((PASS + 1))
+  else
+    echo "  FAIL  $test_name (expected=clean allow, got behavior=${behavior} additionalContext=${has_context})"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
 # ============================================================
 echo ""
 echo "=== Integration Test: Oracle → Tribunal Pipeline ==="
@@ -505,6 +530,13 @@ echo "--- Phase 8: Pantheon Pipeline (multi-perspective analysis) ---"
 
 PANTHEON_TEST_DIR="${TEST_DIR}/.olympus/pantheon-20260401-inttest8"
 mkdir -p "$PANTHEON_TEST_DIR/.checkpoints"
+
+# Regression test: source-scope files are optional — no spurious predecessor warnings
+# Before fix: writing context.md (phase 2) without source-catalog.md etc. triggered warnings
+echo "  [pantheon] Regression: context.md without source-scope files (optional, no spurious warning)"
+RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
+  "${PANTHEON_TEST_DIR}/context.md" "## Context\n## Perspectives")
+check_clean_allow "Pantheon: context.md without source-scope files (no spurious artifact warning)" "$RESULT"
 
 # Step 1: perspectives.md (from helios)
 echo "  [pantheon] Helios → perspectives.md"
