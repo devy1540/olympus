@@ -37,6 +37,17 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Setup Go (for spawn-gate tests)
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: mcp-server/go.sum
+
+      - name: Build olympus-mcp binary (for tests)
+        run: |
+          cd mcp-server
+          go build -o ../bin/olympus-mcp ./cmd/olympus-mcp/
+
       - name: Install jq
         run: sudo apt-get install -y jq
 
