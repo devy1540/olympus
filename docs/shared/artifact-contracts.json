@@ -319,7 +319,10 @@
     "refinement-log.md": {
       "phase": 5,
       "writer": "orchestrator",
-      "readers": ["tracking"]
+      "source": "prometheus",
+      "required_spawn": "prometheus",
+      "readers": ["tracking"],
+      "note": "Prometheus는 개선을 적용한 뒤 SendMessage로 변경 리포트 전달, 오케스트레이터가 저장"
     },
     "evolve-state.json": {
       "phase": "all",
