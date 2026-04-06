@@ -42,6 +42,8 @@ maxTurns: 20
     - Read artifacts by path: Read .olympus/{id}/spec.md
     - Reference by path in SendMessage: "Based on spec.md (.olympus/{id}/spec.md)..."
     - For large artifacts, use Grep first to find the relevant section, then Read that range
+    - gate-thresholds.json is the single source of truth for all threshold values
+    - Never hardcode threshold values; always Read gate-thresholds.json if you need to check a gate
   </Context_Protocol>
 
   <Investigation_Protocol>

@@ -151,6 +151,9 @@ run_check "IMMEDIATE TASK pattern: ${IMMEDIATE}/${SPAWN_SKILLS}" "[ $IMMEDIATE -
 IMMEDIATE_COLON_COUNT=$({ grep -r "IMMEDIATE TASK:" skills/*/SKILL.md 2>/dev/null || true; } | wc -l | tr -d ' ')
 run_check "Every spawn has IMMEDIATE TASK: label: ${IMMEDIATE_COLON_COUNT}/${AGENT_SPAWN_COUNT}" "[ $IMMEDIATE_COLON_COUNT -ge $AGENT_SPAWN_COUNT ]"
 
+LEADER_NAME_COUNT=$({ grep -r "LEADER_NAME: team-lead" skills/*/SKILL.md 2>/dev/null || true; } | wc -l | tr -d ' ')
+run_check "Every spawn has LEADER_NAME: team-lead: ${LEADER_NAME_COUNT}/${AGENT_SPAWN_COUNT}" "[ $LEADER_NAME_COUNT -ge $AGENT_SPAWN_COUNT ]"
+
 MANDATORY=$(grep -rl "MANDATORY" skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
 run_check "MANDATORY consultation: ${MANDATORY}/${SPAWN_SKILLS}" "[ $MANDATORY -ge $SPAWN_SKILLS ]"
 
@@ -177,6 +180,9 @@ run_check "No banned SendMessage(to: \"leader\")" "[ $BANNED_LEADER -eq 0 ]"
 
 VMINDSET=$(grep -rl "Verification_Mindset" agents/*.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
 run_check "Verification_Mindset: ${VMINDSET}/15" "[ $VMINDSET -eq 15 ]"
+
+GATE_NOTE=$(grep -rl "gate-thresholds.json is the single source" agents/*.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
+run_check "gate-thresholds single-source note: ${GATE_NOTE}/15" "[ $GATE_NOTE -eq 15 ]"
 
 XREF_ARES=$(grep -c "poseidon\|CROSS-REFERENCE" agents/ares.md 2>/dev/null || echo 0)
 XREF_POSEIDON=$(grep -c "ares\|CROSS-REFERENCE" agents/poseidon.md 2>/dev/null || echo 0)
