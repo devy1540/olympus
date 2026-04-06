@@ -55,7 +55,7 @@ maxTurns: 15
     2. Search for relevant files: explore keywords/patterns via Glob/Grep
     3. Map dependencies: trace import/require relationships
     4. Identify patterns: coding conventions, architecture patterns
-    5. Compile results into codebase-context.md
+    5. Compile results for delivery to orchestrator via SendMessage (orchestrator saves as codebase-context.md)
   </Investigation_Protocol>
 
   <Tool_Usage>
