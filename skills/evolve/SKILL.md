@@ -22,7 +22,10 @@ All agents operate as teammates for iterative evaluation and refinement with con
 - MANDATORY CONSULTATION (§7): metis and eris MUST cross-verify during diagnosis (Step 5).
   metis sends gap analysis to eris; eris challenges it; metis revises before reporting to leader.
   Reports without evidence of cross-verification are incomplete.
-- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly — this violates §0.
+- RESPONSE RULE: If a teammate does not report within reasonable time:
+  1. SendMessage(to: "{agent}", "Report your findings now. Include consultation results. Keep under 5000 chars.")
+  2. Retry up to 3 times.
+  3. NEVER do the agent's work directly — this violates §0.
 - RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
   Orchestrator writes artifacts from these results. Write-capable agents write files directly.
 - SEQUENTIAL SPAWN: athena (Step 4) first → metis+eris parallel (Step 5) → prometheus after diagnosis (Step 6).
@@ -189,9 +192,11 @@ IF user approves:
         subagent_type: "olympus:prometheus",
         prompt: "You are Prometheus, prompt improver. Artifact directory: ${ARTIFACT_DIR}/
           LEADER_NAME: team-lead
-          IMMEDIATE TASK: Read ${ARTIFACT_DIR}/diagnosis.md Improvement Proposals.
-          Edit agent prompts per specifications. No scope creep.
-          When done: SendMessage(to: 'team-lead', summary: 'prometheus 개선 완료', '{change report}')")
+          IMMEDIATE TASK: Read ${ARTIFACT_DIR}/diagnosis.md — find all Improvement Proposals.
+          Apply each proposal to the target files (agents/*.md and/or skills/*/SKILL.md as specified).
+          Rules: implement ONLY what diagnosis.md specifies, no scope creep, no extra refactoring.
+          For each change: note the exact section modified and what was changed.
+          When done: SendMessage(to: 'team-lead', summary: 'prometheus 개선 완료', '{change report with files modified}')")
   olympus_register_agent_spawn(pipeline_id, "prometheus")
 
   → Write refinement-log.md from prometheus SendMessage

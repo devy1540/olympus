@@ -192,6 +192,18 @@ if [[ -n "$MAX_TURNS" ]]; then
   fi
 fi
 
+# --- 8. isReadOnly consistency (auto-derived: true if disallowedTools has both Write AND Edit) ---
+IS_READONLY_FIELD=$(echo "$FRONTMATTER" | grep -E "^isReadOnly:" | awk '{print $2}' || true)
+if [[ -n "$IS_READONLY_FIELD" ]]; then
+  HAS_WRITE=$(echo "$DISALLOWED_TOOLS" | grep -c "Write" || echo "0")
+  HAS_EDIT=$(echo "$DISALLOWED_TOOLS" | grep -c "Edit" || echo "0")
+  if [[ "$IS_READONLY_FIELD" == "true" && ("$HAS_WRITE" == "0" || "$HAS_EDIT" == "0") ]]; then
+    WARNINGS="${WARNINGS}\n  - isReadOnly: true but disallowedTools is missing Write or Edit (both required for read-only)"
+  elif [[ "$IS_READONLY_FIELD" == "false" && "$HAS_WRITE" -gt 0 && "$HAS_EDIT" -gt 0 ]]; then
+    WARNINGS="${WARNINGS}\n  - isReadOnly: false but disallowedTools includes both Write and Edit (should be isReadOnly: true)"
+  fi
+fi
+
 # --- Emit results ---
 if [[ -n "$VIOLATIONS" ]]; then
   emit_deny \

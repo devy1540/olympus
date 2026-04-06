@@ -22,7 +22,10 @@ Supports interactive and fully automated (--auto) modes.
   NEVER use "Wait for messages — do not act until prompted."
 - MANDATORY CONSULTATION (§7): Agents with peer paths must exchange at least one consultation
   round before reporting to leader. Reports without consultation evidence are incomplete.
-- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly — this violates §0.
+- RESPONSE RULE: If a teammate does not report within reasonable time:
+  1. SendMessage(to: "{agent}", "Report your findings now. Include consultation results. Keep under 5000 chars.")
+  2. Retry up to 3 times.
+  3. NEVER do the agent's work directly — this violates §0.
 - RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
   Orchestrator writes artifacts from these results. Write-capable agents write files directly.
 - SEQUENTIAL SPAWN: hermes first → helios after hermes → ares+poseidon parallel → eris DA → nemesis synthesis.
@@ -186,7 +189,7 @@ Agent(name: "poseidon", team_name: ${TEAM},
       prompt: "You are Poseidon, security reviewer. Artifact directory: ${ARTIFACT_DIR}/
         LEADER_NAME: team-lead
         IMMEDIATE TASK: DO NOT write files — you are read-only.
-        Read ${ARTIFACT_DIR}/pr-context.md.
+        Read ${ARTIFACT_DIR}/pr-context.md, review-perspectives.md.
         {If spec-context.md: 'Read spec-context.md for security requirements.'}
         Review ONLY changed files. Focus: OWASP Top 10, vulnerabilities, secrets, input validation.
         Each finding: Severity, CWE, file:line, confidence 0-1, remediation.

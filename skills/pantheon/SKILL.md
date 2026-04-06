@@ -161,6 +161,7 @@ Agent(name: "poseidon", team_name: ${TEAM},
         IMMEDIATE TASK: Analyze from Security perspective.
         DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
+        Read source-scope-analyst.md if present.
         OWASP Top 10 + project-specific security scan.
         Each finding: Severity, CWE, file:line, confidence 0.0-1.0 (report only ≥ 0.7).
         MANDATORY CROSS-REFERENCE: After your initial analysis, share key findings with 'ares':

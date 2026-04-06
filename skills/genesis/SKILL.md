@@ -17,10 +17,13 @@ Metis and Eris operate as persistent teammates who remember previous generations
 - IMPORTANT: Do NOT skip ToolSearch at Step 0.
 - PROACTIVE SPAWN RULE (§6.3): Every Agent() call MUST include IMMEDIATE TASK in prompt.
   NEVER use "Wait for messages — do not act until prompted."
-- MANDATORY DIALOGUE: Each generation spawns metis (wonder) then eris (reflect) sequentially.
+- MANDATORY CONSULTATION: Each generation spawns metis (wonder) then eris (reflect) sequentially.
   Eris receives metis's wonder in its spawn prompt and challenges it.
   Both deliver results via SendMessage(to: "team-lead") — orchestrator writes artifacts.
-- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly — this violates §0.
+- RESPONSE RULE: If a teammate does not report within reasonable time:
+  1. SendMessage(to: "{agent}", "Report your findings now. Include consultation results. Keep under 5000 chars.")
+  2. Retry up to 3 times.
+  3. NEVER do the agent's work directly — this violates §0.
 - RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
   Orchestrator writes artifacts from these results. Write-capable agents write files directly.
 - SEQUENTIAL SPAWN: metis (wonder) first → eris (reflect) after metis completes, per generation.
@@ -114,7 +117,7 @@ FOR each generation n:
         Read ${ARTIFACT_DIR}/gen-{n}/wonder.md (metis's analysis).
         Compare gen-{n-1}/ontology.json vs gen-{n}/ontology.json.
         {If n > 1: 'Previous wonder: Read gen-{n-1}/wonder.md to track question evolution.'}
-        Validate logical soundness per fallacy-catalog.md.
+        Read docs/shared/fallacy-catalog.md. Validate logical soundness per the 22 fallacy patterns.
         Challenge weak points in metis's wonder analysis.
         When done: SendMessage(to: 'team-lead', summary: 'eris reflect gen-{n} 완료', '{reflect results}')")
      olympus_register_agent_spawn(pipeline_id, "eris")

@@ -384,8 +384,8 @@ Teammates communicate via SendMessage. The leader does NOT need to relay every m
 | zeus | hermes | Codebase context before plan finalization | On-demand |
 | apollo | hermes | Codebase context during interview | Mandatory per round |
 | apollo | metis | Gap analysis feedback during interview | On-demand |
-| metis | eris | Wonder/Reflect loop (Genesis) | Mandatory (dialogue) |
-| ares | eris | Debate exchange (Tribunal Stage 3) | Mandatory (dialogue) |
+| metis | eris | Wonder/Reflect loop (Genesis) | Mandatory (consultation) |
+| ares | eris | Debate exchange (Tribunal Stage 3) | Mandatory (consultation) |
 | ares | poseidon | Cross-reference: quality ↔ security findings | Mandatory (Pantheon) |
 | poseidon | ares | Cross-reference: security ↔ quality findings | Mandatory (Pantheon) |
 | hera | hephaestus | Evidence collection for verdict | Mandatory |

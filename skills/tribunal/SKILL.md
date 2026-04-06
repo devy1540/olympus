@@ -166,7 +166,7 @@ olympus_pipeline_status(pipeline_id)  # confirm stage 1+2 completed before enter
           IMMEDIATE TASK: Tribunal Stage 3 rebuttal — challenge Ares's argument with evidence.
           ARES ARGUES: {ares_position}.
           Your job: find logical fallacies, unsupported claims, overlooked evidence.
-          Use fallacy-catalog.md. Include file:line counter-evidence.
+          Read docs/shared/fallacy-catalog.md. Include file:line counter-evidence.
           IMPORTANT: Respond SPECIFICALLY to ares's points — do not make independent arguments.
           When done: SendMessage(to: 'team-lead', summary: 'eris 반박 완료', '{full rebuttal}')")
       olympus_register_agent_spawn(pipeline_id, "eris")

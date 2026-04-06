@@ -80,6 +80,7 @@ case "$FILENAME" in
     ' 2>/dev/null || true)
 
     if [[ -z "$SCORE" ]]; then
+      emit_allow_with_context "EVIDENCE WARNING: ambiguity-scores.json missing required fields (goal, constraints, ac/acceptanceCriteria). Gate cannot evaluate without all 3 dimension scores." "evidence"
       exit 0
     fi
 
@@ -168,6 +169,7 @@ case "$FILENAME" in
 
     SIMILARITY=$(echo "$CONTENT" | jq -r '.similarity // empty' 2>/dev/null || true)
     if [[ -z "$SIMILARITY" ]]; then
+      emit_allow_with_context "EVIDENCE WARNING: convergence.json missing 'similarity' field. The genesis SKILL.md requires: { generation, similarity, converged, name_sim, type_sim, exact_sim }. Gate cannot evaluate without similarity." "evidence"
       exit 0
     fi
 
@@ -186,6 +188,7 @@ case "$FILENAME" in
 
     PERCENTAGE=$(echo "$CONTENT" | jq -r '.percentage // .consensusPercentage // .consensus_pct // empty' 2>/dev/null || true)
     if [[ -z "$PERCENTAGE" ]]; then
+      emit_allow_with_context "EVIDENCE WARNING: consensus-record.json missing percentage field (accepted: percentage, consensusPercentage, consensus_pct). Gate cannot evaluate without consensus value." "evidence"
       exit 0
     fi
 

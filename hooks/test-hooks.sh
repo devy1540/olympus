@@ -189,6 +189,11 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/ambiguity-scores.json\",\"content\":\"{\\\"goal\\\":0.79,\\\"constraints\\\":0.79,\\\"ac\\\":0.79}\"}}" \
   "deny" "Ambiguity 0.21 (just above 0.2 threshold) → deny"
 
+# Test: ambiguity-scores.json missing required fields → evidence warning (allow)
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/ambiguity-scores.json\",\"content\":\"{\\\"rounds\\\":3}\"}}" \
+  "allow" "Ambiguity-scores missing goal/constraints/ac → evidence warning (allow)"
+
 # Test: ambiguity score pass (high clarity = low ambiguity)
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/ambiguity-scores.json\",\"content\":\"{\\\"goal\\\":0.9,\\\"constraints\\\":0.9,\\\"ac\\\":0.9}\"}}" \
@@ -246,6 +251,11 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/mechanical-result.json\",\"content\":\"{\\\"overall\\\":\\\"PASS\\\",\\\"results\\\":{\\\"build\\\":{\\\"status\\\":\\\"PASS\\\"},\\\"typecheck\\\":{\\\"status\\\":\\\"SKIP\\\"},\\\"test\\\":{\\\"status\\\":\\\"PASS\\\"}}}\"}}" \
   "allow" "Mechanical result: SKIP stage with overall PASS → allow"
 
+# Test: consensus-record.json missing percentage field → evidence warning (allow)
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/consensus-record.json\",\"content\":\"{\\\"level\\\":\\\"working\\\",\\\"votes\\\":{\\\"ares\\\":\\\"APPROVE\\\"}}\"}}" \
+  "allow" "Consensus-record missing percentage field → evidence warning (allow)"
+
 # Test: consensus-record.json above threshold → allow
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/consensus-record.json\",\"content\":\"{\\\"level\\\":\\\"working\\\",\\\"percentage\\\":0.6667}\"}}" \
@@ -281,6 +291,21 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/convergence.json\",\"content\":\"{\\\"similarity\\\":0.8,\\\"converged\\\":false}\"}}" \
   "deny" "Convergence 0.8 < 0.95 → deny"
 
+# Test: convergence.json exactly at threshold (0.95) → allow (boundary)
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/convergence.json\",\"content\":\"{\\\"similarity\\\":0.95,\\\"converged\\\":true}\"}}" \
+  "allow" "Convergence exactly 0.95 (at boundary) → allow"
+
+# Test: convergence.json just below threshold (0.94) → deny
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/convergence.json\",\"content\":\"{\\\"similarity\\\":0.94,\\\"converged\\\":false}\"}}" \
+  "deny" "Convergence 0.94 (just below 0.95) → deny"
+
+# Test: convergence.json missing similarity field → evidence warning (allow)
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/convergence.json\",\"content\":\"{\\\"generation\\\":1,\\\"converged\\\":false}\"}}" \
+  "allow" "Convergence.json missing similarity field → evidence warning (allow)"
+
 # Test: evolve-state.json overall pass + all dims pass → allow
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/evolve-state.json\",\"content\":\"{\\\"overall\\\":0.85,\\\"scores\\\":{\\\"specificity\\\":0.8,\\\"evidence\\\":0.75,\\\"efficiency\\\":0.9}}\"}}" \
@@ -295,6 +320,21 @@ test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/evolve-state.json\",\"content\":\"{\\\"overall\\\":0.85,\\\"scores\\\":{\\\"specificity\\\":0.8,\\\"evidence\\\":0.5,\\\"efficiency\\\":0.9}}\"}}" \
   "allow" "Evolve-state dim below 0.6 → warning allow"
+
+# Test: evolve-state.json overall exactly at threshold (0.8) → allow (boundary)
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/evolve-state.json\",\"content\":\"{\\\"overall\\\":0.8,\\\"scores\\\":{\\\"specificity\\\":0.8,\\\"evidence\\\":0.75,\\\"efficiency\\\":0.9}}\"}}" \
+  "allow" "Evolve-state overall exactly 0.8 (at boundary) → allow"
+
+# Test: evolve-state.json overall just below threshold (0.79) → deny
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/evolve-state.json\",\"content\":\"{\\\"overall\\\":0.79,\\\"scores\\\":{\\\"specificity\\\":0.8,\\\"evidence\\\":0.75,\\\"efficiency\\\":0.9}}\"}}" \
+  "deny" "Evolve-state overall 0.79 (just below 0.8) → deny"
+
+# Test: evolve-state.json dim exactly at minimum (0.6) → allow (boundary)
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${ARTIFACT_DIR}/evolve-state.json\",\"content\":\"{\\\"overall\\\":0.85,\\\"scores\\\":{\\\"specificity\\\":0.8,\\\"evidence\\\":0.6,\\\"efficiency\\\":0.9}}\"}}" \
+  "allow" "Evolve-state dim exactly at 0.6 minimum → allow (boundary)"
 
 # Test: semantic-matrix.md without mechanical-result.json → evidence warning
 SEMANTIC_DIR=$(mktemp -d)/.olympus/tribunal-20260401-sem
@@ -479,6 +519,16 @@ test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
   "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/agents/toomany.md\",\"content\":\"---\nname: toomany\ndescription: Too many turns\nmodel: haiku\ndisallowedTools: []\nmaxTurns: 100\n---\n# TooMany\"}}" \
   "deny" "maxTurns: 100 (exceeds maximum 50) → deny"
 
+# Test: maxTurns 0 (below minimum 1) → deny
+test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
+  "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/agents/zero.md\",\"content\":\"---\nname: zero\ndescription: Zero turns\nmodel: haiku\ndisallowedTools: []\nmaxTurns: 0\n---\n# Zero\"}}" \
+  "deny" "maxTurns: 0 (below minimum 1) → deny"
+
+# Test: invalid disallowedTools item → deny
+test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
+  "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/agents/badtools.md\",\"content\":\"---\nname: badtools\ndescription: Bad tools\nmodel: haiku\ndisallowedTools:\n  - Unknown\n---\n# BadTools\"}}" \
+  "deny" "Invalid disallowedTools item 'Unknown' → deny"
+
 # Test: missing disallowedTools key entirely → deny
 test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
   "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/agents/nodisallow.md\",\"content\":\"---\nname: nodisallow\ndescription: Missing disallowedTools\nmodel: sonnet\n---\n# NoDis\"}}" \
@@ -499,6 +549,16 @@ test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
   "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/agents/editme.md\",\"old_string\":\"model: opus\",\"new_string\":\"model: badmodel\"}}" \
   "deny" "Edit context (no content field): reads file, invalid model → deny"
 rm -f "${TEST_DIR}/agents/editme.md"
+
+# Test: isReadOnly: false but disallowedTools has Write+Edit → warning (allow)
+test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
+  "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/agents/readonly-mismatch.md\",\"content\":\"---\nname: readonlymismatch\ndescription: isReadOnly false but has Write+Edit\nmodel: haiku\ndisallowedTools:\n  - Write\n  - Edit\nisReadOnly: false\n---\n# Mismatch\"}}" \
+  "allow" "isReadOnly: false with Write+Edit in disallowedTools → warning (allow)"
+
+# Test: isReadOnly: true but missing Edit from disallowedTools → warning (allow)
+test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \
+  "{\"tool_input\":{\"file_path\":\"${TEST_DIR}/agents/readonly-missing-edit.md\",\"content\":\"---\nname: readonlymissingedit\ndescription: isReadOnly true but missing Edit\nmodel: haiku\ndisallowedTools:\n  - Write\nisReadOnly: true\n---\n# MissingEdit\"}}" \
+  "allow" "isReadOnly: true but disallowedTools missing Edit → warning (allow)"
 
 # Test: non-agent file → silent
 test_hook "validate-agents" "$SCRIPT_DIR/validate-agents.sh" \

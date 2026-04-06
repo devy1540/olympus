@@ -28,7 +28,10 @@ All agents operate as teammates in a single persistent team for cross-phase cont
   one round of inter-agent messages BEFORE reporting final results.
   Reports lacking consultation evidence are incomplete — send agent back to consult.
 
-- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly — this violates §0.
+- RESPONSE RULE: If a teammate does not report within reasonable time:
+  1. SendMessage(to: "{agent}", "Report your findings now. Include consultation results. Keep under 5000 chars.")
+  2. Retry up to 3 times.
+  3. NEVER do the agent's work directly — this violates §0.
 
 - SEQUENTIAL SPAWN: Within each phase, spawn agents in dependency order, not all at once.
   Wait for prerequisite agent results before spawning dependent agents.
@@ -60,7 +63,7 @@ All agents operate as teammates in a single persistent team for cross-phase cont
   - prometheus ↔ artemis (debugging during implementation)
   - prometheus ↔ hephaestus (quick build checks)
   - apollo ↔ hermes (codebase context during interview) — MANDATORY per interview round
-  - metis ↔ eris (Genesis wonder/reflect loop) — MANDATORY dialogue
+  - metis ↔ eris (Genesis wonder/reflect loop) — MANDATORY consultation
   - ares ↔ poseidon (quality ↔ security cross-reference) — MANDATORY in Pantheon
   - ares ↔ eris (Tribunal debate) — MANDATORY in Stage 3
   - athena ↔ hephaestus (evidence verification) — On-demand
@@ -273,7 +276,7 @@ When enabled:
               subagent_type: "olympus:eris",
               prompt: "You are Eris in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
            LEADER_NAME: team-lead
-                IMMEDIATE TASK: Challenge this wonder analysis with fallacy-catalog.md:
+                IMMEDIATE TASK: Read docs/shared/fallacy-catalog.md. Challenge this wonder analysis:
                 === METIS WONDER ===
                 {metis_wonder}
                 When done: SendMessage(to: 'team-lead', summary: 'eris reflect gen-{n} 완료', '{challenges}')")
@@ -337,6 +340,7 @@ Multi-perspective analysis with MANDATORY cross-reference between analysts.
            IMMEDIATE TASK: Analyze from Code Quality perspective.
            DO NOT write files — you are read-only.
            Read ${ARTIFACT_DIR}/spec.md, codebase-context.md, perspectives.md.
+           Read source-scope-analyst.md if present.
            Each finding: Severity (CRITICAL/WARNING/INFO), file:line, confidence 0.0-1.0 (report only ≥ 0.7).
            MANDATORY CROSS-REFERENCE: After your initial analysis, share key findings with 'poseidon':
              SendMessage(to: 'poseidon', summary: '코드품질→보안 크로스레퍼런스',
@@ -355,6 +359,7 @@ Multi-perspective analysis with MANDATORY cross-reference between analysts.
            IMMEDIATE TASK: Analyze from Security perspective.
            DO NOT write files — you are read-only.
            Read ${ARTIFACT_DIR}/spec.md, codebase-context.md, perspectives.md.
+           Read source-scope-analyst.md if present.
            OWASP Top 10 + project-specific security scan.
            Each finding: Severity, CWE, file:line, confidence 0.0-1.0 (report only ≥ 0.7).
            MANDATORY CROSS-REFERENCE: After your initial analysis, share key findings with 'ares':
@@ -388,7 +393,7 @@ Multi-perspective analysis with MANDATORY cross-reference between analysts.
      prompt: "You are Eris in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
        LEADER_NAME: team-lead
        IMMEDIATE TASK: Read ${ARTIFACT_DIR}/analyst-findings.md.
-       Challenge findings using fallacy-catalog.md. Max 2 rounds.
+       Read docs/shared/fallacy-catalog.md. Challenge findings using the 22 fallacy patterns. Max 2 rounds.
        Focus on: logical gaps, unsupported claims, overlooked risks.
        When done: SendMessage(to: 'team-lead', summary: 'eris DA 평가 완료', '{da-evaluation}')")
    olympus_register_agent_spawn(pipeline_id, "eris")
@@ -607,7 +612,7 @@ Three-stage evaluation with GENUINE adversarial debate (agents respond to each o
          IMMEDIATE TASK: Tribunal Stage 3 rebuttal — challenge Ares's argument with evidence.
          ARES ARGUES: {ares_position}.
          Your job: find logical fallacies, unsupported claims, overlooked evidence.
-         Use fallacy-catalog.md. Include file:line counter-evidence.
+         Read docs/shared/fallacy-catalog.md. Include file:line counter-evidence.
          IMPORTANT: Respond SPECIFICALLY to ares's points — do not make independent arguments.
          When done: SendMessage(to: 'team-lead', summary: 'eris 반박 완료', '{full rebuttal}')")
       olympus_register_agent_spawn(pipeline_id, "eris")

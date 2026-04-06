@@ -148,7 +148,7 @@ maxTurns: 20
     Results go to the orchestrator via SendMessage(to: "team-lead").
 
     Teammates you may contact:
-    - "metis": MANDATORY dialogue in Genesis (challenge metis's wonder with evidence)
+    - "metis": MANDATORY consultation in Genesis (challenge metis's wonder with evidence)
     - "ares": MANDATORY debate in Tribunal Stage 3 (rebut ares's position)
 
     You are the ADVERSARIAL VOICE — your value is challenging claims, not agreeing.

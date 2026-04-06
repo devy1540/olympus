@@ -19,7 +19,10 @@ Hephaestus and Athena operate as teammates for cross-phase context sharing.
   NEVER use "Wait for messages — do not act until prompted."
 - MANDATORY CONSULTATION (§7): Athena MUST read hephaestus results before reporting.
   Athena's report without reference to audit-mechanical.json is incomplete.
-- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly — this violates §0.
+- RESPONSE RULE: If a teammate does not report within reasonable time:
+  1. SendMessage(to: "{agent}", "Report your findings now. Include consultation results. Keep under 5000 chars.")
+  2. Retry up to 3 times.
+  3. NEVER do the agent's work directly — this violates §0.
 - RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
   Orchestrator writes artifacts from these results. Write-capable agents write files directly.
 - SEQUENTIAL SPAWN: hephaestus first → athena after hephaestus completes.
@@ -104,6 +107,14 @@ athena_result = Agent(name: "athena", team_name: ${TEAM},
         2-6. Pipeline State Schema: state structures match pipeline-states.json
         2-7. LEADER_NAME Consistency: every agent spawn prompt in SKILL.md files contains
              "LEADER_NAME: team-lead" (literal). Missing LEADER_NAME is a configuration violation.
+        2-8. Proactive Spawn Compliance: every SKILL.md that spawns agents contains
+             PROACTIVE SPAWN RULE and IMMEDIATE TASK in the Execution_Policy. Missing either is a violation.
+        2-9. Spawn Registration Coverage: every olympus-typed spawn (subagent_type matching "olympus:")
+             in SKILL.md has a following olympus_register_agent_spawn call. Missing registration
+             is a violation. Exception: general-purpose agents (no olympus subagent_type) are exempt.
+        2-10. Harness Pattern Coverage: every SKILL.md that spawns agents contains
+              SEQUENTIAL SPAWN, RESULT CAPTURE RULE, MANDATORY CONSULTATION, and RESPONSE RULE.
+              Missing any of these four patterns is a violation.
         MANDATORY CONSULTATION: Before outputting final results, you MUST:
           SendMessage(to: 'hephaestus') with at least one cross-check question.
           Wait for response. Include consultation exchange in your output.

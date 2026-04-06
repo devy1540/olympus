@@ -21,7 +21,10 @@ Committee members operate as teammates for multi-round debate with context reten
 - MANDATORY CONSULTATION (§7): Debate members MUST react to each other's prior statements,
   not present independent opinions. Round 2+ responses MUST explicitly reference a prior speaker.
   A position that does not engage with any prior argument is incomplete.
-- RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly — this violates §0.
+- RESPONSE RULE: If a teammate does not report within reasonable time:
+  1. SendMessage(to: "{agent}", "Report your findings now. Include consultation results. Keep under 5000 chars.")
+  2. Retry up to 3 times.
+  3. NEVER do the agent's work directly — this violates §0.
 - RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
   Orchestrator writes artifacts from these results. Write-capable agents write files directly.
 - SEQUENTIAL SPAWN: committee members spawned in Step 3 → debate rounds sequential (Step 4).
@@ -195,11 +198,12 @@ eris_challenge = Agent(name: "eris-da", team_name: ${TEAM},
       Artifact directory: ${ARTIFACT_DIR}/
       DO NOT write files — you are read-only.
       Read ${ARTIFACT_DIR}/committee-positions.md for all prior round positions.
+      Read docs/shared/fallacy-catalog.md.
       Challenge each claim by name — do not issue abstract challenges.
       Challenge areas:
         - Weaknesses of the consensus option
         - Overlooked strengths of rejected options
-        - Logical fallacies per fallacy-catalog.md (cite the fallacy name)
+        - Logical fallacies (cite the fallacy name from fallacy-catalog.md)
       When done: SendMessage(to: 'team-lead', summary: 'eris DA 도전 완료', '{challenges}')")
 olympus_register_agent_spawn(pipeline_id, "eris-da")
 olympus_record_execution(pipeline_id, "agora", "eris-da", ...)

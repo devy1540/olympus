@@ -219,7 +219,10 @@ olympus_record_execution(pipeline_id, "oracle", "metis", ...)
 ## Step 7: Spec Generation
 
 ```
-Synthesize interview-log.md + gap-analysis.md into spec.md:
+Synthesize available artifacts into spec.md:
+  - interview-log.md (if exists — skipped for Trivial inputs)
+  - gap-analysis.md (if exists — skipped for Trivial inputs)
+  - Use user input directly for Trivial inputs
 
 # Specification: {title}
 
