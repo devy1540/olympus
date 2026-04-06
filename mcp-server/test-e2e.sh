@@ -260,7 +260,7 @@ assert_contains "CLI: ambiguity gate has score" "score" "$GATE"
 
 SEM_EXIT=0
 "$BIN" query gate-status e2e-001 semantic >/dev/null 2>&1 || SEM_EXIT=$?
-assert_eq "CLI: unscored gate → exit 1" "1" "$SEM_EXIT"
+assert_eq "CLI: semantic gate failed (0.60 < 0.8) → exit 1" "1" "$SEM_EXIT"
 
 # ============================================================
 echo ""
