@@ -373,6 +373,16 @@ echo "# Spec" > "${VERDICT_DIR}/spec.md"
 test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
   "{\"tool_input\":{\"file_path\":\"${VERDICT_DIR}/verdict.md\",\"content\":\"# Verdict\n## Final: APPROVED\"}}" \
   "allow" "verdict.md with spec.md present → allow"
+rm -f "${VERDICT_DIR}/spec.md"
+
+# Test: verdict.md with spec-context.md present → allow (review-pr without --spec)
+REVIEWPR_VERDICT_DIR=$(mktemp -d)/.olympus/review-pr-20260401-verdict
+mkdir -p "$REVIEWPR_VERDICT_DIR"
+echo "# Spec Context" > "${REVIEWPR_VERDICT_DIR}/spec-context.md"
+test_hook "validate-gate" "$SCRIPT_DIR/validate-gate.sh" \
+  "{\"tool_input\":{\"file_path\":\"${REVIEWPR_VERDICT_DIR}/verdict.md\",\"content\":\"# PR Verdict\n## Decision: REQUEST_CHANGES\"}}" \
+  "allow" "verdict.md with spec-context.md present → allow (review-pr pattern)"
+rm -rf "$(dirname "$REVIEWPR_VERDICT_DIR")"
 rm -rf "$(dirname "$VERDICT_DIR")"
 
 # Test: non-gate file → silent

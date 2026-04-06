@@ -80,10 +80,11 @@ fi
 # Check that all artifacts from earlier phases are present
 MISSING_ARTIFACTS=""
 
-# Get all artifacts with phases lower than the current one
+# Get all artifacts with phases lower than the current one (skip optional artifacts)
 PREDECESSORS=$(jq -r --arg skill "$SKILL_NAME" --arg phase "$CURRENT_PHASE" \
   '.[$skill] // {} | to_entries[]
    | select(.value.phase != "all")
+   | select(.value.optional != true)
    | select((.value.phase | tonumber) < ($phase | tonumber))
    | .key' "$CONTRACTS_FILE" 2>/dev/null || true)
 

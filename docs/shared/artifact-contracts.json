@@ -238,6 +238,7 @@
     },
     "spec-context.md": {
       "phase": 0.5,
+      "optional": true,
       "writer": "orchestrator",
       "readers": ["helios", "ares", "poseidon", "eris", "nemesis"],
       "note": "기존 spec.md/ontology.json에서 도메인 컨텍스트 추출. --spec 또는 자동탐지 시에만 생성"

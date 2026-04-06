@@ -312,8 +312,9 @@ case "$FILENAME" in
 
   verdict.md)
     # Verdict: verify spec.md exists (verdicts must be spec-grounded)
+    # spec-context.md is also accepted (review-pr skill uses it when --spec is provided)
     DIR=$(dirname "$FILE_PATH")
-    if [[ ! -f "${DIR}/spec.md" && ! -f "${DIR}/../spec.md" ]]; then
+    if [[ ! -f "${DIR}/spec.md" && ! -f "${DIR}/../spec.md" && ! -f "${DIR}/spec-context.md" ]]; then
       # For odyssey, spec.md may be in a parent or sibling artifact directory
       OLYMPUS_ROOT=$(echo "$FILE_PATH" | sed -n 's|\(.*\.olympus/\).*|\1|p' || true)
       # Re-validate: path must end with /.olympus/
