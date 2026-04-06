@@ -72,13 +72,13 @@ export OLYMPUS_STATE_DIR="${TEST_DIR}/.olympus"
 echo "--- Phase 1: Oracle Pipeline (artifact creation order) ---"
 # ============================================================
 
-# Step 1: Hermes writes codebase-context.md (phase 1, no predecessors)
+# Step 1: Orchestrator writes codebase-context.md (from hermes SendMessage) (phase 1, no predecessors)
 echo "  [oracle] Hermes → codebase-context.md"
 RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
   "${ORACLE_DIR}/codebase-context.md" "# Codebase Context\n## Structure\nsrc/\n  auth.ts\n  api/")
 check_result "Oracle: codebase-context.md (phase 1, no predecessors)" "$RESULT" "allow"
 
-# Step 2: Apollo writes interview-log.md (phase 2, after codebase-context)
+# Step 2: Orchestrator writes interview-log.md (from apollo SendMessage) (phase 2, after codebase-context)
 # First check: codebase-context.md should exist as predecessor
 echo "# Codebase Context" > "${ORACLE_DIR}/codebase-context.md"
 echo "  [oracle] Apollo → interview-log.md"
@@ -86,7 +86,7 @@ RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
   "${ORACLE_DIR}/interview-log.md" "## Round 1\nQ: What is the auth flow?\nA: OAuth2 with refresh tokens")
 check_result "Oracle: interview-log.md (phase 2, codebase-context exists)" "$RESULT" "allow"
 
-# Step 3: Apollo writes ambiguity-scores.json (phase 2)
+# Step 3: Orchestrator writes ambiguity-scores.json (from apollo SendMessage) (phase 2)
 echo "## Round 1" > "${ORACLE_DIR}/interview-log.md"
 echo "  [oracle] Apollo → ambiguity-scores.json (passing score)"
 RESULT=$(run_hook "$SCRIPT_DIR/validate-gate.sh" \
@@ -99,7 +99,7 @@ RESULT=$(run_hook "$SCRIPT_DIR/validate-gate.sh" \
   "${ORACLE_DIR}/ambiguity-scores.json" '{"goal":0.3,"constraints":0.4,"ac":0.3,"rounds":1}')
 check_result "Oracle: ambiguity gate FAIL (score=0.66)" "$RESULT" "deny"
 
-# Step 4: Metis writes gap-analysis.md (phase 4)
+# Step 4: Orchestrator writes gap-analysis.md (from metis SendMessage) (phase 4)
 echo '{"goal":0.9,"constraints":0.85,"ac":0.9}' > "${ORACLE_DIR}/ambiguity-scores.json"
 echo "  [oracle] Metis → gap-analysis.md"
 RESULT=$(run_hook "$SCRIPT_DIR/verify-artifacts.sh" \
@@ -135,7 +135,7 @@ RESULT=$(run_hook "$SCRIPT_DIR/validate-gate.sh" \
   "${TRIBUNAL_DIR}/mechanical-result.json" "$MECH_FAIL")
 check_result "Tribunal: mechanical gate FAIL → deny" "$RESULT" "deny"
 
-# Step 2: Athena writes semantic-matrix.md (requires mechanical PASS)
+# Step 2: Orchestrator writes semantic-matrix.md (from athena SendMessage) (requires mechanical PASS)
 echo "$MECH_PASS" > "${TRIBUNAL_DIR}/mechanical-result.json"
 echo "  [tribunal] Athena → semantic-matrix.md (with file:line refs)"
 SEMANTIC_GOOD="# Semantic Matrix
@@ -669,6 +669,15 @@ echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial
 RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
   "${PANTHEON_SPAWN_DIR}/da-evaluation.md" '## DA Evaluation\n### Verdict: SUFFICIENT')
 check_result "Pantheon: da-evaluation.md spawn gate (eris not spawned) → deny" "$RESULT" "deny"
+
+# Step 8: spawn gate — agora/da-challenges.md without eris-da registered → deny
+echo "  [agora] Spawn gate: da-challenges.md before eris-da spawn → deny"
+AGORA_SPAWN_DIR="${TEST_DIR}/.olympus/agora-20260401-inttest17"
+mkdir -p "$AGORA_SPAWN_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${AGORA_SPAWN_DIR}/da-challenges.md" '## DA Challenges\n### Challenge 1: Hasty Generalization')
+check_result "Agora: da-challenges.md spawn gate (eris-da not spawned) → deny" "$RESULT" "deny"
 
 # ============================================================
 # Cleanup

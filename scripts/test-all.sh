@@ -135,11 +135,21 @@ SPAWN_SKILLS=$(grep -rl "Agent(name:" skills/*/SKILL.md 2>/dev/null | wc -l | tr
 BANNED_WAIT=$({ grep -r "Wait for messages — do not act until prompted" skills/*/SKILL.md 2>/dev/null || true; } | { grep -v "NEVER" || true; } | wc -l | tr -d ' ')
 run_check "No banned 'Wait for messages' (${BANNED_WAIT})" "[ $BANNED_WAIT -eq 0 ]"
 
+BANNED_FINAL_RESP=$({ grep -r "Output.*as your final response\." skills/*/SKILL.md 2>/dev/null || true; } | wc -l | tr -d ' ')
+run_check "No banned 'Output as your final response' in spawn prompts (${BANNED_FINAL_RESP})" "[ $BANNED_FINAL_RESP -eq 0 ]"
+
+AGENT_SPAWN_COUNT=$({ grep -r "Agent(name:" skills/*/SKILL.md 2>/dev/null || true; } | wc -l | tr -d ' ')
+SENDMSG_COUNT=$({ grep -r "When done: SendMessage(to: 'team-lead'" skills/*/SKILL.md 2>/dev/null || true; } | wc -l | tr -d ' ')
+run_check "Every spawn has SendMessage(to: 'team-lead') pattern: ${SENDMSG_COUNT}/${AGENT_SPAWN_COUNT}" "[ $SENDMSG_COUNT -ge $AGENT_SPAWN_COUNT ]"
+
 PROACTIVE_RULE=$(grep -rl "PROACTIVE SPAWN RULE" skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
 run_check "PROACTIVE SPAWN RULE: ${PROACTIVE_RULE}/${SPAWN_SKILLS}" "[ $PROACTIVE_RULE -ge $SPAWN_SKILLS ]"
 
 IMMEDIATE=$(grep -rl "IMMEDIATE TASK" skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
 run_check "IMMEDIATE TASK pattern: ${IMMEDIATE}/${SPAWN_SKILLS}" "[ $IMMEDIATE -ge $SPAWN_SKILLS ]"
+
+IMMEDIATE_COLON_COUNT=$({ grep -r "IMMEDIATE TASK:" skills/*/SKILL.md 2>/dev/null || true; } | wc -l | tr -d ' ')
+run_check "Every spawn has IMMEDIATE TASK: label: ${IMMEDIATE_COLON_COUNT}/${AGENT_SPAWN_COUNT}" "[ $IMMEDIATE_COLON_COUNT -ge $AGENT_SPAWN_COUNT ]"
 
 MANDATORY=$(grep -rl "MANDATORY" skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
 run_check "MANDATORY consultation: ${MANDATORY}/${SPAWN_SKILLS}" "[ $MANDATORY -ge $SPAWN_SKILLS ]"
@@ -188,7 +198,11 @@ run_check "Pre-flight checks (athena+hera+nemesis): ${PREFLIGHT}/3" "[ $PREFLIGH
 
 GATE_AMB=$(python3 -c "import json;t=json.load(open('docs/shared/gate-thresholds.json'));print(t['ambiguity']['threshold'])" 2>/dev/null || echo "?")
 GATE_CON=$(python3 -c "import json;t=json.load(open('docs/shared/gate-thresholds.json'));print(t['consensus']['threshold'])" 2>/dev/null || echo "?")
+GATE_SEM=$(python3 -c "import json;t=json.load(open('docs/shared/gate-thresholds.json'));print(t['semantic']['threshold'])" 2>/dev/null || echo "?")
+GATE_CONV=$(python3 -c "import json;t=json.load(open('docs/shared/gate-thresholds.json'));print(t['convergence']['threshold'])" 2>/dev/null || echo "?")
+GATE_DIM=$(python3 -c "import json;t=json.load(open('docs/shared/gate-thresholds.json'));print(t['evolve_dimension_minimum']['threshold'])" 2>/dev/null || echo "?")
 run_check "Gate thresholds: amb=${GATE_AMB} con=${GATE_CON}" "[ '$GATE_AMB' = '0.2' ] && [ '$GATE_CON' = '0.66' ]"
+run_check "Gate thresholds: sem=${GATE_SEM} conv=${GATE_CONV} dim=${GATE_DIM}" "[ '$GATE_SEM' = '0.8' ] && [ '$GATE_CONV' = '0.95' ] && [ '$GATE_DIM' = '0.6' ]"
 
 # --- Summary ---
 echo ""

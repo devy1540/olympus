@@ -105,10 +105,10 @@ hermes_result = Agent(name: "hermes", team_name: ${TEAM},
         IMMEDIATE TASK: Explore codebase related to: {user_input}.
         DO NOT write files — you are read-only.
         Gather: project structure, relevant modules, existing patterns, dependencies.
-        Output your full results as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'hermes 탐색 완료', '{codebase context}')")
 olympus_register_agent_spawn(pipeline_id, "hermes")
 
-→ Write codebase-context.md from hermes_result
+→ Write codebase-context.md from hermes SendMessage
 olympus_record_execution(pipeline_id, "oracle", "hermes", ...)
 olympus_log_collaboration(pipeline_id, "hermes", "apollo", "코드베이스 컨텍스트 인계: hermes→apollo")
 ```
@@ -175,6 +175,7 @@ ELSE IF rounds < 10:
         run_in_background: true,
         prompt: "You are Apollo in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
           LEADER_NAME: team-lead
+          IMMEDIATE TASK: Continue Socratic interview — reduce ambiguity from {score} by focusing on: {gap areas}.
           Read ${ARTIFACT_DIR}/interview-log.md for context from previous rounds.
           Ambiguity still at {score}. Continue interview, focus on: {gap areas}.
           IMPORTANT: Use SendMessage(to: 'team-lead') for each question (interview proxy pattern).
@@ -206,10 +207,10 @@ metis_result = Agent(name: "metis", team_name: ${TEAM},
         Read ${ARTIFACT_DIR}/interview-log.md and ${ARTIFACT_DIR}/codebase-context.md.
         Analyze: Missing Questions, Undefined Guardrails, Scope Risks,
         Unvalidated Assumptions, Acceptance Criteria, Edge Cases.
-        Output your full results as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'metis 갭분석 완료', '{gap analysis}')")
 olympus_register_agent_spawn(pipeline_id, "metis")
 
-→ Write gap-analysis.md from metis_result
+→ Write gap-analysis.md from metis SendMessage
 olympus_record_execution(pipeline_id, "oracle", "metis", ...)
 ```
 

@@ -127,10 +127,10 @@ hermes_result = Agent(name: "hermes", team_name: ${TEAM},
         For each changed file: module, dependencies, change type (add/modify/delete).
         Output: structured PR context with files, modules, dependency impact.
         Your findings will be used as context by ares and poseidon — be thorough.
-        Output your full results as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'hermes PR 탐색 완료', '{pr context}')")
 olympus_register_agent_spawn(pipeline_id, "hermes")
 
-→ Write pr-context.md from hermes_result
+→ Write pr-context.md from hermes SendMessage
 olympus_record_execution(pipeline_id, "review-pr", "hermes", ...)
 ```
 
@@ -146,10 +146,10 @@ helios_result = Agent(name: "helios", team_name: ${TEAM},
         IMMEDIATE TASK: DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/pr-context.md and generate 3-5 review perspectives.
         Mandatory: Code Quality (→ ares), Security (→ poseidon).
-        Output your full results as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'helios 관점 완료', '{review perspectives}')")
 olympus_register_agent_spawn(pipeline_id, "helios")
 
-→ Write review-perspectives.md from helios_result
+→ Write review-perspectives.md from helios SendMessage
 olympus_record_execution(pipeline_id, "review-pr", "helios", ...)
 
 Perspective approval:
@@ -228,10 +228,10 @@ eris_result = Agent(name: "eris", team_name: ${TEAM},
           - Severity calibration
           - Cross-reviewer contradictions
         Max 2 rounds. Flag BLOCKING_QUESTIONs.
-        Output your full results as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'eris DA 평가 완료', '{da-evaluation}')")
 olympus_register_agent_spawn(pipeline_id, "eris")
 
-→ Write da-evaluation.md from eris_result
+→ Write da-evaluation.md from eris SendMessage
 olympus_record_execution(pipeline_id, "review-pr", "eris", ...)
 
 BLOCKING_QUESTION resolution:
@@ -263,10 +263,10 @@ nemesis_result = Agent(name: "nemesis", team_name: ${TEAM},
           5. Confidence calibration per finding
         Verdict: APPROVE / REQUEST_CHANGES / COMMENT_ONLY.
         Include consultation evidence from ares-poseidon cross-reference in verdict rationale.
-        Output your full results as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'nemesis 판결 완료', '{verdict}')")
 olympus_register_agent_spawn(pipeline_id, "nemesis")
 
-→ Write verdict.md from nemesis_result
+→ Write verdict.md from nemesis SendMessage
 olympus_record_execution(pipeline_id, "review-pr", "nemesis", ...)
 
 Gate check:

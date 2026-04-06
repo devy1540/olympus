@@ -116,10 +116,10 @@ athena_result = Agent(name: "athena", team_name: ${TEAM},
           3. Role Adherence: agents stayed within boundaries?
           4. Efficiency: goal reached without unnecessary rounds?
           5. Actionability: output immediately actionable?
-        Output eval-matrix.md content as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'athena 평가 완료', '{eval-matrix content}')")
 olympus_register_agent_spawn(pipeline_id, "athena")
 
-→ Write eval-matrix.md from athena_result
+→ Write eval-matrix.md from athena SendMessage
 olympus_record_execution(pipeline_id, "evolve", "athena", ...)
 ```
 
@@ -191,10 +191,10 @@ IF user approves:
           LEADER_NAME: team-lead
           IMMEDIATE TASK: Read ${ARTIFACT_DIR}/diagnosis.md Improvement Proposals.
           Edit agent prompts per specifications. No scope creep.
-          Output your change report as your final response.")
+          When done: SendMessage(to: 'team-lead', summary: 'prometheus 개선 완료', '{change report}')")
   olympus_register_agent_spawn(pipeline_id, "prometheus")
 
-  → Write refinement-log.md from prometheus_result
+  → Write refinement-log.md from prometheus SendMessage
   olympus_record_execution(pipeline_id, "evolve", "prometheus", ...)
 ```
 

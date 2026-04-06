@@ -69,10 +69,11 @@ heph_result = Agent(name: "hephaestus", team_name: ${TEAM},
         1-3. Shared doc references: verify docs/shared/ references exist
         1-4. artifact-contracts.json: verify writer/reader agents exist
         1-5. Hook scripts: verify hooks.json scripts exist, are executable, pass bash -n
-        Output audit-mechanical.json content as your final response.")
+        Write results to ${ARTIFACT_DIR}/audit-mechanical.json directly (you have Write access).
+        When done: SendMessage(to: 'team-lead', summary: 'hephaestus 검증 완료', '{PASS/FAIL summary}')")
 olympus_register_agent_spawn(pipeline_id, "hephaestus")
 
-→ Write audit-mechanical.json from heph_result
+→ hephaestus writes audit-mechanical.json directly; leader reads after SendMessage notification
 olympus_record_execution(pipeline_id, "audit", "hephaestus", ...)
 
 Decision:
@@ -99,17 +100,17 @@ athena_result = Agent(name: "athena", team_name: ${TEAM},
         2-2. Artifact Contract Completeness: skill files vs contracts
         2-3. Gate Consistency: gate-thresholds.json vs SKILL.md values
         2-4. Clarity Scan: banned phrases from clarity-enforcement.md
-        2-5. Delegation Pattern: Write/Edit disabled agents use final text output for results
+        2-5. Delegation Pattern: Write/Edit disabled agents send results via SendMessage(to: "team-lead")
         2-6. Pipeline State Schema: state structures match pipeline-states.json
         2-7. LEADER_NAME Consistency: every agent spawn prompt in SKILL.md files contains
              "LEADER_NAME: team-lead" (literal). Missing LEADER_NAME is a configuration violation.
         MANDATORY CONSULTATION: Before outputting final results, you MUST:
           SendMessage(to: 'hephaestus') with at least one cross-check question.
           Wait for response. Include consultation exchange in your output.
-        Output audit-semantic.json content as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'athena 검증 완료', '{audit-semantic.json content}')")
 olympus_register_agent_spawn(pipeline_id, "athena")
 
-→ Write audit-semantic.json from athena_result
+→ Write audit-semantic.json from athena SendMessage
 olympus_record_execution(pipeline_id, "audit", "athena", ...)
 olympus_log_collaboration(pipeline_id, "athena", "hephaestus", "의미 검증: athena↔hephaestus 크로스검증")
 
@@ -174,7 +175,7 @@ Shutdown all teammates → TeamDelete
 <Artifact_Contracts>
   | File | Step | Writer | Readers |
   |------|------|--------|---------|
-  | audit-mechanical.json | 2 | Leader (from hephaestus) | athena |
+  | audit-mechanical.json | 2 | hephaestus (direct) | athena |
   | audit-semantic.json | 3 | Leader (from athena) | Leader |
   | audit-report.md | 4 | Leader | User |
 </Artifact_Contracts>

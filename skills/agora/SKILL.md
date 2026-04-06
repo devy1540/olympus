@@ -88,64 +88,13 @@ Call ToolSearch("+olympus pipeline") to load MCP tools.
 ```
 Spawn committee teammates (lazy):
 
-IF "zeus" not in team:
-  Agent(name: "zeus", team_name: ${TEAM},
-        subagent_type: "olympus:zeus",
-        run_in_background: false,
-        prompt: "You are Zeus, planner and tie-breaker in a committee debate.
-          LEADER_NAME: team-lead
-          IMMEDIATE TASK: You will present positions and respond to other members each round.
-          CONSULTATION: In Round 2+, you MUST explicitly reference ares's or eris's prior argument
-          and either agree, rebut, or qualify it. Independent opinions without engagement are incomplete.
-          You may send direct cross-questions to 'ares' and 'eris' via SendMessage at any time.
-          Artifact directory: ${ARTIFACT_DIR}/
-          Output your results as your final response.")
-  olympus_register_agent_spawn(pipeline_id, "zeus")
+Note: Agora uses per-round spawns (see Step 4). Committee members join only when needed for
+their round — there is no persistent assembly phase. Step 3 assembles the debate frame only.
 
-IF "ares" not in team:
-  Agent(name: "ares", team_name: ${TEAM},
-        subagent_type: "olympus:ares",
-        run_in_background: false,
-        prompt: "You are Ares, engineering critic in a committee debate.
-          LEADER_NAME: team-lead
-          Artifact directory: ${ARTIFACT_DIR}/
-          IMMEDIATE TASK: You will evaluate options from technical feasibility, maintainability, scalability.
-          CONSULTATION: In Round 2+, you MUST explicitly reference zeus's or eris's prior argument
-          and either agree, rebut, or qualify it with technical evidence. Independent opinions are incomplete.
-          You may send direct cross-questions to 'zeus' and 'eris' via SendMessage at any time.
-          Output your results as your final response.")
-  olympus_register_agent_spawn(pipeline_id, "ares")
+# Assembly: Register the debate frame and roles (no agent spawns here)
+# Agents are spawned on-demand per round in Step 4 as "zeus-r{n}", "ares-r{n}", etc.
 
-IF "eris" not in team:
-  Agent(name: "eris", team_name: ${TEAM},
-        subagent_type: "olympus:eris",
-        run_in_background: false,
-        prompt: "You are Eris, devil's advocate in a committee debate.
-          LEADER_NAME: team-lead
-          Artifact directory: ${ARTIFACT_DIR}/
-          IMMEDIATE TASK: You will challenge ALL positions using fallacy-catalog.md.
-          CONSULTATION: You MUST target specific claims made by zeus or ares — not abstract positions.
-          Quote the claim you are challenging, then deliver your challenge.
-          You may send direct challenges to 'zeus' and 'ares' via SendMessage between rounds.
-          Output your results as your final response.")
-  olympus_register_agent_spawn(pipeline_id, "eris")
-
-Spawn UX critic (general-purpose, NOT an olympus agent — skip register_spawn):
-  Agent(name: "ux-critic", team_name: ${TEAM},
-        run_in_background: false,
-        prompt: "You are a UX critic in a committee debate.
-          LEADER_NAME: team-lead
-          Artifact directory: ${ARTIFACT_DIR}/
-          IMMEDIATE TASK: You will evaluate options from user experience, accessibility, usability.
-          CONSULTATION: In Round 2+, you MUST reference a prior speaker's claim and respond to it
-          from a UX lens. Independent opinions without engagement are incomplete.
-          Output your results as your final response.")
-  # NOTE: ux-critic is a general-purpose agent, not in agent-schema.json registry.
-  # Do NOT call olympus_register_agent_spawn for non-olympus agents.
-
-olympus_record_execution(pipeline_id, "agora", "zeus", ...)
-olympus_record_execution(pipeline_id, "agora", "ares", ...)
-olympus_record_execution(pipeline_id, "agora", "eris", ...)
+# No record_execution here — per-round agents are recorded in Step 4
 ```
 
 ---
@@ -161,6 +110,7 @@ FOR each round (max 3):
      Agent(name: "zeus-r{n}", team_name: ${TEAM}, subagent_type: "olympus:zeus",
        run_in_background: true,
        prompt: "LEADER_NAME: team-lead
+         IMMEDIATE TASK: Round {n} debate position.
          Read ${ARTIFACT_DIR}/debate-frame.json.
          Present: preferred option + rationale + pros/cons of others.
          Include evidence (file:line if applicable).
@@ -169,6 +119,7 @@ FOR each round (max 3):
      Agent(name: "ares-r{n}", team_name: ${TEAM}, subagent_type: "olympus:ares",
        run_in_background: true,
        prompt: "LEADER_NAME: team-lead
+         IMMEDIATE TASK: Round {n} debate position.
          DO NOT write files — you are read-only.
          Read ${ARTIFACT_DIR}/debate-frame.json.
          Present: preferred option from technical perspective + evidence.
@@ -177,6 +128,7 @@ FOR each round (max 3):
      Agent(name: "ux-r{n}", team_name: ${TEAM},
        run_in_background: true,
        prompt: "LEADER_NAME: team-lead
+         IMMEDIATE TASK: Round {n} debate position.
          DO NOT write files — you are read-only.
          Read ${ARTIFACT_DIR}/debate-frame.json.
          Present: preferred option from UX perspective + evidence.
@@ -203,15 +155,17 @@ FOR each round (max 3):
   3. Cross-questioning (if disagreements — FOREGROUND sequential):
      ares_rebuttal = Agent(name: "ares-cross", team_name: ${TEAM}, subagent_type: "olympus:ares",
        prompt: "LEADER_NAME: team-lead
+         IMMEDIATE TASK: Cross-questioning rebuttal — counter Zeus's argument.
          DO NOT write files — you are read-only.
          Zeus argues: {zeus_position_verbatim}. Counter-argue with specific technical evidence.
-         Output your rebuttal as your final response.")
+         When done: SendMessage(to: 'team-lead', summary: 'ares 크로스반박 완료', '{rebuttal}')")
      olympus_register_agent_spawn(pipeline_id, "ares-cross")
 
      zeus_rebuttal = Agent(name: "zeus-cross", team_name: ${TEAM}, subagent_type: "olympus:zeus",
        prompt: "LEADER_NAME: team-lead
+         IMMEDIATE TASK: Cross-questioning rebuttal — respond to Ares's objections.
          Ares argues: {ares_position_verbatim}. Respond to ares's specific objections.
-         Output your rebuttal as your final response.")
+         When done: SendMessage(to: 'team-lead', summary: 'zeus 크로스반박 완료', '{rebuttal}')")
      olympus_register_agent_spawn(pipeline_id, "zeus-cross")
      olympus_record_execution(pipeline_id, "agora", "ares-cross", ...)
      olympus_record_execution(pipeline_id, "agora", "zeus-cross", ...)
@@ -237,6 +191,7 @@ FOR each round (max 3):
 eris_challenge = Agent(name: "eris-da", team_name: ${TEAM},
     subagent_type: "olympus:eris",
     prompt: "LEADER_NAME: team-lead
+      IMMEDIATE TASK: Devil's Advocate challenge — find weaknesses in the consensus position.
       Artifact directory: ${ARTIFACT_DIR}/
       DO NOT write files — you are read-only.
       Read ${ARTIFACT_DIR}/committee-positions.md for all prior round positions.
@@ -245,21 +200,23 @@ eris_challenge = Agent(name: "eris-da", team_name: ${TEAM},
         - Weaknesses of the consensus option
         - Overlooked strengths of rejected options
         - Logical fallacies per fallacy-catalog.md (cite the fallacy name)
-      Output your challenges as your final response.")
-olympus_register_agent_spawn(pipeline_id, "eris")
-olympus_record_execution(pipeline_id, "agora", "eris", ...)
+      When done: SendMessage(to: 'team-lead', summary: 'eris DA 도전 완료', '{challenges}')")
+olympus_register_agent_spawn(pipeline_id, "eris-da")
+olympus_record_execution(pipeline_id, "agora", "eris-da", ...)
 
 Committee response (MANDATORY — FOREGROUND sequential):
   zeus_response = Agent(name: "zeus-resp", team_name: ${TEAM}, subagent_type: "olympus:zeus",
     prompt: "LEADER_NAME: team-lead
+      IMMEDIATE TASK: Respond to Eris's DA challenge on your position.
       Eris challenged your position: {eris_challenge}. Respond specifically.
-      Output your response as your final response.")
+      When done: SendMessage(to: 'team-lead', summary: 'zeus DA 응답 완료', '{response}')")
   olympus_register_agent_spawn(pipeline_id, "zeus-resp")
   ares_response = Agent(name: "ares-resp", team_name: ${TEAM}, subagent_type: "olympus:ares",
     prompt: "LEADER_NAME: team-lead
+      IMMEDIATE TASK: Respond to Eris's DA challenge on your position.
       DO NOT write files — you are read-only.
       Eris challenged your position: {eris_challenge}. Respond specifically.
-      Output your response as your final response.")
+      When done: SendMessage(to: 'team-lead', summary: 'ares DA 응답 완료', '{response}')")
   olympus_register_agent_spawn(pipeline_id, "ares-resp")
   olympus_record_execution(pipeline_id, "agora", "zeus-resp", ...)
   olympus_record_execution(pipeline_id, "agora", "ares-resp", ...)

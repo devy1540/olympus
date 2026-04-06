@@ -105,10 +105,10 @@ helios_result = Agent(name: "helios", team_name: ${TEAM},
         Evaluate 6 complexity dimensions: Domain, Technical, Risk, Stakeholders, Timeline, Novelty.
         Derive 3-6 orthogonal perspectives. Apply quality gate (overlap < 20%).
         Map analyst agents: Code quality → ares, Security → poseidon, Architecture → zeus.
-        Output your full results as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'helios 관점 완료', '{perspectives}')")
 olympus_register_agent_spawn(pipeline_id, "helios")
 
-→ Write perspectives.md from helios_result
+→ Write perspectives.md from helios SendMessage
 olympus_record_execution(pipeline_id, "pantheon", "helios", ...)
 ```
 
@@ -181,7 +181,7 @@ IF architecture perspective:
           DO NOT write files — you are read-only.
           Read ${ARTIFACT_DIR}/spec.md, context.md, perspectives.md.
           Analyze from Architecture perspective (Analysis_Mode, not Planning).
-          Output your full results as your final response.")
+          When done: SendMessage(to: 'team-lead', summary: 'zeus 아키텍처 분석 완료', '{findings}')")
   olympus_register_agent_spawn(pipeline_id, "zeus")
 
 Note: ares and poseidon run IN PARALLEL with CROSS-REFERENCE via SendMessage.
@@ -219,10 +219,10 @@ eris_result = Agent(name: "eris", team_name: ${TEAM},
         Max 2 challenge-response rounds.
         BLOCKING_QUESTIONs: tool-solvable → resolve, user-only → flag.
         Verdict: SUFFICIENT / NOT_SUFFICIENT / NEEDS_TRIBUNAL.
-        Output your full results as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'eris DA 평가 완료', '{da-evaluation}')")
 olympus_register_agent_spawn(pipeline_id, "eris")
 
-→ Write da-evaluation.md from eris_result
+→ Write da-evaluation.md from eris SendMessage
 olympus_record_execution(pipeline_id, "pantheon", "eris", ...)
 ```
 

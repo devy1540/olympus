@@ -84,10 +84,11 @@ heph_result = Agent(name: "hephaestus", team_name: ${TEAM},
       prompt: "You are Hephaestus in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
         LEADER_NAME: team-lead
         IMMEDIATE TASK: Run mechanical verification — build, lint, type-check, and test suite in order.
-        Output results as your final response in mechanical-result.json format.")
+        Write results to ${ARTIFACT_DIR}/mechanical-result.json directly (you have Write access).
+        When done: SendMessage(to: 'team-lead', summary: 'hephaestus 검증 완료', '{PASS/FAIL summary}')") 
 olympus_register_agent_spawn(pipeline_id, "hephaestus")
 
-→ Write mechanical-result.json from heph_result
+→ hephaestus writes mechanical-result.json directly; leader reads it after SendMessage notification
 olympus_record_execution(pipeline_id, "tribunal", "hephaestus", ...)
 
 Decision:
@@ -115,10 +116,10 @@ athena_result = Agent(name: "athena", team_name: ${TEAM},
         For each AC: search for implementation evidence (file:line).
         Status: MET (1.0) / PARTIALLY_MET (0.5) / NOT_MET (0.0).
         Calculate overall score: sum / count.
-        Output your full results as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'athena 평가 완료', '{semantic matrix + score}')")
 olympus_register_agent_spawn(pipeline_id, "athena")
 
-→ Write semantic-matrix.md from athena_result
+→ Write semantic-matrix.md from athena SendMessage
 olympus_record_execution(pipeline_id, "tribunal", "athena", ...)
 
 Decision:
@@ -153,7 +154,7 @@ olympus_pipeline_status(pipeline_id)  # confirm stage 1+2 completed before enter
           IMMEDIATE TASK: Read ${ARTIFACT_DIR}/semantic-matrix.md and explore relevant code.
           Argue for APPROVE or REJECT from quality perspective.
           Include file:line evidence for every claim.
-          Output your full position as your final response.")
+          When done: SendMessage(to: 'team-lead', summary: 'ares 포지션 완료', '{full position}')")
       olympus_register_agent_spawn(pipeline_id, "ares")
       olympus_log_collaboration(pipeline_id, "ares", "eris", "Tribunal debate: ares opening")
       olympus_record_execution(pipeline_id, "tribunal", "ares", ...)
@@ -162,11 +163,12 @@ olympus_pipeline_status(pipeline_id)  # confirm stage 1+2 completed before enter
       eris_counter = Agent(name: "eris", team_name: ${TEAM},
         subagent_type: "olympus:eris",
         prompt: "LEADER_NAME: team-lead
+          IMMEDIATE TASK: Tribunal Stage 3 rebuttal — challenge Ares's argument with evidence.
           ARES ARGUES: {ares_position}.
           Your job: find logical fallacies, unsupported claims, overlooked evidence.
           Use fallacy-catalog.md. Include file:line counter-evidence.
           IMPORTANT: Respond SPECIFICALLY to ares's points — do not make independent arguments.
-          Output your full rebuttal as your final response.")
+          When done: SendMessage(to: 'team-lead', summary: 'eris 반박 완료', '{full rebuttal}')")
       olympus_register_agent_spawn(pipeline_id, "eris")
       olympus_log_collaboration(pipeline_id, "eris", "ares", "Tribunal debate: eris rebuttal")
       olympus_record_execution(pipeline_id, "tribunal", "eris", ...)
@@ -175,10 +177,11 @@ olympus_pipeline_status(pipeline_id)  # confirm stage 1+2 completed before enter
       ares_rebuttal = Agent(name: "ares", team_name: ${TEAM},
         subagent_type: "olympus:ares",
         prompt: "LEADER_NAME: team-lead
+          IMMEDIATE TASK: Tribunal Stage 3 rebuttal — respond to Eris's specific counter-arguments.
           ERIS COUNTERS: {eris_counter}.
           Respond ONLY to new points eris raised. Do not repeat your opening.
           Concede where eris is right. Defend where you have stronger evidence.
-          Output your rebuttal as your final response.")
+          When done: SendMessage(to: 'team-lead', summary: 'ares 재반박 완료', '{rebuttal}')")
       olympus_register_agent_spawn(pipeline_id, "ares")
       olympus_record_execution(pipeline_id, "tribunal", "ares-rebuttal", ...)
 
@@ -186,17 +189,21 @@ olympus_pipeline_status(pipeline_id)  # confirm stage 1+2 completed before enter
       hera_verdict = Agent(name: "hera", team_name: ${TEAM},
         subagent_type: "olympus:hera",
         prompt: "LEADER_NAME: team-lead
+          IMMEDIATE TASK: Synthesize the Tribunal debate and render final APPROVE/REJECT verdict.
+          Artifact directory: ${ARTIFACT_DIR}/
           DEBATE TRANSCRIPT:
           === ARES OPENING === {ares_position}
           === ERIS REBUTTAL === {eris_counter}
           === ARES REBUTTAL === {ares_rebuttal or 'N/A'}
+          MANDATORY: Before rendering verdict, consult hephaestus for current build/test status
+          (or read mechanical-result.json if already available).
           Synthesize the debate. Where ares and eris disagree, determine who has stronger evidence.
           Produce final synthesized verdict: APPROVE or REJECT with reasoned synthesis.
-          Output your verdict as your final response.")
+          When done: SendMessage(to: 'team-lead', summary: 'hera 판결 완료', '{verdict}')")
       olympus_register_agent_spawn(pipeline_id, "hera")
       olympus_record_execution(pipeline_id, "tribunal", "hera", ...)
 
-3. Tally votes:
+2. Tally votes:
    Extract APPROVE/REJECT from each response.
    consensus_pct = approve_count / total_voters  # 3 voters: 0/3=0.0, 1/3=0.33, 2/3=0.6667, 3/3=1.0
    olympus_gate_check(pipeline_id, "consensus", consensus_pct)
@@ -211,7 +218,7 @@ olympus_pipeline_status(pipeline_id)  # confirm stage 1+2 completed before enter
      # next.action: advance_phase (record verdict → Odyssey decides retry/rewind)
      #              or escalate (standalone: present options to user)
 
-4. Save consensus-record.json:
+3. Save consensus-record.json:
    { votes: { ares, eris, hera }, consensus_pct, gate_result, dissent }
 ```
 

@@ -19,7 +19,7 @@ Metis and Eris operate as persistent teammates who remember previous generations
   NEVER use "Wait for messages — do not act until prompted."
 - MANDATORY DIALOGUE: Each generation spawns metis (wonder) then eris (reflect) sequentially.
   Eris receives metis's wonder in its spawn prompt and challenges it.
-  Both deliver results as final text output — orchestrator writes artifacts.
+  Both deliver results via SendMessage(to: "team-lead") — orchestrator writes artifacts.
 - RESPONSE RULE: If teammate doesn't report, retry up to 3 times. NEVER do agent's work directly — this violates §0.
 - RESULT CAPTURE RULE: Read-only agents deliver results via SendMessage(to: "team-lead").
   Orchestrator writes artifacts from these results. Write-capable agents write files directly.
@@ -88,6 +88,7 @@ FOR each generation n:
        subagent_type: "olympus:metis",
        prompt: "You are Metis. Artifact directory: ${ARTIFACT_DIR}/
         LEADER_NAME: team-lead
+        IMMEDIATE TASK: Wonder analysis for generation {n} — answer the 4 fundamental questions.
         Generation {n}. DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/gen-{n}/spec.md and ontology.json.
         {If n > 1: 'Previous reflection: Read gen-{n-1}/reflect.md.'}
@@ -96,9 +97,9 @@ FOR each generation n:
           2. Root Cause: Are we addressing root causes or symptoms?
           3. Preconditions: What must be true for this to work?
           4. Hidden Assumptions: What unvalidated assumptions exist?
-        Output your wonder analysis as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'metis wonder gen-{n} 완료', '{wonder analysis}')")
      olympus_register_agent_spawn(pipeline_id, "metis")
-     → Write gen-{n}/wonder.md from metis_wonder
+     → Write gen-{n}/wonder.md from metis SendMessage
      olympus_record_execution(pipeline_id, "genesis", "metis", ...)
 
   c. Reflect (Eris — FOREGROUND, receives metis wonder):
@@ -108,15 +109,16 @@ FOR each generation n:
        subagent_type: "olympus:eris",
        prompt: "You are Eris. Artifact directory: ${ARTIFACT_DIR}/
         LEADER_NAME: team-lead
+        IMMEDIATE TASK: Reflect on Metis's wonder analysis for generation {n} — challenge weak points.
         Generation {n}. DO NOT write files — you are read-only.
         Read ${ARTIFACT_DIR}/gen-{n}/wonder.md (metis's analysis).
         Compare gen-{n-1}/ontology.json vs gen-{n}/ontology.json.
         {If n > 1: 'Previous wonder: Read gen-{n-1}/wonder.md to track question evolution.'}
         Validate logical soundness per fallacy-catalog.md.
         Challenge weak points in metis's wonder analysis.
-        Output your reflect results as your final response.")
+        When done: SendMessage(to: 'team-lead', summary: 'eris reflect gen-{n} 완료', '{reflect results}')")
      olympus_register_agent_spawn(pipeline_id, "eris")
-     → Write gen-{n}/reflect.md from eris_reflect
+     → Write gen-{n}/reflect.md from eris SendMessage
      olympus_record_execution(pipeline_id, "genesis", "eris", ...)
      olympus_log_collaboration(pipeline_id, "metis", "eris", "Wonder/Reflect 다이얼로그 gen-{n}")
 

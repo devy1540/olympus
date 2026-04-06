@@ -169,15 +169,15 @@
       "phase": 3,
       "writer": "orchestrator",
       "source": ["committee"],
-      "required_spawn": ["zeus", "ares", "eris"],
-      "readers": ["eris", "orchestrator"],
-      "note": "위원들은 SendMessage로 입장 전달, 오케스트레이터가 저장"
+      "required_spawn": ["zeus-r{n}", "ares-r{n}"],
+      "readers": ["eris-da", "orchestrator"],
+      "note": "위원들은 per-round 스폰(zeus-r{n}, ares-r{n})으로 SendMessage 전달, 오케스트레이터가 저장"
     },
     "da-challenges.md": {
       "phase": 4,
       "writer": "orchestrator",
-      "source": "eris",
-      "required_spawn": "eris",
+      "source": "eris-da",
+      "required_spawn": "eris-da",
       "readers": ["committee"],
       "note": "Eris는 SendMessage로 챌린지 전달, 오케스트레이터가 저장"
     },
