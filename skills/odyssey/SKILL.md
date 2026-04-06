@@ -182,6 +182,11 @@ Agents are spawned SEQUENTIALLY with IMMEDIATE TASKS — not all at once.
        IF apollo sends a question → AskUserQuestion({apollo's question})
        → SendMessage(to: "apollo", "User answered: {answer}")
        IF apollo sends completion → Write interview-log.md + ambiguity-scores.json
+
+   DEADLOCK FALLBACK: If 5 minutes elapse without apollo sending a question or completion:
+     → SendMessage(to: "apollo", "Interview timeout. Submit your current findings and scores now.")
+     → Retry up to 2 times (2-minute intervals)
+     → If still no response: proceed with available information, note "apollo consultation incomplete" in interview-log.md
    olympus_record_execution(pipeline_id, "oracle", "apollo", ...)
 
 4. Ambiguity gate:
