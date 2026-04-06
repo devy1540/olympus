@@ -351,18 +351,22 @@ Apollo: processes answers → next question or completion
 | Inter-agent | SendMessage(to: "{peer}") | Same ✅ |
 
 **Sequential spawn within a phase:**
-Agents with dependencies are spawned SEQUENTIALLY in FOREGROUND:
+Agents with dependencies wait for prior agent's SendMessage before spawning the next:
 ```
 Phase 1 (Oracle):
-  1. hermes_result = Agent(hermes, FOREGROUND) → write codebase-context.md
-  2. apollo_result = Agent(apollo, FOREGROUND) → write interview-log.md
-  3. metis_result = Agent(metis, FOREGROUND) → write gap-analysis.md
+  1. Agent(hermes, BACKGROUND) → WAIT for SendMessage(from hermes) → write codebase-context.md
+  2. Agent(apollo, BACKGROUND) → WAIT for SendMessage(from apollo) → write interview-log.md
+  3. Agent(metis, BACKGROUND) → WAIT for SendMessage(from metis) → write gap-analysis.md
 
 Phase 3 (Pantheon):
-  1. helios_result = Agent(helios, FOREGROUND) → write perspectives.md
-  2. Agent(ares, BACKGROUND) + Agent(poseidon, BACKGROUND) → cross-reference → both finish → aggregate
-  3. eris_result = Agent(eris, FOREGROUND) → write da-evaluation.md
+  1. Agent(helios, BACKGROUND) → WAIT for SendMessage(from helios) → write perspectives.md
+  2. Agent(ares, BACKGROUND) + Agent(poseidon, BACKGROUND) → cross-reference → WAIT for both SendMessages → aggregate
+  3. Agent(eris, BACKGROUND) → WAIT for SendMessage(from eris) → write da-evaluation.md
 ```
+
+Note: FOREGROUND spawn (no `run_in_background`) blocks until the agent finishes, but the Agent tool
+return value carries only an idle notification in teammate mode — no result content. Always capture
+results via SendMessage regardless of foreground/background.
 
 Memory impact: ~125MB per concurrent in-process agent. Foreground spawn keeps only 1 active at a time (~125MB). Parallel spawn: 2 concurrent (~250MB).
 
@@ -394,9 +398,9 @@ Teammates communicate via SendMessage. The leader does NOT need to relay every m
 
 **Communication rules:**
 1. Inter-agent messages use `SendMessage(to: "{teammate_name}", summary: "{5-10 words}", "{content}")`
-2. Result delivery depends on spawn mode:
-   - **FOREGROUND** (no `run_in_background`): result captured from Agent tool return value directly
-   - **BACKGROUND** (`run_in_background: true`): result delivered via `SendMessage(to: "team-lead")` — final text output of background agents generates only an idle notification (no content). Always use SendMessage in background mode.
+2. Result delivery in teammate mode: **ALL agents must use `SendMessage(to: "team-lead")`** — both foreground and background.
+   - **FOREGROUND** (no `run_in_background`): agent completes task then sends results via `SendMessage(to: "team-lead")`. The Agent tool return value delivers only an idle notification (no content) in teammate mode.
+   - **BACKGROUND** (`run_in_background: true`): same — results delivered via `SendMessage(to: "team-lead")`. Final text output generates only an idle notification.
    - `SendMessage(to: "leader")` is **BANNED** — "leader" is not a valid teammate name (messages are silently lost)
 3. Agents MUST NOT bypass the leader for phase transitions or gate checks
 4. Agents MUST NOT spawn other teammates (only the leader can spawn)
@@ -420,7 +424,7 @@ CONSULTATION EXCHANGE (minimum 2 turns):
         - {recommendation}")
 
   3. Agent A incorporates B's feedback into final report
-  4. Agent A outputs final result as text (orchestrator captures via Agent tool return value):
+  4. Agent A sends final result to leader: `SendMessage(to: "team-lead", ...)`
        "... Consultation with {agent_b}: {what changed based on feedback}"
 ```
 
@@ -496,7 +500,7 @@ When teammate features are unavailable or fail:
 | Failure | Fallback |
 |:--------|:---------|
 | Teammate spawn fails | Retry once → fall back to subagent (Agent tool without team_name) |
-| Agent return value empty/truncated | Re-spawn agent with narrower scope or direct investigation |
+| SendMessage not received (timeout) | Re-spawn agent with narrower scope or direct investigation |
 | MCP server unavailable | Proceed without MCP — hooks provide validation |
 | Agent exceeds maxTurns before completing | Re-spawn with focused prompt + previous partial results |
 | Memory pressure (too many active) | Foreground spawn keeps only 1 active; parallel spawn limited to 2-3 |
