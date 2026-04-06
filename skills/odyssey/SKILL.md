@@ -266,6 +266,7 @@ When enabled:
            LEADER_NAME: team-lead
                 IMMEDIATE TASK: Genesis wonder for generation {n}.
                 Read ${ARTIFACT_DIR}/gen-{n}/spec.md and ontology.json.
+                {If n > 1: Read gen-{n-1}/reflect.md for prior generation reflection context.}
                 Answer 4 questions: Essence, Root Cause, Preconditions, Hidden Assumptions.
                 When done: SendMessage(to: 'team-lead', summary: 'metis wonder gen-{n} 완료', '{wonder analysis}')")
         olympus_register_agent_spawn(pipeline_id, "metis")
@@ -277,6 +278,7 @@ When enabled:
               prompt: "You are Eris in team ${TEAM}. Artifact directory: ${ARTIFACT_DIR}/
            LEADER_NAME: team-lead
                 IMMEDIATE TASK: Read docs/shared/fallacy-catalog.md. Challenge this wonder analysis:
+                {If n > 1: Read gen-{n-1}/wonder.md to track question evolution across generations.}
                 === METIS WONDER ===
                 {metis_wonder}
                 When done: SendMessage(to: 'team-lead', summary: 'eris reflect gen-{n} 완료', '{challenges}')")
