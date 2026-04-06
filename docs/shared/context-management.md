@@ -118,6 +118,8 @@ AFTER pruning:
 | Planning → Execution | plan.md is already compact; no action needed |
 | Execution → Tribunal | Summarize implementation changes to file list + key modifications |
 | Tribunal → retry | Prune prior verdict, carry only failure reasons |
+| Tribunal → Oracle (REJECTED_SPEC) | Drop all implementation/execution history; carry only rejection reason, unmet ACs, spec defects |
+| Tribunal → Pantheon (REJECTED_ARCHITECTURE) | Drop all implementation/execution history; carry only rejection reason, architectural issues, analysis gaps |
 
 ### Evolve
 | Transition | Compaction Action |
