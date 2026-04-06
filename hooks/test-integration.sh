@@ -680,6 +680,110 @@ RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
 check_result "Agora: da-challenges.md spawn gate (eris-da not spawned) → deny" "$RESULT" "deny"
 
 # ============================================================
+echo ""
+echo "--- Phase 12: Spawn Gate — Additional Coverage ---"
+# ============================================================
+
+# tribunal/mechanical-result.json → hephaestus
+echo "  [tribunal] Spawn gate: mechanical-result.json before hephaestus spawn → deny"
+TRIBUNAL_SPAWN_DIR="${TEST_DIR}/.olympus/tribunal-20260401-inttest18"
+mkdir -p "$TRIBUNAL_SPAWN_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${TRIBUNAL_SPAWN_DIR}/mechanical-result.json" '{"overall":"PASS"}')
+check_result "Tribunal: mechanical-result.json spawn gate (hephaestus not spawned) → deny" "$RESULT" "deny"
+
+# tribunal/semantic-matrix.md → athena
+echo "  [tribunal] Spawn gate: semantic-matrix.md before athena spawn → deny"
+TRIBUNAL_SPAWN2_DIR="${TEST_DIR}/.olympus/tribunal-20260401-inttest19"
+mkdir -p "$TRIBUNAL_SPAWN2_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${TRIBUNAL_SPAWN2_DIR}/semantic-matrix.md" '## Semantic Matrix')
+check_result "Tribunal: semantic-matrix.md spawn gate (athena not spawned) → deny" "$RESULT" "deny"
+
+# genesis/gen-1/wonder.md → metis
+echo "  [genesis] Spawn gate: gen-1/wonder.md before metis spawn → deny"
+GENESIS_SPAWN_DIR="${TEST_DIR}/.olympus/genesis-20260401-inttest20"
+mkdir -p "$GENESIS_SPAWN_DIR/gen-1/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${GENESIS_SPAWN_DIR}/gen-1/wonder.md" '## Wonder')
+check_result "Genesis: gen-1/wonder.md spawn gate (metis not spawned) → deny" "$RESULT" "deny"
+
+# genesis/gen-1/reflect.md → eris
+echo "  [genesis] Spawn gate: gen-1/reflect.md before eris spawn → deny"
+GENESIS_SPAWN2_DIR="${TEST_DIR}/.olympus/genesis-20260401-inttest21"
+mkdir -p "$GENESIS_SPAWN2_DIR/gen-1/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${GENESIS_SPAWN2_DIR}/gen-1/reflect.md" '## Reflect')
+check_result "Genesis: gen-1/reflect.md spawn gate (eris not spawned) → deny" "$RESULT" "deny"
+
+# oracle/gap-analysis.md → metis
+echo "  [oracle] Spawn gate: gap-analysis.md before metis spawn → deny"
+ORACLE_SPAWN_DIR="${TEST_DIR}/.olympus/oracle-20260401-inttest22"
+mkdir -p "$ORACLE_SPAWN_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${ORACLE_SPAWN_DIR}/gap-analysis.md" '## Gap Analysis')
+check_result "Oracle: gap-analysis.md spawn gate (metis not spawned) → deny" "$RESULT" "deny"
+
+# review-pr/verdict.md → nemesis
+echo "  [review-pr] Spawn gate: verdict.md before nemesis spawn → deny"
+REVIEWPR_SPAWN_DIR="${TEST_DIR}/.olympus/review-pr-20260401-inttest23"
+mkdir -p "$REVIEWPR_SPAWN_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${REVIEWPR_SPAWN_DIR}/verdict.md" '## Verdict')
+check_result "Review-PR: verdict.md spawn gate (nemesis not spawned) → deny" "$RESULT" "deny"
+
+# audit/audit-semantic.json → athena
+echo "  [audit] Spawn gate: audit-semantic.json before athena spawn → deny"
+AUDIT_SPAWN2_DIR="${TEST_DIR}/.olympus/audit-20260401-inttest24"
+mkdir -p "$AUDIT_SPAWN2_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${AUDIT_SPAWN2_DIR}/audit-semantic.json" '{"scores":{}}')
+check_result "Audit: audit-semantic.json spawn gate (athena not spawned) → deny" "$RESULT" "deny"
+
+# odyssey/plan.md → zeus
+echo "  [odyssey] Spawn gate: plan.md before zeus spawn → deny"
+ODYSSEY_SPAWN2_DIR="${TEST_DIR}/.olympus/odyssey-20260401-inttest25"
+mkdir -p "$ODYSSEY_SPAWN2_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${ODYSSEY_SPAWN2_DIR}/plan.md" '## Implementation Plan')
+check_result "Odyssey: plan.md spawn gate (zeus not spawned) → deny" "$RESULT" "deny"
+
+# evolve/eval-matrix.md → athena
+echo "  [evolve] Spawn gate: eval-matrix.md before athena spawn → deny"
+EVOLVE_SPAWN_DIR="${TEST_DIR}/.olympus/evolve-20260401-inttest26"
+mkdir -p "$EVOLVE_SPAWN_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${EVOLVE_SPAWN_DIR}/eval-matrix.md" '## Evaluation Matrix')
+check_result "Evolve: eval-matrix.md spawn gate (athena not spawned) → deny" "$RESULT" "deny"
+
+# evolve/diagnosis.md → metis+eris
+echo "  [evolve] Spawn gate: diagnosis.md before metis+eris spawn → deny"
+EVOLVE_SPAWN2_DIR="${TEST_DIR}/.olympus/evolve-20260401-inttest27"
+mkdir -p "$EVOLVE_SPAWN2_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${EVOLVE_SPAWN2_DIR}/diagnosis.md" '## Diagnosis')
+check_result "Evolve: diagnosis.md spawn gate (metis+eris not spawned) → deny" "$RESULT" "deny"
+
+# oracle/codebase-context.md → hermes
+echo "  [oracle] Spawn gate: codebase-context.md before hermes spawn → deny"
+ORACLE_SPAWN2_DIR="${TEST_DIR}/.olympus/oracle-20260401-inttest28"
+mkdir -p "$ORACLE_SPAWN2_DIR/.checkpoints"
+echo '{"consecutiveDenials":0,"totalDenials":0}' > "${TEST_DIR}/.olympus/.denial-tracking.json"
+RESULT=$(run_hook "$SCRIPT_DIR/enforce-spawn-gate.sh" \
+  "${ORACLE_SPAWN2_DIR}/codebase-context.md" '# Codebase Context')
+check_result "Oracle: codebase-context.md spawn gate (hermes not spawned) → deny" "$RESULT" "deny"
+
+# ============================================================
 # Cleanup
 rm -rf "$TEST_DIR"
 

@@ -142,6 +142,10 @@ AGENT_SPAWN_COUNT=$({ grep -r "Agent(name:" skills/*/SKILL.md 2>/dev/null || tru
 SENDMSG_COUNT=$({ grep -r "When done: SendMessage(to: 'team-lead'" skills/*/SKILL.md 2>/dev/null || true; } | wc -l | tr -d ' ')
 run_check "Every spawn has SendMessage(to: 'team-lead') pattern: ${SENDMSG_COUNT}/${AGENT_SPAWN_COUNT}" "[ $SENDMSG_COUNT -ge $AGENT_SPAWN_COUNT ]"
 
+OLYMPUS_SPAWN_COUNT=$({ grep -r 'subagent_type: "olympus:' skills/*/SKILL.md 2>/dev/null || true; } | wc -l | tr -d ' ')
+REGISTER_COUNT=$({ grep -r "olympus_register_agent_spawn" skills/*/SKILL.md 2>/dev/null || true; } | grep -v "MUST\|Tool_Usage\|after each\|SHOULD" | wc -l | tr -d ' ')
+run_check "Every olympus spawn has olympus_register_agent_spawn: ${REGISTER_COUNT}/${OLYMPUS_SPAWN_COUNT}" "[ $REGISTER_COUNT -ge $OLYMPUS_SPAWN_COUNT ]"
+
 PROACTIVE_RULE=$(grep -rl "PROACTIVE SPAWN RULE" skills/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ' || echo 0)
 run_check "PROACTIVE SPAWN RULE: ${PROACTIVE_RULE}/${SPAWN_SKILLS}" "[ $PROACTIVE_RULE -ge $SPAWN_SKILLS ]"
 
