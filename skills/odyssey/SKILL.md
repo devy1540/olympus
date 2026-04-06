@@ -504,9 +504,12 @@ Implement the approved plan. **Teammate mode shines here — agents collaborate 
            LEADER_NAME: team-lead
            IMMEDIATE TASK: Implement ${ARTIFACT_DIR}/plan.md.
            You CAN write files directly.
-           Do NOT work in isolation — use Glob/Grep/Read for codebase context.
+           Use teammate collaboration (per your Teammate_Protocol):
+             - SendMessage(to: 'hermes') for unfamiliar code structure BEFORE implementing
+             - SendMessage(to: 'artemis') when encountering errors
+             - SendMessage(to: 'hephaestus') AFTER completing for build verification
            When complete, write your implementation report to ${ARTIFACT_DIR}/implementation-report.md directly.
-           When done: SendMessage(to: 'team-lead', summary: 'prometheus 구현 완료', '{implementation report}')")
+           When done: SendMessage(to: 'team-lead', summary: 'prometheus 구현 완료', '{implementation report + collaboration log}')")
    olympus_register_agent_spawn(pipeline_id, "prometheus")
 
    olympus_record_execution(pipeline_id, "execution", "prometheus", ...)
