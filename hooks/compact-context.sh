@@ -55,7 +55,7 @@ CHECKPOINT_DIR="${DIR}/.checkpoints"
 PREV_PHASE=""
 
 if [[ -d "$CHECKPOINT_DIR" ]]; then
-  LATEST_CHECKPOINT=$(ls -1 "${CHECKPOINT_DIR}/${FILENAME}".*.json 2>/dev/null | sort -t. -k2 -n | tail -1 || true)
+  LATEST_CHECKPOINT=$(ls -1 "${CHECKPOINT_DIR}/${FILENAME}".*.json 2>/dev/null | sort -V | tail -1 || true)
   if [[ -n "$LATEST_CHECKPOINT" && -f "$LATEST_CHECKPOINT" ]]; then
     PREV_PHASE=$(jq -r '.phase // empty' "$LATEST_CHECKPOINT" 2>/dev/null || true)
   fi

@@ -40,7 +40,7 @@ mkdir -p "$CHECKPOINT_DIR"
 
 # Compare with LATEST CHECKPOINT (not the current file, since PostToolUse fires after write).
 # If no prior checkpoint exists OR content differs from latest checkpoint, create a new one.
-LATEST_CHECKPOINT=$(ls -1 "${CHECKPOINT_DIR}/${FILENAME}".*.json 2>/dev/null | sort -t. -k2 -n | tail -1 || true)
+LATEST_CHECKPOINT=$(ls -1 "${CHECKPOINT_DIR}/${FILENAME}".*.json 2>/dev/null | sort -V | tail -1 || true)
 if [[ -n "$LATEST_CHECKPOINT" && -f "$LATEST_CHECKPOINT" ]]; then
   LAST_CONTENT=$(cat "$LATEST_CHECKPOINT" 2>/dev/null || true)
   # 최신 체크포인트와 내용이 동일하면 백업 불필요 (중복 방지)
@@ -64,7 +64,7 @@ echo "$CONTENT" > "${CHECKPOINT_DIR}/${FILENAME}.${PADDED_NUM}.json"
 CHECKPOINT_COUNT=$(ls -1 "${CHECKPOINT_DIR}/${FILENAME}".*.json 2>/dev/null | wc -l | tr -d ' ')
 if [[ "$CHECKPOINT_COUNT" -gt "$MAX_CHECKPOINTS" ]]; then
   DELETE_COUNT=$((CHECKPOINT_COUNT - MAX_CHECKPOINTS))
-  ls -1 "${CHECKPOINT_DIR}/${FILENAME}".*.json | sort -t. -k2 -n | head -"$DELETE_COUNT" | while read -r OLD_FILE; do
+  ls -1 "${CHECKPOINT_DIR}/${FILENAME}".*.json | sort -V | head -"$DELETE_COUNT" | while read -r OLD_FILE; do
     rm -f "$OLD_FILE"
   done
 fi
